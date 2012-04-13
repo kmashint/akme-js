@@ -442,6 +442,14 @@ if (!this.akme) this.akme = {
 		return obj;
 	},
 	/**
+	 * Copy values from the map to the obj for existing keys in the obj, returning the same obj.
+	 */
+	copyExisting : function (obj, map) {
+		if (map === null || typeof map === "undefined") return obj;
+		for (var key in map) if (key in obj) obj[key] = map[key];
+		return obj;
+	},
+	/**
 	 * Copy the array values to the given obj as map keys all with the given value (obj[ary[i][keyName]] = ary[i][valName]).
 	 * If valName is undefined or null then the entire array values it used.
 	 */
