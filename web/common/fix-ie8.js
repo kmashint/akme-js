@@ -6,6 +6,10 @@
 // http://jsperf.com/innerhtml-vs-innertext/7
 //
 
+// Only IE8+HTML5 browsers are supported.
+if (document.documentMode && document.documentMode < 8) {
+	alert("Only IE8 and HTML5 browsers are supported.  Please upgrade your browser.");
+}
 
 if ( Object.defineProperty && Object.getOwnPropertyDescriptor ) (function(){
 
