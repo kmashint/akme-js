@@ -7,7 +7,9 @@
 //
 
 // Only IE8+HTML5 browsers are supported.
-if (document.documentMode && document.documentMode < 8) {
+if ((document.documentMode && document.documentMode < 8) || 
+		navigator.userAgent.indexOf("MSIE 6") != -1 || 
+		navigator.userAgent.indexOf("MSIE 7") != -1 ) {
 	alert("Only IE8 and HTML5 browsers are supported.  Please upgrade your browser.");
 }
 
