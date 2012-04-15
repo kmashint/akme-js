@@ -123,7 +123,7 @@ interface Storage {
 /**
  * akme.localStorage
  */
-if (!akme.localStorage) akme.localStorage = new akme.Storage({
+if (!akme.localStorage && localStorage) akme.localStorage = new akme.Storage({
 	name : "localStorage",
 	length : localStorage.length,
 	key : function(idx) { return localStorage.key(idx); },
@@ -136,13 +136,12 @@ if (!akme.localStorage) akme.localStorage = new akme.Storage({
 /**
  * akme.sessionStorage
  */
-if (!akme.sessionStorage) akme.sessionStorage = new akme.Storage({
+if (!akme.sessionStorage && localStorage) akme.sessionStorage = new akme.Storage({
 	name : "sessionStorage",
 	length : sessionStorage.length,
 	key : function(idx) { return sessionStorage.key(idx); },
 	getItem : function(key) { return sessionStorage.getItem(key); },
-	setItem : function(key, value) { sessionStorage.setItem(key, value); this.length = sessionStorage.length; },
-	removeItem : function(key) { sessionStorage.removeItem(key); this.length = sessionStorage.length; },
-	clear : function() { sessionStorage.clear(); this.length = sessionStorage.length; }
+	setItem : function(key, value) { sessionStorage.setItem(key, value); this.length = window.sessionStorage.length; },
+	removeItem : function(key) { sessionStorage.removeItem(key); this.length = window.sessionStorage.length; },
+	clear : function() { sessionStorage.clear(); this.length = window.sessionStorage.length; }
 });
-

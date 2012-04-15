@@ -141,7 +141,7 @@ akme.copy(akme, {
 });
 
 
-akme.form = akme.form || {
+if (!akme.form) akme.form = {
 	getFormElements : function (outer) {
 		var a = [];
 		var names = ["button","input","select","textarea"];
@@ -299,7 +299,7 @@ akme.copy(akme.xhr, {
 });
 
 
-akme._callbasep = akme._callbasep || {
+if (!akme._callbasep) akme._callbasep = {
 	_tag : "",
 	_lock : [true], // pop()===true to lock, push(true) to free.
 	_count : 0,
@@ -336,15 +336,15 @@ akme._callbasep = akme._callbasep || {
 		}, this.timeout);
 		return true;
 	}
-}
+};
 
 // iframe data access is governed by same document.domain and protocol, script is not.
 // Both suffer from slow-failure by timeout, rather than XMLHttpRequest that fast-fails.
-akme.iframep = akme.iframep || akme.copy(akme.clone(akme._callbasep), {_tag:"iframe"});
-akme.scriptp = akme.scriptp || akme.copy(akme.clone(akme._callbasep), {_tag:"script"});
+if (!akme.iframep) akme.iframep = akme.copy(akme.clone(akme._callbasep), {_tag:"iframe"});
+if (!akme.scriptp) akme.scriptp = akme.copy(akme.clone(akme._callbasep), {_tag:"script"});
 
 
-akme.hsv2rgb = akme.hsv2rgb || function (hsv) {
+if (!akme.hsv2rgb) akme.hsv2rgb = function (hsv) {
     var red, grn, blu, i, f, p, q, t;
     var hue = hsv[0]%360;
     if (hsv[2]==0) return [0, 0, 0];
@@ -366,8 +366,8 @@ akme.hsv2rgb = akme.hsv2rgb || function (hsv) {
     }
     return [Math.floor(red*255), Math.floor(grn*255), Math.floor(blu*255)];
 };
-//
-akme.rgb2hsv = akme.rgb2hsv || function (rgb) {
+
+if (!akme.rgb2hsv) akme.rgb2hsv = function (rgb) {
     var x, val, f, i, hue, sat, val;
     var red = rgb[0]/255;
     var grn = rgb[1]/255;
@@ -381,16 +381,16 @@ akme.rgb2hsv = akme.rgb2hsv || function (rgb) {
     sat = Math.floor(((val-x)/val)*100);
     val = Math.floor(val*100);
     return [hue, sat, val];
-}
-//
-akme.rgb2hex = akme.rgb2hex || function (rgb) {
+};
+
+if (!akme.rgb2hex) akme.rgb2hex = function (rgb) {
 	return this.toHexByte(rgb[0])+this.toHexByte(rgb[1])+this.toHexByte(rgb[2]);
-}
-//
-akme.toHexByte = akme.toHexByte || function (n) {
+};
+
+if (!akme.toHexByte) akme.toHexByte = function (n) {
 	if (n==null) return "00";
 	n=parseInt(n); if (n==0 || isNaN(n)) return "00";
 	n=Math.max(0,n); n=Math.min(n,255); n=Math.round(n);
 	return "0123456789ABCDEF".charAt((n-n%16)/16)
     	+ "0123456789ABCDEF".charAt(n%16);
-}
+};
