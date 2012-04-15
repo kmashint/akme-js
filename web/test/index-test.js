@@ -119,6 +119,10 @@ $(document).ready(function(){
 	
 	module("Raphael SVG/VML");
 	
+	var div = document.createElement("div");
+	div.id = 'raphael';
+	akme.copyAll(div.style, {width: '615px', height: '175px'});
+	document.body.appendChild(div);	
 	var paper = new Raphael("raphael");
 	console.log(" width ", paper.width, " height ", paper.height);
 	var rect = paper.rect(1, 1, paper.width-15, paper.height-15, 15);
