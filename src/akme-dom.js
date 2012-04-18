@@ -1,6 +1,11 @@
 // akme-dom.js
 
-if (typeof console === "undefined") console = { log : function() {} };
+// Simple ability to ensure console.log and allow for use of if (console.logEnabled).
+// http://www.tuttoaster.com/learning-javascript-and-dom-with-console/
+// http://www.thecssninja.com/javascript/console
+if (typeof console === "undefined") console = { 
+	log : function() {}, info : function() {}, warn : function() {}, error : function() {}, assert : function() {} 
+};
 if (typeof console.logEnabled === "undefined") console.logEnabled = false;
 
 this.DOMParser = this.DOMParser || function() {
@@ -332,9 +337,38 @@ akme.copyAll(this.akme, {
 	/**
 	 * Import and replace Elements into the given doc from thatParent.
 	 * Return an array of elements that were replaced.
+	 * The callbackFn is called when everything has loaded due to the possible async delay of script and iframe.
 	 */
-	importElementsReplaceById : function(doc, thatParent) {
+	importElementsReplaceById : function(doc, thatParent, callbackFn) {
 		var a = [];
+		var scriptTracker = {
+			count : 0,
+			callbackFn : null,
+			check : function() { 
+				if (console.logEnabled) console.log("scriptTracker.check count " +this.count);
+				if (this.count < 1 && this.callbackFn) {
+					this.callbackFn();
+					this.callbackFn = null;
+				}
+			},
+			load : function(elem) {
+				this.count++;
+				elem.onload = function(ev) { scriptTracker.onload(ev); };
+				elem.onreadystatechange = function(ev) {
+					if (!this.readyState || this.readyState == "loaded" || this.readyState == "complete") scriptTracker.onload(ev);
+				};
+				if (console.logEnabled) console.log("scriptTracker.load count " +this.count);
+			},
+			onload : function(ev) {
+				if (ev) {
+					var elem = fw.getEventElement(ev);
+					elem.onload = null;
+					elem.onreadystatechange = null;
+				}
+				this.count--;
+				this.check();
+			}
+		};
 		var parentAry = [thatParent];
 		for (var parent = parentAry.pop(); parent != null; parent = parentAry.pop()) {
 			var childNodes = parent.childNodes;
@@ -342,7 +376,7 @@ akme.copyAll(this.akme, {
 				var child = childNodes[i];
 				if (child.nodeType == 1) { // 1=ElementNode
 					var thisChild = child.getAttribute("id") > "" ? doc.getElementById(child.getAttribute("id")) : null;
-					if (thisChild) { 
+					if (thisChild) {
 						var importChild = this.importNode(doc, child);
 						var nodeName = importChild.nodeName.toLowerCase();
 						var scriptChild = nodeName==="script" ? importChild : null;
@@ -350,14 +384,15 @@ akme.copyAll(this.akme, {
 						var scripts = scriptChild ? [scriptChild] : importChild.getElementsByTagName("script");
 						if (scripts && scripts.length > 0) for (var j=0; j<scripts.length; j++) {
 							var elem = scripts[j];
-							var clone = this.cloneNodeByCreateElement(doc, elem, false); 
+							var clone = this.cloneNodeByCreateElement(doc, elem, false);
+							scriptTracker.load(clone);
 							if (elem.text > "") clone.text = elem.text;
 							if (!scriptChild) {
-								var dead = this.replaceChild(elem.parentNode, clone, elem);
+								var dead = fw.replaceChild(elem.parentNode, clone, elem);
 							}
 							else importChild = clone;
 						}
-						var dead = this.replaceChild(thisChild.parentNode, importChild, thisChild);
+						var dead = fw.replaceChild(thisChild.parentNode, importChild, thisChild);
 						a[a.length] = importChild;
 					} else {
 						parentAry[parentAry.length]=(child);
@@ -365,6 +400,8 @@ akme.copyAll(this.akme, {
 				}
 			}
 		}
+		if (callbackFn) scriptTracker.callbackFn = callbackFn;
+		scriptTracker.check();
 		return a;
 	},
 
