@@ -169,6 +169,17 @@ if (!akme.form) akme.form = {
 		 }
 	},
 	
+	getValue : function (elem) {
+		if ("selectedIndex" in elem) {
+			return elem.options[selectedIndex].value;
+		} else if ("checked" in elem && "length" in elem) {
+			for (var i=0; i<elem.length; i++) if (elem[i].checked) return elem[i].value;
+			return elem[0].value;
+		} else {
+			return elem.value;
+		}
+	},
+	
 	setChecked : function (elem, value) {
 		for (var i=0; i<elem.options.length; i++) {
 			var optn = elem.options[i];
