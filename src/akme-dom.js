@@ -361,7 +361,7 @@ akme.copyAll(this.akme, {
 			},
 			onload : function(ev) {
 				if (ev) {
-					var elem = fw.getEventElement(ev);
+					var elem = akme.getEventElement(ev);
 					elem.onload = null;
 					elem.onreadystatechange = null;
 				}
@@ -388,11 +388,11 @@ akme.copyAll(this.akme, {
 							scriptTracker.load(clone);
 							if (elem.text > "") clone.text = elem.text;
 							if (!scriptChild) {
-								var dead = fw.replaceChild(elem.parentNode, clone, elem);
+								var dead = akme.replaceChild(elem.parentNode, clone, elem);
 							}
 							else importChild = clone;
 						}
-						var dead = fw.replaceChild(thisChild.parentNode, importChild, thisChild);
+						var dead = akme.replaceChild(thisChild.parentNode, importChild, thisChild);
 						a[a.length] = importChild;
 					} else {
 						parentAry[parentAry.length]=(child);
