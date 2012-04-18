@@ -636,6 +636,9 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 		} else {
 			content = storage[headers.method](headers.type, headers.key);
 		}
+		if (typeof content === "object") {
+			content = akme.formatJSON(content);
+		}
 		var headers = {
 			call : "StorageResponse",
 			method : headers.method,
