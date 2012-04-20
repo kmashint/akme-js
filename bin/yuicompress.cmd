@@ -11,7 +11,7 @@ pushd ..\src
 set file=..\web\common\akme-core.min.js
 @echo off
 echo>"%file%" // %file%
-for %%a in (akme-core.js akme-dom.js akme-more.js akme-storage.js akme-context.js) ^
+for %%a in (akme-core.js akme-context.js akme-dom.js akme-more.js akme-storage.js) ^
 do type>>"%file%.src.js" "%%a"
 %yuic% >>"%file%" "%file%.src.js"
 del /q "%file%.src.js"
