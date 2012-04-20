@@ -621,11 +621,12 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 				}
 			}
 			var content = xhr["responseText"] ? xhr.responseText : "";
-			if (/xml;|xml$/.test(headers["Content-Type"])) {
+			if (/xml;|xml$/.test(headers["Content-Type"]) || /html;|html$/.test(headers["Content-Type"])) {
 				// Remove DOCTYPE ... SYSTEM if found since the DTD reference will be invalid after postMessage.
 				var pos1 = content.indexOf("<"+"!DOCTYPE ");
 				var pos2 = pos1 !== -1 ? content.indexOf(">", pos1+10) : -1;
-				if (pos2 !== -1 && content.lastIndexOf(" SYSTEM ", pos2) !== -1) {
+				if (pos2 !== -1 && (content.lastIndexOf(" SYSTEM ", pos2) !== -1 ||
+						(document.documentMode && document.documentMode < 9 && content.lastIndexOf(" PUBLIC ", pos2) === -1))) {
 					content = content.substring(0, pos1) + content.substring(content.indexOf("<", pos2+1));
 				}
 			}
