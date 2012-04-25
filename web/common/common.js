@@ -8,7 +8,7 @@ akme.onLoad(function() {
 		var xmldom = akme.xhr.getResponseXML(xhr);
 		akme.importElementsReplaceById(document, xmldom, function(){
 			// Called after all scripts have loaded.
-			// new akme.core.Template().set(akme.getContext()) ensures something is run.
+			// new akme.core.Template().setContext(akme.getContext()) ensures something is run.
 			// and puts the current templateScript in the Context.
 			console.info("xmldom ", xmldom)
 		});

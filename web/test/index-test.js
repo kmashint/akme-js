@@ -126,7 +126,7 @@ $(document).ready(function(){
 	var paper = new Raphael("raphael");
 	console.log(" width ", paper.width, " height ", paper.height);
 	var rect = paper.rect(1, 1, paper.width-15, paper.height-15, 15);
-	rect.attr("fill", "goldenrod");
+	rect.attr("fill", "transparent");
 	var img = paper.image("../akme-logo.gif", 15, 15, 42, 42);
 	function goRaphael() {
 		var attr = img.attrs.x == 15 ? {y: 100, x: 500} : {y: 15, x: 15};

@@ -8,7 +8,7 @@ if (typeof console === "undefined") console = {
 };
 if (typeof console.logEnabled === "undefined") console.logEnabled = false;
 
-this.DOMParser = this.DOMParser || function() {
+if (!this.DOMParser) this.DOMParser = function() {
 	this.xmldoc = null;
 	// IE8 and earlier do not support DOMParser directly.
 	// http://www.w3schools.com/Xml/xml_parser.asp
@@ -44,7 +44,7 @@ if (document['documentMode'] && document.documentMode == 9) {
 	};
 }
 
-this.XMLHttpRequest = this.XMLHttpRequest || function() {
+if (!this.DOMParser) this.XMLHttpRequest = function() {
 	try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); } catch (ex) {}
     try { return new ActiveXObject("Msxml2.XMLHTTP.3.0"); } catch (ex) {}
     throw new Error("This browser does not support XMLHttpRequest.");
@@ -53,7 +53,7 @@ this.XMLHttpRequest = this.XMLHttpRequest || function() {
 
 akme.copyAll(this.akme, {
 	_html5 : null,
-	isIE8 : "documentMode" in document && document.documentMode <= 8, // IE8 documentMode or below
+	isIE8 : document.documentMode && document.documentMode <= 8, // IE8 documentMode or below
 	isW3C : "addEventListener" in window, // W3C support
 	
 	onEvent : function (elem, evnt, fnOrHandleEvent) {
@@ -77,14 +77,9 @@ akme.copyAll(this.akme, {
 	/**
 	 * Cross-browser cancel of regular DOM events.
 	 */
-	cancelEvent: function ( evt ) {
-		if ( evt.preventDefault ) {
-			evt.preventDefault();
-			evt.stopPropagation();
-		} else {
-			evt.returnValue = false;
-			evt.cancelBubble = true;
-		}
+	cancelEvent: function (ev) {
+		if (evt.preventDefault) { ev.preventDefault(); ev.stopPropagation(); }
+		else { ev.returnValue = false; ev.cancelBubble = true; }
 	},
 	
 	getBaseHref : function () {
@@ -107,12 +102,12 @@ akme.copyAll(this.akme, {
 		return this._html5;
 	},
 	
-	parseJSON : function (text) {
-		return JSON.parse(text);
+	parseJSON : function (text, reviver) {
+		return JSON.parse(text, reviver);
 	},
 	
-	formatJSON : function (obj) {
-		return JSON.stringify(obj);
+	formatJSON : function (obj, replacer) {
+		return JSON.stringify(obj, replacer);
 	},
 		
 	parseXML : function (text, contentType) {
@@ -335,7 +330,8 @@ akme.copyAll(this.akme, {
 			check : function() { 
 				if (console.logEnabled) console.log("scriptTracker.check count " +this.count);
 				if (this.count < 1 && this.callbackFn) {
-					this.callbackFn();
+					try { this.callbackFn(); } 
+					catch (er) { var t = "scriptTracker.callbackFn: "+ String(er); console.error(t); alert(t); }
 					this.callbackFn = null;
 				}
 			},
@@ -420,6 +416,8 @@ akme.copyAll(this.akme, {
 if (!akme.xhr) akme.xhr = {
 	DATE_1970 : "Thu, 1 Jan 1970 00:00:00 GMT",
 	HTTP_OK : 200,
+	HTTP_NO_CONTENT : 204,
+	HTTP_NOT_MODIFIED : 304,
 	CONTENT_TYPE : "Content-Type",
 	CONTENT_BINARY : {"Content-Type": "application/octet-stream"},
 	CONTENT_TEXT : {"Content-Type": "text/plain"},
@@ -470,14 +468,18 @@ if (!akme.xhr) akme.xhr = {
 		var isXMLDOM = !!(xhr.responseXML && xhr.responseXML.documentElement);
 		// Handle IE XDomainRequest contentType in addition to W3C standard.
 		var contentType = this.getResponseContentType(xhr);
+		var xml;
 		if (xhr.responseXML && !isXMLDOM && "ActiveXObject" in window &&
 				("application/xhtml+xml" == contentType)) {
 			// Handle broken application/xhtml+xml in IE8 and earlier.
-			var xml = new DOMParser().parseFromString(xhr.responseText, contentType);
-			return xml;
+			xml = new DOMParser().parseFromString(xhr.responseText, contentType);
 		} else {
-			return xhr.responseXML;
+			xml = xhr.responseXML;
 		}
+		if (xml.documentElement.nodeName === 'parsererror') {
+			xml = null;
+		}
+		return xml;
 	}
 };
 
@@ -539,7 +541,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			delete self.callbackMap[key];
 			delete self.callbackTime[key];
 			akme.handleEvent(callbackFnOrOb, headers, content);
-			self = null; // closure cleanup
+			self = key = callbackFnOrOb = null; // closure cleanup
 		};
 		self.callbackTime[key] = new Date().getTime();
 		if (/xml;|xml$/.test(headers["Content-Type"]) && !(content instanceof String) && content instanceof Object) {
@@ -549,14 +551,16 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			content = akme.formatJSON(content);
 		}
 		var msg = this.formatMessage(headers, content);
-		frame.postMessage(msg, "*");
+		var targetOrigin = iframe.src.substring(0, iframe.src.indexOf("/", 8));
+		iframe.contentWindow.postMessage(msg, targetOrigin); // "*" is insecure
+		return headers["callback"];
 	},
-	handleEvent : function(ev) { // ev.data, ev.domain, ev.source
+	handleEvent : function(ev) { // ev.data, ev.origin, ev.source
 		var deny = true;
 		for (var i=0; i<this.allowOrigins.length; i++) {
 			if (this.allowOrigins[i] === ev.origin) {deny = false; break;}
 		}
-		if (deny) { console.log(this.id+" deny "+ ev.origin); return; }
+		if (deny) { console.warn(this.id+" deny "+ ev.origin); return; }
 		var data = this.parseMessage(ev.data);
 		if (!data.headers.call || typeof this[data.headers.call] !== 'function') return;
 		this[data.headers.call](data.headers, data.content, ev.origin, ev.source);
@@ -622,13 +626,13 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			if (window.console) console.log(this.id+' '+location.protocol+'//'+location.host+' XMLHttpRequest postMessage back '+ String(messageEvent.origin || origin));
 			if (messageEvent.source) messageEvent.source.postMessage(result, messageEvent.origin);
 			else source.postMessage(result, origin);
-			self = xhr = messageEvent = source = origin = null; // closure cleanup
+			self = xhr = callback = messageEvent = source = origin = null; // closure cleanup
 		};
 		xhr.send(content || null);
 	},
 	XMLHttpResponse : function(headers, content) {
 		var callbackFnOrOb = akme.getNested(window, headers["callback"]);
-		if (callbackFnOrOb && (headers.status == 200 || headers.status == 304)) {
+		if (callbackFnOrOb && (headers.status == 200 || headers.status == 204 || headers.status == 304)) {
 			if (/xml;|xml$/.test(headers["Content-Type"])) {
 				var resx = akme.parseXML(content, "application/xml");
 				if (callbackFnOrOb && typeof resx === 'object' && ("childNodes" in resx)) {
@@ -639,11 +643,12 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 					}
 				}
 				akme.handleEvent(callbackFnOrOb, headers, resx);
-			}
+			} 
 			else if (/json;|json$/.test(headers["Content-Type"])) {
 				var reso = akme.parseJSON(content);
 				akme.handleEvent(callbackFnOrOb, headers, reso);
-			} else {
+			} // else if (/x-www-form-urlencoded;|x-www-form-urlencoded$/.test(headers["Content-Type"]))
+			else {
 				akme.handleEvent(callbackFnOrOb, headers, content);
 			}
 			return;
