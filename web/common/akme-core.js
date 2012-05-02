@@ -2,6 +2,13 @@
 // First declare some backported (from Mozilla JavaScript documentation) methods from later ECMAScript/JavaScript if missing.
 // Then on to akme.*.
 
+// Simple ability to ensure console.log and allow for use of if (console.logEnabled).
+// http://www.tuttoaster.com/learning-javascript-and-dom-with-console/
+// http://www.thecssninja.com/javascript/console
+if (typeof console === "undefined") console = { 
+	log : function() {}, info : function() {}, warn : function() {}, error : function() {}, assert : function() {} 
+};
+if (typeof console.logEnabled === "undefined") console.logEnabled = false;
 
 /**
  * Add Function.prototype.bind() if not available.

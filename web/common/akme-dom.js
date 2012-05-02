@@ -1,13 +1,5 @@
 // akme-dom.js
 
-// Simple ability to ensure console.log and allow for use of if (console.logEnabled).
-// http://www.tuttoaster.com/learning-javascript-and-dom-with-console/
-// http://www.thecssninja.com/javascript/console
-if (typeof console === "undefined") console = { 
-	log : function() {}, info : function() {}, warn : function() {}, error : function() {}, assert : function() {} 
-};
-if (typeof console.logEnabled === "undefined") console.logEnabled = false;
-
 this.DOMParser = this.DOMParser || function() {
 	this.xmldoc = null;
 	// IE8 and earlier do not support DOMParser directly.

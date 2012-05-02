@@ -1,12 +1,18 @@
-<html xmlns='http://www.w3.org/1999/xhtml'><head>
+<html xmlns='http://www.w3.org/1999/xhtml'><head><title/>
 <link rel='stylesheet' id='templateLink' />
 <style id='templateStyle'></style>
 </head><body>
 
+<div id='templateHead'>head</div>
+
+<div id='templateFoot'>foot</div>
+
 <script id='templateScript'>/*<![CDATA[*/
 
 console.log(456);
-new akme.core.Template().setContext(akme.getContext());
+new akme.core.Template('templateScript',function(ev){
+	alert("templateScript")
+	});
 
 /*]]>*/</script>
 </body></html>
