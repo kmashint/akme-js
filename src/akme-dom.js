@@ -1,14 +1,6 @@
 // akme-dom.js
 
-// Simple ability to ensure console.log and allow for use of if (console.logEnabled).
-// http://www.tuttoaster.com/learning-javascript-and-dom-with-console/
-// http://www.thecssninja.com/javascript/console
-if (typeof console === "undefined") console = { 
-	log : function() {}, info : function() {}, warn : function() {}, error : function() {}, assert : function() {} 
-};
-if (typeof console.logEnabled === "undefined") console.logEnabled = false;
-
-if (!this.DOMParser) this.DOMParser = function() {
+this.DOMParser = this.DOMParser || function() {
 	this.xmldoc = null;
 	// IE8 and earlier do not support DOMParser directly.
 	// http://www.w3schools.com/Xml/xml_parser.asp
@@ -44,17 +36,19 @@ if (document['documentMode'] && document.documentMode == 9) {
 	};
 }
 
-if (!this.DOMParser) this.XMLHttpRequest = function() {
-	try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); } catch (ex) {}
-    try { return new ActiveXObject("Msxml2.XMLHTTP.3.0"); } catch (ex) {}
-    throw new Error("This browser does not support XMLHttpRequest.");
+if (!this.XMLHttpRequest) this.XMLHttpRequest = function() {
+	try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); }
+	catch (er) { throw new Error("This browser does not support XMLHttpRequest."); }
 };
+// Use new ActiveXObject("Msxml2.ServerXMLHTTP.6.0") to avoid Access is Denied in HTA.
 
 
 akme.copyAll(this.akme, {
 	_html5 : null,
-	isIE8 : document.documentMode && document.documentMode <= 8, // IE8 documentMode or below
-	isW3C : "addEventListener" in window, // W3C support
+	// IE8 documentMode or below
+	isIE8 : "documentMode" in document && document.documentMode < 9,
+	// W3C support
+	isW3C : "addEventListener" in window,
 	
 	onEvent : function (elem, evnt, fnOrHandleEvent) {
 		if ("click" === evnt && window.Touch && this.onEventTouch) this.onEventTouch(elem, fnOrHandleEvent);
@@ -643,7 +637,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 					}
 				}
 				akme.handleEvent(callbackFnOrOb, headers, resx);
-			} 
+			}
 			else if (/json;|json$/.test(headers["Content-Type"])) {
 				var reso = akme.parseJSON(content);
 				akme.handleEvent(callbackFnOrOb, headers, reso);
