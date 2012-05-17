@@ -7,8 +7,6 @@ iframe.postMessage { display:inline; width:0; height:0; border:0; }
 <script src='AkmeService.js'></script>
 <script>/*<![CDATA[*/
 
-// main page at user.mydomain.com
-
 function callServiceFrame(msg) {
     var iframe = document.getElementById("ServiceFrame");
     var targetOrigin = iframe.src.substring(0, iframe.src.indexOf("/", 8));
@@ -31,12 +29,13 @@ akme.onEvent(window, "message", function(messageEvent) { // ev.data, ev.origin, 
 
 /*]]>*/</script>
 <head><body>
-<iframe id="ServiceFrame" name="ServiceFrame" class="postMessage" frameborder="0" scrolling="no" src="AkmeFrame.html"></iframe>
+<iframe id="ServiceFrame" name="ServiceFrame" class="postMessage" frameborder="0" scrolling="no" src="AkmeFrame.html"
+></iframe>
 
 AkmePage
 <form name="" action="" onsubmit="return false;">
   <input type="text" name="inputText" value="Joe"/>
-  <input type="button" name="goBtn" value="Go" onclick="callServiceFrame(this.form.elements['inputText'].value)"/>
+  <input type="button" name="goBtn" value="Call" onclick="callServiceFrame(this.form.elements['inputText'].value)"/>
   <input type="text" name="outputText" value=""/>
   <input type="reset" name="resetBtn" value="Clear"/>
 </form>
