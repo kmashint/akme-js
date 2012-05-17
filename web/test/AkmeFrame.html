@@ -4,14 +4,14 @@
 <script src='AkmeService.js'></script>
 <script>/*<![CDATA[*/
 
-// message EventListener and responder within ServiceFrame, a service-oriented iframe
+// message EventListener and responder, a service-oriented iframe
 
 akme.onEvent(window, "message", function(messageEvent) { // ev.data, ev.origin, ev.source
     var source = messageEvent.source;
     var origin = messageEvent.origin;
 	var allowOrigin = "http://localhost";
     if (allowOrigin !== origin) {
-      alert("ServiceFrame deny "+ ev.origin);
+      alert("AkmeFrame deny "+ ev.origin);
 	  return;
 	}
 	 
