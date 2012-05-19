@@ -37,9 +37,7 @@ if (!akme.onEvent) akme.copyAll(akme, {
    * Provide a simpler common way of registering and unregistering DOM Event handlers.
    */
   onEvent : function (elem, evnt, fnOrHandleEvent) {
-    if ("click" === evnt && this.isTouch && fw.onEventTouch) 
-      fw.onEventTouch(elem, fnOrHandleEvent);
-    else if (this.isW3C) elem.addEventListener(evnt, fnOrHandleEvent, false);
+    if (this.isW3C) elem.addEventListener(evnt, fnOrHandleEvent, false);
     else elem.attachEvent("on"+evnt, typeof fnOrHandleEvent.handleEvent==="function" ? 
       fw.fixHandleEvent(fnOrHandleEvent).handleEvent : fnOrHandleEvent);
   },
@@ -48,27 +46,6 @@ if (!akme.onEvent) akme.copyAll(akme, {
   },
   onUnload : function (fnOrHandleEvent) { 
     this.onEvent(window, "unload", fnOrHandleEvent); 
-  },
-  unEvent : function (elem, evnt, fnOrHandleEvent) {
-    if ("click" === evnt && this.isTouch && fw.unEventTouch) 
-      fw.unEventTouch(elem, fnOrHandleEvent);
-    else if (this.isW3C) elem.removeEventListener(evnt, fnOrHandleEvent, false);
-    else elem.detachEvent("on"+evnt, typeof fnOrHandleEvent.handleEvent==="function" ? 
-      fnOrHandleEvent.handleEvent : fnOrHandleEvent);
-  },
-  /**
-   * Return the element of the Event.target, 
-   * using the target.parentNode if the target is not an element.
-   */ 
-  getEventElement : function (ev) {
-    return (ev.target.nodeType === 1) ? ev.target : ev.target.parentNode;
-  },
-  /**
-   * Cross-browser cancel of regular DOM events.
-   */
-  cancelEvent: function (ev) {
-    if (evt.preventDefault) { ev.preventDefault(); ev.stopPropagation(); }
-    else { ev.returnValue = false; ev.cancelBubble = true; }
   },
   /**
    * Helper to invoke a callback function or {handleEvent:function(ev){...}}.
@@ -84,7 +61,7 @@ if (!akme.onEvent) akme.copyAll(akme, {
    * Ensures internally to be applied only once by setting _ie8fix = true on the object.
    */
   fixHandleEvent : function (self) {
-    if (document.documentMode && document.documentMode < 9 &&
+    if (document.documentMode && document.documentMode < 9 && 
         typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
       var handleEvent = self.handleEvent;
       self.handleEvent = function(ev) { handleEvent.call(self, ev); };
