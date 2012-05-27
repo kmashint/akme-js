@@ -81,8 +81,9 @@ akme.copyAll(this.akme, {
 		return a.length != 0 ? a[0]["href"] : "";
 	},
 	getContextPath : function () {
+		// Java ROOT contextPath is "", not "/", so use "/." to ensure a ROOT reference.
 		var a = document.getElementsByName("head")[0].getElementsByTagName("meta");
-		for (var i=0; i<a.length; i++) if (a[i].name === "contextPath") return a[i].content !== "/" ? a[i].content : "/.";
+		for (var i=0; i<a.length; i++) if (a[i].name === "contextPath") return a[i].content ? a[i].content : "/.";
 		return "/.";
 	},
 	
@@ -625,7 +626,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 		xhr.send(content || null);
 	},
 	XMLHttpResponse : function(headers, content) {
-		var callbackFnOrOb = akme.getNested(window, headers["callback"]);
+		var callbackFnOrOb = akme.getProperty(window, headers["callback"]);
 		if (callbackFnOrOb && (headers.status == 200 || headers.status == 204 || headers.status == 304)) {
 			if (/xml;|xml$/.test(headers["Content-Type"])) {
 				var resx = akme.parseXML(content, "application/xml");
