@@ -734,7 +734,7 @@ if (!akme.core) akme.core = {};
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
-	function IndexedMap(storage) {
+	function IndexedMap() {
 		var p = { map : {}, ary : [] }; // private closure
 		function privates(caller) { return caller === PRIVATES ? p : undefined; };
 		
