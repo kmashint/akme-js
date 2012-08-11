@@ -734,13 +734,16 @@ if (!akme.core) akme.core = {};
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
-	var self = $.extend(function() {
+	function IndexedMap(storage) {
 		var p = { map : {}, ary : [] }; // private closure
-		function privates(caller) { return caller === PRIVATES ? p : undefined; }
+		function privates(caller) { return caller === PRIVATES ? p : undefined; };
 		
 		this.length = p.ary.length;
 		this.privates = privates;
-    }, {
+	};
+	$$.IndexedMap = $.extend($.copyAll( // class constructor
+		Storage, {name: CLASS} 
+	), { // super-static prototype, public functions
     	size : size,
     	linkMapTo : linkMapTo,
     	keys : keys,
@@ -756,8 +759,6 @@ if (!akme.core) akme.core = {};
 		copyFrom : copyFrom,
 		copyAllFrom : copyAllFrom
 	});
-    self.name = CLASS;
-	$$.IndexedMap = self;
 	
 	//
 	// Functions
