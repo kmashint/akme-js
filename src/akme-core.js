@@ -187,7 +187,7 @@ function(ary, fun /*, thisp */) {
 
 //Production steps of ECMA-262, Edition 5, 15.4.4.18  
 //Reference: http://es5.github.com/#x15.4.4.18  
-if (!Array.filter) Array.forEach = (Array.prototype.forEach) ? 
+if (!Array.forEach) Array.forEach = (Array.prototype.forEach) ? 
 function(ary) { Array.prototype.forEach.apply(ary, Array.prototype.slice.call(arguments,1)); } :
 function(ary, callback, thisArg ) {  
 
@@ -864,7 +864,7 @@ if (!akme.core) akme.core = {};
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
-	var self = $.extend(Object, function() {
+	function EventSource() {
 		if (console.logEnabled) console.log(this.constructor.name+" injecting "+CLASS+" arguments.length "+ arguments.length);
 		var p = {}; // private closure
 		function privates(caller) { return caller === PRIVATES ? p : undefined; };
@@ -875,9 +875,11 @@ if (!akme.core) akme.core = {};
 		this.doEvent = doEvent;
 
 		$.extendDestroy(this, destroy);
+	};
+	$.Storage = $.extend($.copyAll( // class constructor
+		EventSource, {name: CLASS} 
+	), { // super-static prototype, public functions
 	});
-	self.name = CLASS;
-	$$.EventSource = self;
 	
 	//
 	// Functions

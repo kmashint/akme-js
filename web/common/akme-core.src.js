@@ -188,7 +188,7 @@ function(ary, fun /*, thisp */) {
 
 //Production steps of ECMA-262, Edition 5, 15.4.4.18  
 //Reference: http://es5.github.com/#x15.4.4.18  
-if (!Array.filter) Array.forEach = (Array.prototype.forEach) ? 
+if (!Array.forEach) Array.forEach = (Array.prototype.forEach) ? 
 function(ary) { Array.prototype.forEach.apply(ary, Array.prototype.slice.call(arguments,1)); } :
 function(ary, callback, thisArg ) {  
 
@@ -865,7 +865,7 @@ if (!akme.core) akme.core = {};
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
-	var self = $.extend(Object, function() {
+	function EventSource() {
 		if (console.logEnabled) console.log(this.constructor.name+" injecting "+CLASS+" arguments.length "+ arguments.length);
 		var p = {}; // private closure
 		function privates(caller) { return caller === PRIVATES ? p : undefined; };
@@ -876,9 +876,11 @@ if (!akme.core) akme.core = {};
 		this.doEvent = doEvent;
 
 		$.extendDestroy(this, destroy);
+	};
+	$.Storage = $.extend($.copyAll( // class constructor
+		EventSource, {name: CLASS} 
+	), { // super-static prototype, public functions
 	});
-	self.name = CLASS;
-	$$.EventSource = self;
 	
 	//
 	// Functions
@@ -2178,24 +2180,28 @@ interface Storage {
 	//
 	// Private static declarations / closure
 	//
+	var CLASS = "akme.Storage";
 	var SPLIT_CHAR = ':';
 	
 	//
 	// Initialise instance and public functions
 	//
-	var self = $.extend(function(storage) {
+	function Storage(storage) {
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		this.getStorage = function() { return storage; };
-	}, {
+	};
+	$.Storage = $.extend($.copyAll( // class constructor
+		Storage, {name: CLASS} 
+	), { // super-static prototype, public functions
 		getItem : getItem,
 		setItem : setItem,
 		removeItem : removeItem,
 		getAll : getAll,
 		setAll : setAll,
-		removeAll : removeAll
+		removeAll : removeAll,
+		exportAll : exportAll,
+		clear : clear
 	});
-	self.name = "akme.Storage";
-	$.Storage = self;
 	
 	//
 	// Functions
@@ -2206,7 +2212,7 @@ interface Storage {
 	 */
 	function getItem(/*string*/ type, /*string*/ key) { 
 		var value = this.getStorage().getItem(type+SPLIT_CHAR+key);
-		this.doEvent({ name:"getItem", type:type, key:key, value:value });
+		this.doEvent({ type:"getItem", keyType:type, key:key, value:value });
 		return value;
 	}
 	
@@ -2215,7 +2221,7 @@ interface Storage {
 	 */
 	function setItem(/*string*/ type, /*string*/ key, /*string*/ value) { 
 		this.getStorage().setItem(type+SPLIT_CHAR+key, value);
-		this.doEvent({ name:"setItem", type:type, key:key, value:value });
+		this.doEvent({ type:"setItem", keyType:type, key:key, value:value });
 	}
 
 	/**
@@ -2223,7 +2229,7 @@ interface Storage {
 	 */
 	function removeItem(/*string*/ type, /*string*/ key) { 
 		this.getStorage().removeItem(type+SPLIT_CHAR+key); 
-		this.doEvent({ name:"removeItem", type:type, key:key });
+		this.doEvent({ type:"removeItem", keyType:type, key:key });
 	}
 	
 	function getAll(/*string*/ type) {
@@ -2238,7 +2244,7 @@ interface Storage {
 				count++;
 			}
 		}
-		this.doEvent({ name:"getAll", type:type, count:count, result:result });
+		this.doEvent({ type:"getAll", keyType:type, count:count, result:result });
 		return result;
 	}
 
@@ -2250,7 +2256,7 @@ interface Storage {
 			storage.setItem(key, map[mapKey]);
 			count++;
 		}
-		this.doEvent({ name:"setAll", type:type, count:count, map:map });
+		this.doEvent({ type:"setAll", keyType:type, count:count, map:map });
 	}
 
 	function removeAll(/*string*/ type) {
@@ -2264,7 +2270,25 @@ interface Storage {
 				count++;
 			}
 		}
-		this.doEvent({ name:"removeAll", type:type, count:count });
+		this.doEvent({ type:"removeAll", keyType:type, count:count });
+	}
+	
+	function exportAll() {
+		var storage = this.getStorage();
+		var result = {};
+		var count = 0;
+		for (var i=0; i<storage.length; i++) {
+			result[storage.key(i)] = storage.getItem(storage.key(i));
+			count++;
+		}
+		this.doEvent({ type:"exportAll", count:count, result:result });
+		return result;
+	}
+	
+	function clear() {
+		var count = this.size();
+		this.getStorage().clear();
+		this.doEvent({ type:"clear", count:count });
 	}
 	
 })(akme);
@@ -2276,6 +2300,7 @@ interface Storage {
 if (!akme.localStorage && localStorage) akme.localStorage = new akme.Storage({
 	name : "localStorage",
 	length : localStorage.length,
+	size : function() { this.length = localStorage.length; return this.length; },
 	key : function(idx) { return localStorage.key(idx); },
 	getItem : function(key) { return localStorage.getItem(key); },
 	setItem : function(key, value) { localStorage.setItem(key, value); this.length = localStorage.length; },
@@ -2286,9 +2311,10 @@ if (!akme.localStorage && localStorage) akme.localStorage = new akme.Storage({
 /**
  * akme.sessionStorage
  */
-if (!akme.sessionStorage && localStorage) akme.sessionStorage = new akme.Storage({
+if (!akme.sessionStorage && sessionStorage) akme.sessionStorage = new akme.Storage({
 	name : "sessionStorage",
 	length : sessionStorage.length,
+	size : function() { this.length = sessionStorage.length; return this.length; },
 	key : function(idx) { return sessionStorage.key(idx); },
 	getItem : function(key) { return sessionStorage.getItem(key); },
 	setItem : function(key, value) { sessionStorage.setItem(key, value); this.length = window.sessionStorage.length; },
