@@ -124,16 +124,17 @@ div.-target { display: block; background-color: lightgreen; }
  */
 for (var key in {"load":1,"hashchange":1}) window.attachEvent("on"+key, function(ev) {
 	// Check if exists and already a target.
-	var el = location.hash.length > 1 ? document.querySelector(location.hash) : null;
-	if (el && / ?-target ?/i.test(el.className)) return;
+	var el = location.hash.length > 1 ? document.getElementById(location.hash.substring(1)) : null;
+	if (el && /(^|\s)-target(\s|$)/.test(el.className)) return;
 	// Remove old targets.
 	var elems = document.querySelectorAll(".-target");
 	for (var i=0; i<elems.length; i++) {
 		var old = elems[i];
-		old.className = old.className.replace(/ ?-target ?/i, "");
+		old.className = old.className.replace(/(^|\s)-target(\s|$)/i, "");
 	}
 	// Add current target.
-	if (el) el.className += " -target"; //alert("#"+ el.id +".("+ el.className +")")
+	if (el) el.className = el.className.replace(/\s?$/, " -target");
+	//alert("#"+ el.id +".("+ el.className +")")
 });
 
 /*]]>*/</script><![endif]-->
