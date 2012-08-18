@@ -124,7 +124,7 @@ div.-target { display: block; background-color: lightgreen; }
  */
 for (var key in {"load":1,"hashchange":1}) window.attachEvent("on"+key, function(ev) {
 	// Check if exists and already a target.
-	var el = document.querySelector(location.hash);
+	var el = location.hash.length > 1 ? document.querySelector(location.hash) : null;
 	if (el && / ?-target ?/i.test(el.className)) return;
 	// Remove old targets.
 	var elems = document.querySelectorAll(".-target");
