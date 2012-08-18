@@ -1,0 +1,140 @@
+<!DOCTYPE html ><html><head>
+<title></title>
+<style>
+
+#globalnav {
+	position:relative;
+	float:left;
+	width:100%;
+	padding:0 0 1.75em 1em;
+	margin:0;
+	list-style:none;
+	line-height:1em;
+}
+
+#globalnav LI {
+	float:left;
+	margin:0;
+	padding:0;
+}
+
+#globalnav A {
+	display:block;
+	color:#444;
+	text-decoration:none;
+	font-weight:bold;
+	background:#ddd;
+	margin:0;
+	padding:0.25em 1em;
+	border-left:1px solid #fff;
+	border-top:1px solid #fff;
+	border-right:1px solid #aaa;
+}
+
+#globalnav A:hover,
+#globalnav A:active,
+#globalnav A.selected:link,
+#globalnav A.selected:visited {
+	background:#bbb;
+}
+
+#globalnav A.selected:link,
+#globalnav A.selected:visited {
+	position:relative;
+	z-index:102;
+}
+
+/*subnav*/
+
+#globalnav UL {
+	position:absolute;
+	left:0;
+	top:1.5em;
+	float:left;
+	background:#bbb;
+	width:100%;
+	margin:0;
+	padding:0.25em 0.25em 0.25em 1em;
+	list-style:none;
+	border-top:1px solid #fff;
+}
+
+#globalnav UL LI {
+	float:left;
+	display:block;
+	margin-top:1px;
+}
+
+#globalnav UL A {
+	background:#bbb;
+	color:#fff;
+	display:inline;
+	margin:0;
+	padding:0 1em;
+	border:0
+}
+
+#globalnav UL A:hover,
+#globalnav UL A:active,
+#globalnav UL A.selected:link,
+#globalnav UL A.selected:visited {
+	color:#444;
+}
+
+div.target { display: none; background-color: lightgray; }
+div:target { display: block; background-color: lightgreen; } 
+div.-target { display: block; background-color: lightgreen; } 
+/* :hover or :active (clicked) or :target (a name) */
+
+</style>
+</head><body>
+
+<form name='test'>
+<ul id="globalnav">
+  <li><a href="#help">Home</a></li>
+  <li><a href="#about" class="selected">About</a>
+    <ul>
+      <li><a href="#vision" class="selected">Vision</a></li>
+      <li><a href="#team">Team</a></li>
+      <li><a href="#culture">Culture</a></li>
+      <li><a href="#careers">Careers</a></li>
+      <li><a href="#history">History</a></li>
+      <li><a href="#sponsorship">Sponsorship</a></li>
+    </ul>
+  </li>
+  <li><a href="#news">News</a></li>
+  <li><a href="#proof">Proof</a></li>
+  <li><a href="#process">Process</a></li>
+  <li><a href="#expertise">Expertise</a></li>
+  <li><a href="#help">Help</a></li>
+</ul>
+</form>
+
+<br/><br/>
+<div id="vision" class="target">vision of sugarplums</div>
+
+<br/><br/>
+
+<!--[if IE 8]><script>/*<![CDATA[*/
+
+/**
+ * Helper for :target in IE8, will not work in IE7 or below.
+ * Duplicate the :target {} CSS rule as .-target {} and this will toggle that class upon hashchange.
+ * The rules need to be separate, avoiding the comma, since IE8 throws out the :target {} rule as invalid.
+ */
+for (var key in {"load":1,"hashchange":1}) window.attachEvent("on"+key, function(ev) {
+	// Check if exists and already a target.
+	var el = document.querySelector(location.hash);
+	if (el && / ?-target ?/i.test(el.className)) return;
+	// Remove old targets.
+	var elems = document.querySelectorAll(".-target");
+	for (var i=0; i<elems.length; i++) {
+		var old = elems[i];
+		old.className = old.className.replace(/ ?-target ?/i, "");
+	}
+	// Add current target.
+	if (el) el.className += " -target"; //alert("#"+ el.id +".("+ el.className +")")
+});
+
+/*]]>*/</script><![endif]-->
+</body></html>

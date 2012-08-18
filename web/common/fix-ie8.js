@@ -16,32 +16,30 @@ if ((document.documentMode && document.documentMode < 8) || !document.documentMo
 if ( Object.defineProperty && Object.getOwnPropertyDescriptor ) (function(){
 
 	// reroute properties
-	
-	routeProperty ( Element, "innerText", "textContent", true, true );
-	                
-	routeProperty ( Event, "srcElement", "target", true, false );
+	routeProperty( Element, "innerText", "textContent", true, true );
+	routeProperty( Event, "srcElement", "target", true, false );
 
 	// attach members to mimic functionality from other browsers
-	
-	attachFunction ( Event, "preventDefault", function () { this.returnValue = false; } );
-	
-	attachFunction ( Event, "stopPropagation", function () { this.cancelBubble = true; } );
+	//attachFunction( Element, "addEventListener", function (type, fn) { this.attachEvent("on"+type, fn); } );
+	//attachFunction( Element, "removeEventListener", function (type, fn) { this.detachEvent("on"+type, fn); } );
+	attachFunction( Event, "preventDefault", function () { this.returnValue = false; } );
+	attachFunction( Event, "stopPropagation", function () { this.cancelBubble = true; } );
 	
 	function routeProperty ( domConstructor, originalName, routedName, useGetter, useSetter ) {
-	      useGetter = ( useGetter === "undefined" ) ? false : true;
-	      useSetter = ( useSetter === "undefined" ) ? false : true;
+	    useGetter = !!useGetter;
+	    useSetter = !!useSetter;
 	      
-	      if ( !Object.getOwnPropertyDescriptor ( domConstructor.prototype, routedName ).get ) {
-	            var prpd = Object.getOwnPropertyDescriptor ( domConstructor.prototype, originalName );
-	            var prpSetGet = {};
-	            if ( useGetter ) prpSetGet.get = function () { return prpd.get.call ( this ); };
-	            if ( useSetter ) prpSetGet.set = function ( x ) { return prpd.set.call ( this, x ); };
-	            Object.defineProperty ( domConstructor.prototype, routedName, prpSetGet );
-	      }
+	    if ( !Object.getOwnPropertyDescriptor ( domConstructor.prototype, routedName ).get ) {
+	    	var prpd = Object.getOwnPropertyDescriptor ( domConstructor.prototype, originalName );
+	        var prpSetGet = {};
+	        if ( useGetter ) prpSetGet.get = function () { return prpd.get.call( this ); };
+	        if ( useSetter ) prpSetGet.set = function ( x ) { return prpd.set.call( this, x ); };
+	        Object.defineProperty ( domConstructor.prototype, routedName, prpSetGet );
+	    }
 	}
 	
 	function attachFunction ( domConstructor, name, delegate ) {
-		if ( typeof ( domConstructor.prototype [ name ] ) === "undefined" ) domConstructor.prototype [ name ] = delegate;
+		if ( typeof ( domConstructor.prototype[name] ) === "undefined" ) domConstructor.prototype[name] = delegate;
 	}
 
 })();
