@@ -25,6 +25,26 @@ if ( Object.defineProperty && Object.getOwnPropertyDescriptor ) (function(){
 	attachFunction( Event, "preventDefault", function () { this.returnValue = false; } );
 	attachFunction( Event, "stopPropagation", function () { this.cancelBubble = true; } );
 	
+	/**
+	 * Helper for :target in IE8, will not work in IE7 or below.
+	 * Duplicate the :target {} CSS rule as .-target {} and this will toggle that class upon hashchange.
+	 * The rules need to be separate, avoiding the comma, since IE8 throws out the :target {} rule as invalid.
+	 */
+	for (var key in {"load":1,"hashchange":1}) window.attachEvent("on"+key, function(ev) {
+		// Check if exists and already a target.
+		var el = location.hash.length > 1 ? document.getElementById(location.hash.substring(1)) : null;
+		if (el && /(^|\s)-target(\s|$)/.test(el.className)) return;
+		// Remove old targets.
+		var elems = document.querySelectorAll(".-target");
+		for (var i=0; i<elems.length; i++) {
+			var old = elems[i];
+			old.className = old.className.replace(/(^|\s)-target(\s|$)/i, "");
+		}
+		// Add current target.
+		if (el) el.className = el.className.replace(/\s?$/, " -target");
+		//alert("#"+ el.id +".("+ el.className +")")
+	});
+	
 	function routeProperty ( domConstructor, originalName, routedName, useGetter, useSetter ) {
 	    useGetter = !!useGetter;
 	    useSetter = !!useSetter;
