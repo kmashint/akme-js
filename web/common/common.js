@@ -25,8 +25,13 @@ if (!akme.core.Template) akme.core.Template = akme.extend(akme.copyAll(function(
 					// new akme.core.Template("templateScript", function(){}) can be used in a template xhtml.
 					//if (console.logEnabled) console.log(789)
 					var template = akme.getContext().get(scriptId || "templateScript");
-					if (template) template.callback({type:"load", target:template});
-					if (callback) callback(xhr);
+					if (template) {
+						if (template.callback) template.callback({type:"load", target:template});
+						if (callback) callback({type:"load", target:template});
+					} else {
+						template = new akme.core.Template(scriptId || "templateScript", callback);
+						if (callback) template.callback({type:"load", target:template});
+					}
 				});
 			};
 			xhr.send();
