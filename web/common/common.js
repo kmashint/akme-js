@@ -2,7 +2,7 @@
 
 akme.onLoad(function() {
 	console.logEnabled = true;
-	akme.core.Template.load("template/main.xhtml");
+	akme.core.Template.load("template/main.xhtml", null, function(){ console.log("Template.load"); });
 	// main.xhtml then should have a new akme.core.Template("templateScript", function() { ... });
 });
 
@@ -14,19 +14,19 @@ if (!akme.core.Template) akme.core.Template = akme.extend(akme.copyAll(function(
 		if (script && script.onload) script.onload({type:"load", target:script});
 	}, 
 	{ // .constructor function class additions
-		name: "akme.core.Template",
-		load: function(name) {
+		CLASS: "akme.core.Template",
+		load: function(name,scriptId,callback) {
 			var xhr = akme.xhr.open("GET", name);
 			xhr.onreadystatechange = function(ev) {
 				if (xhr.readyState !== 4) return; 
 				var xmldom = akme.xhr.getResponseXML(xhr);
 				akme.importElementsReplaceById(document, xmldom, function(){
 					// Called after all scripts have loaded.
-					// new akme.core.Template().setContext(akme.getContext()) ensures something is run.
-					// and puts the current templateScript in the Context.
-					console.log(789)
-					var template = akme.getContext().get("templateScript");
-					template.callback({type:"load", target:template});
+					// new akme.core.Template("templateScript", function(){}) can be used in a template xhtml.
+					//if (console.logEnabled) console.log(789)
+					var template = akme.getContext().get(scriptId || "templateScript");
+					if (template) template.callback({type:"load", target:template});
+					if (callback) callback(xhr);
 				});
 			};
 			xhr.send();
