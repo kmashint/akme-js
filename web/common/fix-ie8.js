@@ -33,12 +33,12 @@ if ( Object.defineProperty && Object.getOwnPropertyDescriptor ) (function(){
 	for (var key in {"load":1,"hashchange":1}) window.attachEvent("on"+key, function(ev) {
 		// Check if exists and already a target.
 		var el = location.hash.length > 1 ? document.getElementById(location.hash.substring(1)) : null;
-		if (el && /(^|\s)-target(\s|$)/.test(el.className)) return;
+		if (el && /(^|\s)-target(\s|$)/i.test(el.className)) return;
 		// Remove old targets.
 		var elems = document.querySelectorAll(".-target");
 		for (var i=0; i<elems.length; i++) {
 			var old = elems[i];
-			old.className = old.className.replace(/(^|\s)-target(\s|$)/i, "");
+			old.className = old.className.replace(/(^|\s)-target(\s|$)/i, " ");
 		}
 		// Add current target.
 		if (el) el.className = el.className.replace(/\s?$/, " -target");

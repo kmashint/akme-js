@@ -33,13 +33,13 @@
 
 #globalnav A:hover,
 #globalnav A:active,
-#globalnav A.selected:link,
-#globalnav A.selected:visited {
+#globalnav A.active:link,
+#globalnav A.active:visited {
 	background:#bbb;
 }
 
-#globalnav A.selected:link,
-#globalnav A.selected:visited {
+#globalnav A.active:link,
+#globalnav A.active:visited {
 	position:relative;
 	z-index:102;
 }
@@ -76,8 +76,8 @@
 
 #globalnav UL A:hover,
 #globalnav UL A:active,
-#globalnav UL A.selected:link,
-#globalnav UL A.selected:visited {
+#globalnav UL A.active:link,
+#globalnav UL A.active:visited {
 	color:#444;
 }
 
@@ -89,12 +89,11 @@ div.-target { display: block; background-color: lightgreen; }
 </style>
 </head><body>
 
-<form name='test'>
 <ul id="globalnav">
   <li><a href="#help">Home</a></li>
-  <li><a href="#about" class="selected">About</a>
+  <li><a href="#about" class="active">About</a>
     <ul>
-      <li><a href="#vision" class="selected">Vision</a></li>
+      <li><a href="#vision">Vision</a></li>
       <li><a href="#team">Team</a></li>
       <li><a href="#culture">Culture</a></li>
       <li><a href="#careers">Careers</a></li>
@@ -108,7 +107,6 @@ div.-target { display: block; background-color: lightgreen; }
   <li><a href="#expertise">Expertise</a></li>
   <li><a href="#help">Help</a></li>
 </ul>
-</form>
 
 <br/><br/>
 <div id="vision" class="target">vision of sugarplums</div>
@@ -130,7 +128,7 @@ for (var key in {"load":1,"hashchange":1}) window.attachEvent("on"+key, function
 	var elems = document.querySelectorAll(".-target");
 	for (var i=0; i<elems.length; i++) {
 		var old = elems[i];
-		old.className = old.className.replace(/(^|\s)-target(\s|$)/i, "");
+		old.className = old.className.replace(/(^|\s)-target(\s|$)/i, " ");
 	}
 	// Add current target.
 	if (el) el.className = el.className.replace(/\s?$/, " -target");
@@ -138,4 +136,44 @@ for (var key in {"load":1,"hashchange":1}) window.attachEvent("on"+key, function
 });
 
 /*]]>*/</script><![endif]-->
+<script>/*<![CDATA[*/
+
+if (!this.console) this.console = { log : function(){} };
+
+if (!this.akme) this.akme = {
+	onEvent : function(elem, type, fn) {
+		if (this.isW3C) elem.addEventListener(type, fn, false);
+		else elem.attachEvent("on"+type, fn);
+	},
+	getEventElement : function(ev) {
+		if (!ev.target && ev.srcElement) ev.target = ev.srcElement;
+		return (ev.target && ev.target.nodeType != 1) ? ev.target.parentNode : ev.target;
+	},
+	replaceActive : function(elem, selectorStr) {
+		var elems = elem.parentNode.parentNode.querySelectorAll(selectorStr);
+		for (var i=0; i<elems.length; i++) elems[i].className = elems[i].className.replace(/(^|\s)active(\s|$)/, " ");
+		elem.className = elem.className.replace(/\s?$/, " active");
+	}
+};
+
+akme.onEvent(window, "load", function(ev) { 
+	handleNav({ type: ev.type, target: document.querySelector("#globalnav .active") });
+});
+akme.onEvent(document.getElementById("globalnav"), "click", handleNav);
+
+function handleNav(ev) {
+	//console.log(akme.getEventElement(ev).href);
+	var elem = akme.getEventElement(ev);
+	var parentSelector = "ul#globalnav>li>a.active";
+	var childSelector = "li>a.active";
+	if (elem.parentNode.parentNode.id == "#globalnav") {
+		akme.replaceActive(elem, parentSelector);
+		elem = elem.parentNode.querySelector("ul:first-child>li:first-child>a");
+		akme.replaceActive(elem, childSelector);
+	} else {
+		akme.replaceActive(elem, childSelector);
+	}
+}
+
+/*]]>*/</script>
 </body></html>

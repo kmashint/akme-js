@@ -22,13 +22,12 @@ interface Storage {
  * This gives the Storage API a collection/type name in addition to the key.
  * The underlying W3C Storage can be retrieved from akme.localStorage.getStorage() or akme.sessionStorage.getStorage().
  */
-(function($) {
-	if ($.Storage) return; // One-time.
+(function($,CLASS) {
+	if ($.getProperty(CLASS)) return; // One-time.
 	
 	//
 	// Private static declarations / closure
 	//
-	var CLASS = "akme.Storage";
 	var SPLIT_CHAR = ':';
 	
 	//
@@ -38,8 +37,8 @@ interface Storage {
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		this.getStorage = function() { return storage; };
 	};
-	$.Storage = $.extend($.copyAll( // class constructor
-		Storage, {name: CLASS} 
+	$.setProperty(CLASS, $.extend($.copyAll( // class constructor
+		Storage, {CLASS: CLASS} 
 	), { // super-static prototype, public functions
 		getItem : getItem,
 		setItem : setItem,
@@ -49,7 +48,7 @@ interface Storage {
 		removeAll : removeAll,
 		exportAll : exportAll,
 		clear : clear
-	});
+	}));
 	
 	//
 	// Functions
@@ -139,15 +138,15 @@ interface Storage {
 		this.doEvent({ type:"clear", count:count });
 	}
 	
-})(akme);
+})(akme,"akme.core.Storage");
 
 
 /**
  * akme.localStorage
  */
-if (!akme.localStorage && localStorage) akme.localStorage = new akme.Storage({
+if (!akme.localStorage && localStorage) akme.localStorage = new akme.core.Storage({
 	name : "localStorage",
-	length : localStorage.length,
+	length : typeof localStorage !== "undefined" ? localStorage.length : 0,
 	size : function() { this.length = localStorage.length; return this.length; },
 	key : function(idx) { return localStorage.key(idx); },
 	getItem : function(key) { return localStorage.getItem(key); },
@@ -159,9 +158,9 @@ if (!akme.localStorage && localStorage) akme.localStorage = new akme.Storage({
 /**
  * akme.sessionStorage
  */
-if (!akme.sessionStorage && sessionStorage) akme.sessionStorage = new akme.Storage({
+if (!akme.sessionStorage && sessionStorage) akme.sessionStorage = new akme.core.Storage({
 	name : "sessionStorage",
-	length : sessionStorage.length,
+	length : typeof sessionStorage !== "undefined" ? sessionStorage.length : 0,
 	size : function() { this.length = sessionStorage.length; return this.length; },
 	key : function(idx) { return sessionStorage.key(idx); },
 	getItem : function(key) { return sessionStorage.getItem(key); },

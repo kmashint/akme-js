@@ -412,7 +412,8 @@ function(ary, callbackfn /*, initialValue */) {
 
 
 if (!this.akme) this.akme = {
-	WHITESPACE_TRIM_REGEXP : /^\s*|\s*$/,
+	THIS : this,
+	WHITESPACE_TRIM_REGEXP : /^\s*|\s*$/gm,
 	PRINTABLE_EXCLUDE_REGEXP : /[^\x20-\x7e\xc0-\xff]/g,
 		
 	/**
@@ -652,8 +653,8 @@ if (!akme.core) akme.core = {};
 /**
  * akme.core.Access
  */
-(function($,$$){
-	if ($$.Access) return; // One-time.
+(function($,CLASS){
+	if ($.getProperty($.THIS,CLASS)) return; // One-time.
 	
 	//
 	// Private static declarations / closure
@@ -662,10 +663,12 @@ if (!akme.core) akme.core = {};
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
-	var self = $.extend(Object, function() {
+	function Access() {
 		//$.extendDestroy(this, function(){});
-	});
-	$.copy(self.prototype, {
+	};
+	$.extend($.copyAll( // class constructor
+		Access, {CLASS: CLASS}
+	), { // super-static prototype, public functions
 		clear : null, // any use as related to JPA EntityManager?
 		flush : null, // any use as related to JPA EntityManager?
 		sync : null, // instead of refresh? sync is better with HTML5 Offline Apps
@@ -678,21 +681,21 @@ if (!akme.core) akme.core = {};
 		write : null, // given Object return Object
 		remove : null // given Object return Object
 	});
-	self.name = "akme.core.Access";
-	$$.Access = self;
+	$.setProperty($.THIS, CLASS, Access);
 	
 	//
 	// Functions
 	//
 	
-})(akme,akme.core);
+})(akme,"akme.core.Access");
 
 
 /**
  * akme.core.Data
  */
-(function($,$$){
-	
+(function($,CLASS){
+	if ($.getProperty($.THIS,CLASS)) return; // One-time.
+
 	//
 	// Private static declarations / closure
 	//
@@ -700,35 +703,35 @@ if (!akme.core) akme.core = {};
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
-	var self = $.extend(function() {
-	}, {
+	// This gives a example of using .prototype directly, not using $.extend.
+	function Data() {};
+	$.copyAll(Data, {CLASS: CLASS}); // class constructor
+	$.copyAll(Data.prototype, { // super-static prototype, public functions
 		toString : toString
 	});
-	self.name = "akme.core.Data";
-	$$.Data = self;
+	$.setProperty($.THIS, CLASS, Data);
 
 	//
 	// Functions
 	//
 	
 	function toString() {
-		return this.constructor.name+$.formatJSON(this);
+		return this.constructor.CLASS+$.formatJSON(this);
 	}
 	
-})(akme,akme.core);
+})(akme,"akme.core.Data");
 
 
 
 /**
  * akme.core.IndexedMap
  */
-(function($,$$){
-	if ($$.IndexedMap) return; // One-time.
+(function($,CLASS){
+	if ($.getProperty($.THIS,CLASS)) return; // One-time.
   
 	//
 	// Private static declarations / closure
 	//
-	var CLASS = "akme.core.IndexedMap";
 	function PRIVATES(self) { return self.privates(PRIVATES); }
 
 	//
@@ -741,8 +744,8 @@ if (!akme.core) akme.core = {};
 		this.length = p.ary.length;
 		this.privates = privates;
 	};
-	$$.IndexedMap = $.extend($.copyAll( // class constructor
-		Storage, {name: CLASS} 
+	$.extend($.copyAll( // class constructor
+		IndexedMap, {CLASS: CLASS} 
 	), { // super-static prototype, public functions
     	size : size,
     	linkMapTo : linkMapTo,
@@ -759,6 +762,7 @@ if (!akme.core) akme.core = {};
 		copyFrom : copyFrom,
 		copyAllFrom : copyAllFrom
 	});
+	$.setProperty($.THIS, CLASS, IndexedMap);
 	
 	//
 	// Functions
@@ -844,7 +848,7 @@ if (!akme.core) akme.core = {};
 		return this;
 	}
 
-})(akme,akme.core);
+})(akme,"akme.core.IndexedMap");
 
 
 /**
@@ -853,20 +857,19 @@ if (!akme.core) akme.core = {};
  * This is intended to be used via akme.core.EventSource.apply(this) to construct/inject functionality 
  * into objects rather than act as a prototype/super-static.
  */
-(function($,$$){
-	if ($$.EventSource) return; // One-time.
+(function($,CLASS){
+	if ($.getProperty($.THIS,CLASS)) return; // One-time.
 
 	//
 	// Private static declarations / closure
 	//
-	var CLASS = "akme.core.EventSource";
 	function PRIVATES(self) { return self.events(PRIVATES); }
 
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
 	function EventSource() {
-		if (console.logEnabled) console.log(this.constructor.name+" injecting "+CLASS+" arguments.length "+ arguments.length);
+		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
 		var p = {}; // private closure
 		function privates(caller) { return caller === PRIVATES ? p : undefined; };
 		
@@ -877,17 +880,16 @@ if (!akme.core) akme.core = {};
 
 		$.extendDestroy(this, destroy);
 	};
-	$.Storage = $.extend($.copyAll( // class constructor
-		EventSource, {name: CLASS} 
-	), { // super-static prototype, public functions
-	});
+	// Example of extend with the Object super-class constructor-function first, then the sub-class constructor.
+	$.extend(Object, $.copyAll(EventSource, {CLASS: CLASS}));
+	$.setProperty($.THIS, CLASS, EventSource);
 	
 	//
 	// Functions
 	//
 
 	function destroy() {
-		if (console.logEnabled) console.log(this.constructor.name+".destroy()");
+		if (console.logEnabled) console.log(this.constructor.CLASS+".destroy()");
 		var map = PRIVATES(this);
 		for (var key in map) delete map[key];
 	}
@@ -896,13 +898,13 @@ if (!akme.core) akme.core = {};
 	 * Append the given function to the event handlers for the named event.
 	 * The fnOrHandleEventObject can be a function(ev){...} or { handleEvent:function(ev){...} }.
 	 */
-	function onEvent(name, fnOrHandleEventOb) {
+	function onEvent(type, fnOrHandleEventOb) {
 		if (!(typeof fnOrHandleEventOb === "function" || typeof fnOrHandleEventOb.handleEvent === "function")) {
-			throw new TypeError(this.constructor.name+".onEvent given neither function(ev){...} nor { handleEvent:function(ev){...} }");
+			throw new TypeError(this.constructor.CLASS+".onEvent given neither function(ev){...} nor { handleEvent:function(ev){...} }");
 		}
 		var EVENTS = PRIVATES(this);
-		var a = EVENTS[name];
-		if (!a) { a = []; EVENTS[name] = a; }
+		var a = EVENTS[type];
+		if (!a) { a = []; EVENTS[type] = a; }
 		a.push($.fixHandleEvent(fnOrHandleEventOb));
 	}
 
@@ -910,16 +912,16 @@ if (!akme.core) akme.core = {};
 	 * Remove the given function from the event handlers for the named event.
 	 * The fnOrHandleEventObject can be a function(ev){...} or { handleEvent:function(ev){...} }.
 	 */
-	function unEvent(name, fnOrHandleEventOb) {
+	function unEvent(type, fnOrHandleEventOb) {
 		var EVENTS = PRIVATES(this);
-		var a = EVENTS[name];
+		var a = EVENTS[type];
 		if (!a) return;
 		for (var i=0; i<a.length; i++) if (a[i] === fnOrHandleEventOb) { a.splice(i,1); }
 	}
 
 	function doEvent(ev) {
 		var EVENTS = PRIVATES(this);
-		var a = EVENTS[ev.name];
+		var a = EVENTS[ev.type];
 		if (a) for (var i=0; i<a.length; i++) {
 			var eh = a[i];
 			if (typeof eh === "function") eh(ev);
@@ -927,4 +929,4 @@ if (!akme.core) akme.core = {};
 		}
 	}
 
-})(akme,akme.core);
+})(akme,"akme.core.EventSource");

@@ -12,7 +12,8 @@
 	//
 	// Private static declarations / closure
 	//
-	var CONTEXT,
+	var CLASS = "akme.getContext",
+		CONTEXT,
 		//LOCK = [true], // var lock = LOCK.pop(); if (lock) try { ... } finally { if (lock) LOCK.push(lock); }
 		INSTANCE_COUNT = 0,
 		INSTANCE_MAP = {},
@@ -75,7 +76,6 @@
 	 * Will NOT return undefined.
 	 */
 	function get(id) {
-		// TODO, maybe v2: prototype handling vs default singleton
 		var o = INSTANCE_MAP[id];
 		if (typeof o === "function") o = akme.newApplyArgs(o, Array.prototype.slice.call(arguments, 1));
 		if (o === undefined) o = null;
