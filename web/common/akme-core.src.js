@@ -733,14 +733,14 @@ if (!akme.core) akme.core = {};
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES(self) { return self.privates(PRIVATES); }
+	function PRIVATES() { return this.privates.call(PRIVATES); }
 
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
 	function IndexedMap() {
 		var p = { map : {}, ary : [] }; // private closure
-		function privates(caller) { return caller === PRIVATES ? p : undefined; };
+		function privates() { return this === PRIVATES ? p : undefined; };
 		
 		this.length = p.ary.length;
 		this.privates = privates;
@@ -770,37 +770,37 @@ if (!akme.core) akme.core = {};
 	//
 
 	// Public functions that use PRIVATES and in turn the privileged this.privates().
-	function linkMapTo (obj,key) { obj[key] = PRIVATES(this).map; return this; };
-	function size () { return PRIVATES(this).ary.length; };
-	function keys () { return PRIVATES(this).ary.slice(0); };
-	function key (idx) { return PRIVATES(this).ary[idx]; };
+	function linkMapTo (obj,key) { obj[key] = PRIVATES.call(this).map; return this; };
+	function size () { return PRIVATES.call(this).ary.length; };
+	function keys () { return PRIVATES.call(this).ary.slice(0); };
+	function key (idx) { return PRIVATES.call(this).ary[idx]; };
 	function keySlice (start, end) { 
-		return end ? PRIVATES(this).ary.slice(start, end) : PRIVATES(this).ary.slice(start);
+		return end ? PRIVATES.call(this).ary.slice(start, end) : PRIVATES.call(this).ary.slice(start);
 	};
-	function value (idx) { var p = PRIVATES(this); return p.map[p.ary[idx]]; };
+	function value (idx) { var p = PRIVATES.call(this); return p.map[p.ary[idx]]; };
 	function values () {
-		var p = PRIVATES(this); 
+		var p = PRIVATES.call(this); 
 		var r = new Array(p.ary.length);
 		for (var i = 0; i < p.ary.length; i++) r[i] = p.map[p.ary[i]];
 		return r;
 	};
 	function valueSlice (start, end) {
-		var p = PRIVATES(this);
+		var p = PRIVATES.call(this);
 		if (!(end >= 0)) end = p.ary.length;
 		var r = new Array(end-start);
 		for (var i = start; i < end; i++) r[i-start] = p.map[p.ary[i]];
 		return r;
 	};
-	function get (key) { return PRIVATES(this).map[key]; };
+	function get (key) { return PRIVATES.call(this).map[key]; };
 	function set (key, val) {
-		var p = PRIVATES(this); 
+		var p = PRIVATES.call(this); 
 		if (!(key in p.map)) {
 			p.ary[p.ary.length] = key; this.length = p.ary.length; 
 		}
 		p.map[key] = val;
 	};
 	function remove (key) {
-		var p = PRIVATES(this); 
+		var p = PRIVATES.call(this); 
 		if (!(key in p.map)) return;
 		for (var i=0; i<p.ary.length; i++) if (p.ary[i]===key) {
 			p.ary.splice(i, 1); this.length = p.ary.length; break;
@@ -808,7 +808,7 @@ if (!akme.core) akme.core = {};
 		delete p.map[key];
 	};
 	function clear () {
-		var p = PRIVATES(this); 
+		var p = PRIVATES.call(this); 
 		p.ary.splice(0, p.ary.length);
 		this.length = 0;
 		for (var key in p.map) delete p.map[key];
@@ -864,7 +864,7 @@ if (!akme.core) akme.core = {};
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES(self) { return self.events(PRIVATES); }
+	function PRIVATES() { return this.events.call(PRIVATES); }
 
 	//
 	// Initialise constructor or singleton instance and public functions
@@ -872,7 +872,7 @@ if (!akme.core) akme.core = {};
 	function EventSource() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
 		var p = {}; // private closure
-		function privates(caller) { return caller === PRIVATES ? p : undefined; };
+		function privates() { return this === PRIVATES ? p : undefined; };
 		
 		this.events = privates;
 		this.onEvent = onEvent;
@@ -891,7 +891,7 @@ if (!akme.core) akme.core = {};
 
 	function destroy() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+".destroy()");
-		var map = PRIVATES(this);
+		var map = PRIVATES.call(this);
 		for (var key in map) delete map[key];
 	}
 	
@@ -903,7 +903,7 @@ if (!akme.core) akme.core = {};
 		if (!(typeof fnOrHandleEventOb === "function" || typeof fnOrHandleEventOb.handleEvent === "function")) {
 			throw new TypeError(this.constructor.CLASS+".onEvent given neither function(ev){...} nor { handleEvent:function(ev){...} }");
 		}
-		var EVENTS = PRIVATES(this);
+		var EVENTS = PRIVATES.call(this);
 		var a = EVENTS[type];
 		if (!a) { a = []; EVENTS[type] = a; }
 		a.push($.fixHandleEvent(fnOrHandleEventOb));
@@ -914,14 +914,14 @@ if (!akme.core) akme.core = {};
 	 * The fnOrHandleEventObject can be a function(ev){...} or { handleEvent:function(ev){...} }.
 	 */
 	function unEvent(type, fnOrHandleEventOb) {
-		var EVENTS = PRIVATES(this);
+		var EVENTS = PRIVATES.call(this);
 		var a = EVENTS[type];
 		if (!a) return;
 		for (var i=0; i<a.length; i++) if (a[i] === fnOrHandleEventOb) { a.splice(i,1); }
 	}
 
 	function doEvent(ev) {
-		var EVENTS = PRIVATES(this);
+		var EVENTS = PRIVATES.call(this);
 		var a = EVENTS[ev.type];
 		if (a) for (var i=0; i<a.length; i++) {
 			var eh = a[i];
