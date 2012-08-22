@@ -2178,7 +2178,7 @@ interface Storage {
  * The underlying W3C Storage can be retrieved from akme.localStorage.getStorage() or akme.sessionStorage.getStorage().
  */
 (function($,CLASS) {
-	if ($.getProperty(CLASS)) return; // One-time.
+	if ($.getProperty($.THIS,CLASS)) return; // One-time.
 	
 	//
 	// Private static declarations / closure
@@ -2192,7 +2192,7 @@ interface Storage {
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		this.getStorage = function() { return storage; };
 	};
-	$.setProperty(CLASS, $.extend($.copyAll( // class constructor
+	$.extend($.copyAll( // class constructor
 		Storage, {CLASS: CLASS} 
 	), { // super-static prototype, public functions
 		getItem : getItem,
@@ -2203,7 +2203,8 @@ interface Storage {
 		removeAll : removeAll,
 		exportAll : exportAll,
 		clear : clear
-	}));
+	});
+	$.setProperty($.THIS, CLASS, Storage);
 	
 	//
 	// Functions
@@ -2299,7 +2300,7 @@ interface Storage {
 /**
  * akme.localStorage
  */
-if (!akme.localStorage && localStorage) akme.localStorage = new akme.core.Storage({
+if (!akme.localStorage) akme.localStorage = new akme.core.Storage({
 	name : "localStorage",
 	length : typeof localStorage !== "undefined" ? localStorage.length : 0,
 	size : function() { this.length = localStorage.length; return this.length; },
@@ -2313,7 +2314,7 @@ if (!akme.localStorage && localStorage) akme.localStorage = new akme.core.Storag
 /**
  * akme.sessionStorage
  */
-if (!akme.sessionStorage && sessionStorage) akme.sessionStorage = new akme.core.Storage({
+if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 	name : "sessionStorage",
 	length : typeof sessionStorage !== "undefined" ? sessionStorage.length : 0,
 	size : function() { this.length = sessionStorage.length; return this.length; },

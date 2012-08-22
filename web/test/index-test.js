@@ -6,7 +6,7 @@ $(document).ready(function(){
 	console.logEnabled = true;
 
 	
-	module(akme.core.IndexedMap.name);
+	module(akme.core.IndexedMap.CLASS);
 
 	test("basic set/get/remove/clear", function() {
 		equal( typeof akme.core.IndexedMap, "function", "exists" );
@@ -41,7 +41,7 @@ $(document).ready(function(){
 	});
 
 	
-	module(akme.core.EventSource.name);
+	module(akme.core.EventSource.CLASS);
 
 	test("basics", function() {
 		equal( typeof akme.core.EventSource, "function", "exists" );
@@ -50,9 +50,9 @@ $(document).ready(function(){
 	
 	if (akme.sessionStorage) {
 	
-		module(akme.sessionStorage.name);
+		module(akme.sessionStorage.constructor.CLASS);
 		
-		test("basics", function() {
+		test(akme.sessionStorage.getStorage().name, function() {
 			//expect(4);
 			ok( !akme.sessionStorage.getItem("test","x"), "item test.x should not yet be stored" );
 			ok( !akme.sessionStorage.setItem("test","x",1), "set test.x=1" );
@@ -63,13 +63,13 @@ $(document).ready(function(){
 			equal( typeof akme.sessionStorage.events(), "undefined", "private events() returns undefined" );
 			
 			var evtFcn = function(ev){ 
-				ok(true, "Storage "+ ev.name +" "+ ev.value +" should fire events"); 
+				ok(true, "Storage "+ ev.type +" "+ ev.value +" should fire events"); 
 			};
 			akme.sessionStorage.onEvent("setItem", evtFcn);
 			akme.sessionStorage.setItem("test","x",2);
 			akme.sessionStorage.unEvent("setItem", evtFcn);
 			akme.sessionStorage.onEvent("setItem", function(ev){ 
-				ok(false, "Storage "+ ev.name +" "+ ev.value +" should no longer fire events after akme.sessionStorage.destroy()"); 
+				ok(false, "Storage "+ ev.type +" "+ ev.value +" should no longer fire events after akme.sessionStorage.destroy()"); 
 				} );
 			akme.sessionStorage.destroy();
 			akme.sessionStorage.setItem("test","x",3);
