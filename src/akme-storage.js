@@ -47,6 +47,7 @@ interface Storage {
 		setAll : setAll,
 		removeAll : removeAll,
 		exportAll : exportAll,
+		importAll : importAll,
 		clear : clear
 	});
 	$.setProperty($.THIS, CLASS, Storage);
@@ -131,6 +132,16 @@ interface Storage {
 		}
 		this.doEvent({ type:"exportAll", count:count, result:result });
 		return result;
+	}
+	
+	function importAll(/*object*/ map) {
+		var storage = this.getStorage();
+		var count = 0;
+		for (var key in map) {
+			storage.setItem(key, map[key]);
+			count++;
+		}
+		this.doEvent({ type:"importAll", count:count });
 	}
 	
 	function clear() {

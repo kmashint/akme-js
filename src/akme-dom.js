@@ -658,7 +658,8 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 		var origin = messageEvent.origin;
 		
 		if (content) {
-			content = storage[headers.method](headers.type, headers.key, content);
+			if ("importAll"===headers.method) storage[headers.method](akme.parseJSON(content));
+			else content = storage[headers.method](headers.type, headers.key, content);
 		} else {
 			content = storage[headers.method](headers.type, headers.key);
 		}
