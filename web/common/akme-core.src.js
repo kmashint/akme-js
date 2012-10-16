@@ -673,12 +673,13 @@ if (!akme.core) akme.core = {};
 		clear : null, // any use as related to JPA EntityManager?
 		flush : null, // any use as related to JPA EntityManager?
 		sync : null, // instead of refresh? sync is better with HTML5 Offline Apps
-		syncDecorator : null, // given Array return void,
+		syncDecorator : null, // given Array return void
 		find : null, // return Array
 		findOne : null, // return Object
-		findDecorator : null, // given Array return void,
+		findDecorator : null, // given Array return void
 		read : null, // return Object
-		readDecorator : null, // given Object return void,
+		readDecorator : null, // given Object return void
+		readMany : readMany,
 		write : null, // given Object return Object
 		remove : null // given Object return Object
 	});
@@ -687,6 +688,19 @@ if (!akme.core) akme.core = {};
 	//
 	// Functions
 	//
+	
+	function readMany(keys) {
+		var a = [];
+		if (!keys) return a;
+		if (keys instanceof Array) for (var i=0; i<keys.length; i++) {
+			a[a.length] = this.read(keys[i]);
+		} else if (keys instanceof Array) for (var key in keys) {
+			a[a.length] = this.read(keys[key]);
+		} else {
+			a[a.length] = this.read(keys);
+		}
+		return a;
+	}
 	
 })(akme,"akme.core.Access");
 
@@ -2523,22 +2537,17 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 		this.name = name;
 		this.url = url;
 		this.dataConstructor = $.getProperty(window, name);
-		$$.EventSource.apply(this);
+		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		//$.extendDestroy(this, function(){});
 	};
-	$.setProperty(CLASS, $.extend($.copyAll(
+	$.setProperty($.THIS, CLASS, $.extend($.copyAll(
 		CouchAccess, {CLASS: CLASS}
-	), {
-		find : null, // return Array
+	), $.copyAll(new $.core.Access, {
 		findOne : findOne, // return Object
-		findDecorator : null, // given Array return void
 		read : read, // return Object
-		readDecorator : null, // given Object return void
-		readMany : $$.AccessUtil.readMany, // return Object
 		write : write, // given Object return Object
 		remove : remove // given Object return Object
-		//removeAll : removeAll // careful!
-	}));
+	})));
 	
 	//
 	// Functions
@@ -2616,7 +2625,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 				typeof value == "string" ? value : akme.formatJSON(value, replacer));
 		var type = akme.xhr.getResponseContentType(xhr);
 		if (console.logEnabled) console.log("PUT "+ url, xhr.status, xhr.statusText, type);
-		var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? JSON.parse(xhr.responseText) : xhr.responseText;
+		var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? akme.parseJSON(xhr.responseText) : xhr.responseText;
 		if (result.ok && result.rev) {
 			value._id = result.id;
 			value._rev = result.rev;
@@ -2644,7 +2653,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 		var xhr = callWithRetry("DELETE", url, {"Accept": CONTENT_TYPE_JSON});
 		var type = akme.xhr.getResponseContentType(xhr);
 		if (console.logEnabled) console.log("DELETE "+ url, xhr.status, xhr.statusText, type);
-		var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? JSON.parse(xhr.responseText) : xhr.responseText;
+		var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? akme.parseJSON(xhr.responseText) : xhr.responseText;
 		if (result.ok && result.rev) {
 			akme.sessionStorage.removeItem(self.name, key);
 		}
