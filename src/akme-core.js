@@ -672,12 +672,13 @@ if (!akme.core) akme.core = {};
 		clear : null, // any use as related to JPA EntityManager?
 		flush : null, // any use as related to JPA EntityManager?
 		sync : null, // instead of refresh? sync is better with HTML5 Offline Apps
-		syncDecorator : null, // given Array return void,
+		syncDecorator : null, // given Array return void
 		find : null, // return Array
 		findOne : null, // return Object
-		findDecorator : null, // given Array return void,
+		findDecorator : null, // given Array return void
 		read : null, // return Object
-		readDecorator : null, // given Object return void,
+		readDecorator : null, // given Object return void
+		readMany : readMany,
 		write : null, // given Object return Object
 		remove : null // given Object return Object
 	});
@@ -686,6 +687,19 @@ if (!akme.core) akme.core = {};
 	//
 	// Functions
 	//
+	
+	function readMany(keys) {
+		var a = [];
+		if (!keys) return a;
+		if (keys instanceof Array) for (var i=0; i<keys.length; i++) {
+			a[a.length] = this.read(keys[i]);
+		} else if (keys instanceof Array) for (var key in keys) {
+			a[a.length] = this.read(keys[key]);
+		} else {
+			a[a.length] = this.read(keys);
+		}
+		return a;
+	}
 	
 })(akme,"akme.core.Access");
 

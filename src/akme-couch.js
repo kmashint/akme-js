@@ -25,22 +25,17 @@
 		this.name = name;
 		this.url = url;
 		this.dataConstructor = $.getProperty(window, name);
-		$$.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
+		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		//$.extendDestroy(this, function(){});
 	};
 	$.setProperty($.THIS, CLASS, $.extend($.copyAll(
 		CouchAccess, {CLASS: CLASS}
-	), {
-		find : null, // return Array
+	), $.copyAll(new $.core.Access, {
 		findOne : findOne, // return Object
-		findDecorator : null, // given Array return void
 		read : read, // return Object
-		readDecorator : null, // given Object return void
-		readMany : $$.AccessUtil.readMany, // return Object
 		write : write, // given Object return Object
 		remove : remove // given Object return Object
-		//removeAll : removeAll // careful!
-	}));
+	})));
 	
 	//
 	// Functions
