@@ -666,9 +666,9 @@ if (!akme.core) akme.core = {};
 	function Access() {
 		//$.extendDestroy(this, function(){});
 	};
-	$.extend($.copyAll( // class constructor
+	$.extend($.copyAll( // class-constructor function
 		Access, {CLASS: CLASS}
-	), { // super-static prototype, public functions
+	), { // super-static-prototype object
 		clear : null, // any use as related to JPA EntityManager?
 		flush : null, // any use as related to JPA EntityManager?
 		sync : null, // instead of refresh? sync is better with HTML5 Offline Apps
