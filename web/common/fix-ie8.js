@@ -13,8 +13,8 @@ if ((document.documentMode && document.documentMode < 8) || !document.documentMo
 	alert("Only IE8 and HTML5 browsers are supported.  Please upgrade your browser.");
 }
 
-if ( Object.defineProperty && Object.getOwnPropertyDescriptor ) (function(){
-
+if ( document.documentMode && document.documentMode == 8 ) (function(){
+	
 	// reroute properties
 	routeProperty( Element, "innerText", "textContent", true, true );
 	routeProperty( Event, "srcElement", "target", true, false );
@@ -49,17 +49,15 @@ if ( Object.defineProperty && Object.getOwnPropertyDescriptor ) (function(){
 	    useGetter = !!useGetter;
 	    useSetter = !!useSetter;
 	      
-	    if ( !Object.getOwnPropertyDescriptor ( domConstructor.prototype, routedName ).get ) {
-	    	var prpd = Object.getOwnPropertyDescriptor ( domConstructor.prototype, originalName );
-	        var prpSetGet = {};
-	        if ( useGetter ) prpSetGet.get = function () { return prpd.get.call( this ); };
-	        if ( useSetter ) prpSetGet.set = function ( x ) { return prpd.set.call( this, x ); };
-	        Object.defineProperty ( domConstructor.prototype, routedName, prpSetGet );
-	    }
+	    var prpd = Object.getOwnPropertyDescriptor ( domConstructor.prototype, originalName );
+		var prpSetGet = {};
+		if ( useGetter ) prpSetGet.get = function () { return prpd.get.call( this ); };
+		if ( useSetter ) prpSetGet.set = function ( x ) { return prpd.set.call( this, x ); };
+		Object.defineProperty ( domConstructor.prototype, routedName, prpSetGet );
 	}
 	
 	function attachFunction ( domConstructor, name, delegate ) {
-		if ( typeof ( domConstructor.prototype[name] ) === "undefined" ) domConstructor.prototype[name] = delegate;
+		domConstructor.prototype[name] = delegate;
 	}
 
 })();

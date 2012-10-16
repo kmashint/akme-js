@@ -62,6 +62,18 @@ akme.copyAll(this.akme, {
 		else if (this.isW3C) elem.removeEventListener(evnt, fnOrHandleEvent, false);
 		else elem.detachEvent("on"+evnt, typeof fnOrHandleEvent.handleEvent === "function" ? fnOrHandleEvent.handleEvent : fnOrHandleEvent);
 	},
+	/** 
+	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.
+	 * Ensures internally to be applied only once by setting _ie8fix = true on the object.
+	 */
+	fixHandleEvent : function (self) {
+		if (document.documentMode && document.documentMode < 9 && typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
+			var handleEvent = self.handleEvent;
+			self.handleEvent = function(ev) { handleEvent.call(self, ev); };
+			self.handleEvent._ie8fix = true;
+		}
+		return self;
+	},
 	/**
 	 * Return the element of the Event.target, using the target.parentNode if the target is not an element.
 	 */ 

@@ -1121,6 +1121,18 @@ akme.copyAll(this.akme, {
 		else if (this.isW3C) elem.removeEventListener(evnt, fnOrHandleEvent, false);
 		else elem.detachEvent("on"+evnt, typeof fnOrHandleEvent.handleEvent === "function" ? fnOrHandleEvent.handleEvent : fnOrHandleEvent);
 	},
+	/** 
+	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.
+	 * Ensures internally to be applied only once by setting _ie8fix = true on the object.
+	 */
+	fixHandleEvent : function (self) {
+		if (document.documentMode && document.documentMode < 9 && typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
+			var handleEvent = self.handleEvent;
+			self.handleEvent = function(ev) { handleEvent.call(self, ev); };
+			self.handleEvent._ie8fix = true;
+		}
+		return self;
+	},
 	/**
 	 * Return the element of the Event.target, using the target.parentNode if the target is not an element.
 	 */ 
@@ -1918,30 +1930,178 @@ if (!akme.form) akme.form = {
 		 }
 	},
 	
+	/**
+	 * Get the current value of the element, works for select, checkbox, radio.
+	 
 	getValue : function (elem) {
-		if ("selectedIndex" in elem) {
+		var a = elem instanceof NodeList ? elem : [elem];
+		var node = a[0].nodeName.toLowerCase();
+		var type = a[0].type;
+		if ("select"===node) {
 			return elem.options[selectedIndex].value;
-		} else if ("checked" in elem && "length" in elem) {
-			for (var i=0; i<elem.length; i++) if (elem[i].checked) return elem[i].value;
-			return elem[0].value;
+		} else if ("checkbox"===type || "radio"===type) {
+			if (elem instanceof NodeList) for (var i=0; i<a.length; i++) {
+				if (a[i].checked) return a[i].value;
+			}
+			return a[0].value;
 		} else {
 			return elem.value;
 		}
 	},
 	
-	setChecked : function (elem, value) {
-		for (var i=0; i<elem.options.length; i++) {
-			var optn = elem.options[i];
-			optn.checked = (optn.value == value);
+	/**
+	 * Set the current value of the element to the given value, works for select, checkbox, radio.
+	 
+	setValue : function (elem, value) {
+		var a = elem instanceof NodeList ? elem : [elem];
+		var node = a[0].nodeName.toLowerCase();
+		var type = a[0].type;
+		if ("select"===node) {
+			for (var i=0; i<elem.options.length; i++) {
+				var optn = elem.options[i];
+				optn.selected = (optn.value == value);
+				if (optn.selected) elem.selectedIndex = i;
+			}
+		} else if ("checkbox"===type || "radio"===type) {
+			for (var i=0; i<elem.options.length; i++) {
+				var optn = elem.options[i];
+				optn.checked = (optn.value == value);
+			}
+		} else {
+			elem.value = value;
 		}
+	}, */
+	
+	getValue : function (elem) {
+		var elem0 = elem instanceof NodeList ? elem[0] : elem;
+		var nodeName = elem0.nodeName.toLowerCase();
+		if ("select"==nodeName) {
+			return elem.options[elem.selectedIndex].value;
+		} 
+		else if ("input"==nodeName && ("radio"==elem0.type || "checkbox"==elem0.type)) {
+			if ("length" in elem0) {
+				for (var i=0; i<elem0.length; i++) if (elem0[i].checked) return elem0[i].value;
+				return "";
+			}
+			return elem.checked ? elem.value : "";
+		}
+		else return elem.value;
 	},
 	
-	setSelected : function (elem, value) {
-		for (var i=0; i<elem.options.length; i++) {
-			var optn = elem.options[i];
-			optn.selected = (optn.value == value);
-			if (optn.selected) elem.selectedIndex = i;  
+	setValue : function (elem, value) {
+		var elem0 = elem instanceof NodeList ? elem[0] : elem;
+		var nodeName = elem0.nodeName.toLowerCase();
+		if ("select"==nodeName) {
+			for (var i=0; i<elem.options.length; i++) {
+				var optn = elem.options[i];
+				optn.selected = (optn.value == value);
+				if (optn.selected) elem.selectedIndex = i;
+			}
 		}
+		else if ("input"==nodeName && ("radio"==elem0.type || "checkbox"==elem0.type)) {
+			if ("length" in elem0) {
+				for (var i=0; i<elem0.length; i++) {
+					var item = elem0[i];
+					item.checked = (value == item.value);
+				}
+			} 
+			else elem.checked = (value == elem.value);
+		}
+		else elem.value = value;
+	},
+
+	/** @deprecated - use setValue instead. */
+	setChecked : function (elem, value) {
+		this.setValue(elem, value);
+	},
+
+	/** @deprecated - use setValue instead. */
+	setSelected : function (elem, value) {
+		this.setValue(elem, value);
+	},
+	
+	/**
+	 * Get values from the form into a map, optionally given, but only those with a non-empty name.
+	 * Will make arrays under the name for repeating elements as is practice with web form submissions.
+	 * @returns the given or a new map ({} object). 
+	 
+	getIntoMap : function (form, map) {
+		if (!map) map = {}; 
+		for (var i=0; i<form.elements.length; i++) {
+			var elem = form.elements[i];
+			if (!elem.name) continue;
+			var a = map[elem.name];
+			var v = this.getValue(elem);
+			if (elem.name in map) {
+				if (a instanceof Array) a[a.length] = (v);
+				else map[elem.name] = [v];
+			} 
+			else map[elem.name] = v;
+		}
+		return map;
+	},
+	
+	/**
+	 * Set values in the form from the given map.
+	 
+	setFromMap : function (form, map) {
+		for (var key in map) {
+			var elem = form.elements[key];
+			if (!elem) continue;
+			var v = map[key];
+			if (elem instanceof NodeList) for (var i=0; i<v.length && i<elem.length; i++) {
+				this.setValue(elem[i], v[i]);
+			} else {
+				this.setValue(elem, v);
+			}
+		}
+	},
+	*/
+	
+
+	/** 
+	 * Get form element values into the given map or a new {} if map not given, handling repeating names as an array like Servlet API.
+	 * Will NOT copy elements with an empty name.
+	 */
+	getIntoMap : function (form, map) {
+		map = map || {};
+		for (var i=0; i<form.elements.length; i++) {
+			var elem = form.elements[i];
+			if (!("name" in elem) || elem.name.length === 0) continue;
+			var value = fw.form.getValue(elem);
+			var j = -1;
+			
+			if (elem.name in map) {
+				var item = map[elem.name];
+				if (item instanceof Array) {j = item.length; item[item.length] = value;}
+				else map[elem.name] = [item, value];
+			}
+			else map[elem.name] = value;
+			
+			if (console.logEnabled) console.log("get ", form.name, (j!=-1 ? elem.name+"["+i+"]" : elem.name), value);
+		}
+		return map;
+	},
+
+	/** 
+	 * Set form element values from the given map, handling repeating names as an array like Servlet API.
+	 */
+	setFromMap : function (form, map) {
+		for (var key in map) {
+			var elem = form.elements[key];
+			if (!elem) continue;
+			var value = map[key];
+			var wasAry = (value instanceof Array);
+			if (!wasAry) value = [value];
+			if (!(elem instanceof NodeList)) elem = [elem];
+			for (var i=0; i<value.length && i<elem.length; i++) {
+				fw.form.setValue(elem[i], value[i]);
+				if (console.logEnabled) console.log("set ", form.name, 
+						wasAry ? elem[i].name+"["+i+"]" : elem.name, 
+						wasAry ? elem[i].value : elem.value);
+			}
+		}
+		return form;
 	}
 
 };
@@ -2173,7 +2333,7 @@ interface Storage {
 */
 
 /**
- * akme.Storage
+ * akme.score.Storage
  * Provide underlying functions for akme.localStorage and akme.sessionStorage.
  * This gives the Storage API a collection/type name in addition to the key.
  * The underlying W3C Storage can be retrieved from akme.localStorage.getStorage() or akme.sessionStorage.getStorage().
@@ -2336,3 +2496,160 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 	removeItem : function(key) { sessionStorage.removeItem(key); this.length = window.sessionStorage.length; },
 	clear : function() { sessionStorage.clear(); this.length = window.sessionStorage.length; }
 });
+/*
+		var shiftAccess = new akme.core.CouchAccess("shiftdb", "../proxy/couchdb.jsp?/shiftdb");
+		shiftAccess.key = function(location, date, time) {
+			return location+"_"+date+"_"+time;
+		};
+		cx.set('shiftAccess', shiftAccess);
+ */
+
+/**
+ * akme.core.CouchAccess
+ */
+(function($,CLASS){
+	if ($.getProperty($.THIS,CLASS)) return; // One-time.
+	
+	//
+	// Private static declarations / closure
+	//
+	var CONTENT_TYPE_JSON = "application/json";
+		//CONTENT_TYPE_URLE = "application/x-www-form-urlencoded";
+	
+	//
+	// Initialise constructor or singleton instance and public functions
+	//
+	function CouchAccess(name, url) {
+		this.name = name;
+		this.url = url;
+		this.dataConstructor = $.getProperty(window, name);
+		$$.EventSource.apply(this);
+		//$.extendDestroy(this, function(){});
+	};
+	$.setProperty(CLASS, $.extend($.copyAll(
+		CouchAccess, {CLASS: CLASS}
+	), {
+		find : null, // return Array
+		findOne : findOne, // return Object
+		findDecorator : null, // given Array return void
+		read : read, // return Object
+		readDecorator : null, // given Object return void
+		readMany : $$.AccessUtil.readMany, // return Object
+		write : write, // given Object return Object
+		remove : remove // given Object return Object
+		//removeAll : removeAll // careful!
+	}));
+	
+	//
+	// Functions
+	//
+	
+	function reviver(key, value) {
+		if ("jsonReviver" in this.constructor) return this.constructor.jsonReviver.call(this, key, value);
+		else return value;
+	}
+	
+	function replacer(key, value) {
+		if ("jsonReplacer" in this.constructor) return this.constructor.jsonReplacer.call(this, key, value);
+		else return value;
+	}
+	
+	function callWithRetry(method, url, headers, content) {
+		//var self = this;
+		var xhr = null;
+		for (var i=0; i<1; i++) { // take away re-try to implement server-side but leave here as example
+			if (i!=0) {
+				//var xhr2 = authorize();
+				//if (xhr2.status >= 400) break;
+			}
+			xhr = akme.xhr.open(method, url, false);
+			for (var key in headers) xhr.setRequestHeader(key, headers[key]);
+			if (typeof content !== "undefined" && content !== null) xhr.send(content);
+			else xhr.send();
+			if (xhr.status != 401) break;
+		}
+		return xhr;
+	}
+
+	function findOne(map) {
+		var ary = this.find(map);
+		return ary.length === 0 ? ary[0] : null;
+	}
+	
+	/**
+	 * This maintains a copy of the key/value in sessionStorage.
+	 */
+	function read(key) { //if (console.logEnabled) console.log(this.name +".read("+ key +")");
+		var self = this;
+		var url = self.url+"/"+encodeURIComponent(key);
+		var xhr = callWithRetry("GET", url, {"Accept": CONTENT_TYPE_JSON}, null);
+		var type = akme.xhr.getResponseContentType(xhr);
+		if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
+		var value = (type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
+		if (value) {
+			akme.sessionStorage.setItem(self.name, key, value);
+			value = akme.parseJSON(value, reviver);
+			//delete value._id;
+			//delete value._rev;
+		} else {
+			akme.sessionStorage.removeItem(self.name, key);
+		}
+		if (this.dataConstructor && value) value = new this.dataConstructor(value);
+		this.doEvent({ type:"read", keyType:this.name, key:key, value:value });
+		return value;
+	}
+
+	/**
+	 * This maintains a copy of the key/value in sessionStorage.
+	 * This is so the caller doesn't have to manage the _id and _rev directly that are required to PUT in CouchDB.
+	 */
+	function write(key, value) { //if (console.logEnabled) console.log(this.name +".write("+ key +",...)");
+		var self = this;
+		var valueMap = akme.sessionStorage.getItemJSON(self.name, key);
+		if (valueMap && valueMap._id) {
+			value._id = valueMap._id;
+			value._rev = valueMap._rev;
+		}
+		var url = self.url+"/"+encodeURIComponent(key);
+		var xhr = callWithRetry("PUT", url, 
+				{"Accept": CONTENT_TYPE_JSON, "Content-Type": CONTENT_TYPE_JSON}, 
+				typeof value == "string" ? value : akme.formatJSON(value, replacer));
+		var type = akme.xhr.getResponseContentType(xhr);
+		if (console.logEnabled) console.log("PUT "+ url, xhr.status, xhr.statusText, type);
+		var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? JSON.parse(xhr.responseText) : xhr.responseText;
+		if (result.ok && result.rev) {
+			value._id = result.id;
+			value._rev = result.rev;
+			akme.sessionStorage.setItem(self.name, key, akme.formatJSON(value, replacer));
+		}
+		this.doEvent({ type:"write", keyType:this.name, key:key, value:value });
+		return result;
+	}
+	
+	/**
+	 * Remove the given revision or the latest if no rev is given.
+	 */
+	function remove(key, rev) { //if (console.logEnabled) console.log(this.name +".remove("+ key +")");
+		// TODO: KM: Perhaps change from a DELETE to just a save-empty with just key-rev?
+		// Save-empty rather than delete would reduce the 404 responses, but then there are blank records, normally a bad thing.
+		var self = this;
+		if (!rev) {
+			var url = self.url+"/"+encodeURIComponent(key);
+			var xhr = callWithRetry("HEAD", url, {"Accept": CONTENT_TYPE_JSON});
+			rev = xhr.getResponseHeader("ETag");
+			if (rev) rev = rev.replace(/^"|"$/g, "");
+			if (!rev) rev = "";
+		}
+		var url = self.url+"/"+encodeURIComponent(key)+"?rev="+encodeURIComponent(rev);
+		var xhr = callWithRetry("DELETE", url, {"Accept": CONTENT_TYPE_JSON});
+		var type = akme.xhr.getResponseContentType(xhr);
+		if (console.logEnabled) console.log("DELETE "+ url, xhr.status, xhr.statusText, type);
+		var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? JSON.parse(xhr.responseText) : xhr.responseText;
+		if (result.ok && result.rev) {
+			akme.sessionStorage.removeItem(self.name, key);
+		}
+		this.doEvent({ type:"remove", keyType:this.name, key:key });
+		return result;
+	}
+	
+})(akme,"akme.core.CouchAccess");

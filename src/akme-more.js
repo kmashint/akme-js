@@ -169,30 +169,178 @@ if (!akme.form) akme.form = {
 		 }
 	},
 	
+	/**
+	 * Get the current value of the element, works for select, checkbox, radio.
+	 
 	getValue : function (elem) {
-		if ("selectedIndex" in elem) {
+		var a = elem instanceof NodeList ? elem : [elem];
+		var node = a[0].nodeName.toLowerCase();
+		var type = a[0].type;
+		if ("select"===node) {
 			return elem.options[selectedIndex].value;
-		} else if ("checked" in elem && "length" in elem) {
-			for (var i=0; i<elem.length; i++) if (elem[i].checked) return elem[i].value;
-			return elem[0].value;
+		} else if ("checkbox"===type || "radio"===type) {
+			if (elem instanceof NodeList) for (var i=0; i<a.length; i++) {
+				if (a[i].checked) return a[i].value;
+			}
+			return a[0].value;
 		} else {
 			return elem.value;
 		}
 	},
 	
-	setChecked : function (elem, value) {
-		for (var i=0; i<elem.options.length; i++) {
-			var optn = elem.options[i];
-			optn.checked = (optn.value == value);
+	/**
+	 * Set the current value of the element to the given value, works for select, checkbox, radio.
+	 
+	setValue : function (elem, value) {
+		var a = elem instanceof NodeList ? elem : [elem];
+		var node = a[0].nodeName.toLowerCase();
+		var type = a[0].type;
+		if ("select"===node) {
+			for (var i=0; i<elem.options.length; i++) {
+				var optn = elem.options[i];
+				optn.selected = (optn.value == value);
+				if (optn.selected) elem.selectedIndex = i;
+			}
+		} else if ("checkbox"===type || "radio"===type) {
+			for (var i=0; i<elem.options.length; i++) {
+				var optn = elem.options[i];
+				optn.checked = (optn.value == value);
+			}
+		} else {
+			elem.value = value;
 		}
+	}, */
+	
+	getValue : function (elem) {
+		var elem0 = elem instanceof NodeList ? elem[0] : elem;
+		var nodeName = elem0.nodeName.toLowerCase();
+		if ("select"==nodeName) {
+			return elem.options[elem.selectedIndex].value;
+		} 
+		else if ("input"==nodeName && ("radio"==elem0.type || "checkbox"==elem0.type)) {
+			if ("length" in elem0) {
+				for (var i=0; i<elem0.length; i++) if (elem0[i].checked) return elem0[i].value;
+				return "";
+			}
+			return elem.checked ? elem.value : "";
+		}
+		else return elem.value;
 	},
 	
-	setSelected : function (elem, value) {
-		for (var i=0; i<elem.options.length; i++) {
-			var optn = elem.options[i];
-			optn.selected = (optn.value == value);
-			if (optn.selected) elem.selectedIndex = i;  
+	setValue : function (elem, value) {
+		var elem0 = elem instanceof NodeList ? elem[0] : elem;
+		var nodeName = elem0.nodeName.toLowerCase();
+		if ("select"==nodeName) {
+			for (var i=0; i<elem.options.length; i++) {
+				var optn = elem.options[i];
+				optn.selected = (optn.value == value);
+				if (optn.selected) elem.selectedIndex = i;
+			}
 		}
+		else if ("input"==nodeName && ("radio"==elem0.type || "checkbox"==elem0.type)) {
+			if ("length" in elem0) {
+				for (var i=0; i<elem0.length; i++) {
+					var item = elem0[i];
+					item.checked = (value == item.value);
+				}
+			} 
+			else elem.checked = (value == elem.value);
+		}
+		else elem.value = value;
+	},
+
+	/** @deprecated - use setValue instead. */
+	setChecked : function (elem, value) {
+		this.setValue(elem, value);
+	},
+
+	/** @deprecated - use setValue instead. */
+	setSelected : function (elem, value) {
+		this.setValue(elem, value);
+	},
+	
+	/**
+	 * Get values from the form into a map, optionally given, but only those with a non-empty name.
+	 * Will make arrays under the name for repeating elements as is practice with web form submissions.
+	 * @returns the given or a new map ({} object). 
+	 
+	getIntoMap : function (form, map) {
+		if (!map) map = {}; 
+		for (var i=0; i<form.elements.length; i++) {
+			var elem = form.elements[i];
+			if (!elem.name) continue;
+			var a = map[elem.name];
+			var v = this.getValue(elem);
+			if (elem.name in map) {
+				if (a instanceof Array) a[a.length] = (v);
+				else map[elem.name] = [v];
+			} 
+			else map[elem.name] = v;
+		}
+		return map;
+	},
+	
+	/**
+	 * Set values in the form from the given map.
+	 
+	setFromMap : function (form, map) {
+		for (var key in map) {
+			var elem = form.elements[key];
+			if (!elem) continue;
+			var v = map[key];
+			if (elem instanceof NodeList) for (var i=0; i<v.length && i<elem.length; i++) {
+				this.setValue(elem[i], v[i]);
+			} else {
+				this.setValue(elem, v);
+			}
+		}
+	},
+	*/
+	
+
+	/** 
+	 * Get form element values into the given map or a new {} if map not given, handling repeating names as an array like Servlet API.
+	 * Will NOT copy elements with an empty name.
+	 */
+	getIntoMap : function (form, map) {
+		map = map || {};
+		for (var i=0; i<form.elements.length; i++) {
+			var elem = form.elements[i];
+			if (!("name" in elem) || elem.name.length === 0) continue;
+			var value = fw.form.getValue(elem);
+			var j = -1;
+			
+			if (elem.name in map) {
+				var item = map[elem.name];
+				if (item instanceof Array) {j = item.length; item[item.length] = value;}
+				else map[elem.name] = [item, value];
+			}
+			else map[elem.name] = value;
+			
+			if (console.logEnabled) console.log("get ", form.name, (j!=-1 ? elem.name+"["+i+"]" : elem.name), value);
+		}
+		return map;
+	},
+
+	/** 
+	 * Set form element values from the given map, handling repeating names as an array like Servlet API.
+	 */
+	setFromMap : function (form, map) {
+		for (var key in map) {
+			var elem = form.elements[key];
+			if (!elem) continue;
+			var value = map[key];
+			var wasAry = (value instanceof Array);
+			if (!wasAry) value = [value];
+			if (!(elem instanceof NodeList)) elem = [elem];
+			for (var i=0; i<value.length && i<elem.length; i++) {
+				fw.form.setValue(elem[i], value[i]);
+				if (console.logEnabled) console.log("set ", form.name, 
+						wasAry ? elem[i].name+"["+i+"]" : elem.name, 
+						wasAry ? elem[i].value : elem.value);
+			}
+		}
+		return form;
 	}
 
 };

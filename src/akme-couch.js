@@ -25,10 +25,10 @@
 		this.name = name;
 		this.url = url;
 		this.dataConstructor = $.getProperty(window, name);
-		$$.EventSource.apply(this);
+		$$.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		//$.extendDestroy(this, function(){});
 	};
-	$.setProperty(CLASS, $.extend($.copyAll(
+	$.setProperty($.THIS, CLASS, $.extend($.copyAll(
 		CouchAccess, {CLASS: CLASS}
 	), {
 		find : null, // return Array
@@ -118,7 +118,7 @@
 				typeof value == "string" ? value : akme.formatJSON(value, replacer));
 		var type = akme.xhr.getResponseContentType(xhr);
 		if (console.logEnabled) console.log("PUT "+ url, xhr.status, xhr.statusText, type);
-		var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? JSON.parse(xhr.responseText) : xhr.responseText;
+		var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? akme.parseJSON(xhr.responseText) : xhr.responseText;
 		if (result.ok && result.rev) {
 			value._id = result.id;
 			value._rev = result.rev;
@@ -146,7 +146,7 @@
 		var xhr = callWithRetry("DELETE", url, {"Accept": CONTENT_TYPE_JSON});
 		var type = akme.xhr.getResponseContentType(xhr);
 		if (console.logEnabled) console.log("DELETE "+ url, xhr.status, xhr.statusText, type);
-		var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? JSON.parse(xhr.responseText) : xhr.responseText;
+		var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? akme.parseJSON(xhr.responseText) : xhr.responseText;
 		if (result.ok && result.rev) {
 			akme.sessionStorage.removeItem(self.name, key);
 		}
