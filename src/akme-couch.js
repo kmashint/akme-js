@@ -28,14 +28,15 @@
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		//$.extendDestroy(this, function(){});
 	};
-	$.setProperty($.THIS, CLASS, $.extend($.copyAll(
+	$.extend($.copyAll(
 		CouchAccess, {CLASS: CLASS}
 	), $.copyAll(new $.core.Access, {
 		findOne : findOne, // return Object
 		read : read, // return Object
 		write : write, // given Object return Object
 		remove : remove // given Object return Object
-	})));
+	}));
+	$.setProperty($.THIS, CLASS, CouchAccess);
 	
 	//
 	// Functions
