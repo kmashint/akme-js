@@ -1,0 +1,57 @@
+<!DOCTYPE html ><html>
+<head>
+<title>test</title>
+<http-equiv name='X-UA-Compatible' content='IE=edge'/>
+</head>
+<body>
+<div style='width:100px; height: 100px; background-color: yellowgreen;'>
+	<div style='width:50px; height: 50px; background-color: goldenrod;'>&nbsp;</div>
+</div>
+<script src='../common/fix-ie8.js'></script>
+<script>
+if (document.documentMode && document.documentMode == 8) {
+
+	if (!this.akme) this.akme = {};
+
+	akme.attachEvent = ( function(old) { return function (elem, type, fn) {
+		var self = elem;
+		var wrapper = function (ev) {
+			Object.defineProperty(ev, "currentTarget", {
+				get: function () { return self; }
+			});
+			fn.call(self, ev);
+		};
+		wrapper.fn = fn;
+		var key = type+"Ary";
+		var ary = self[key];
+		if (!ary) { ary = []; self[key] = ary; }
+		ary.push(wrapper);
+		old.call(self, type, wrapper);
+	} }(Element.prototype.attachEvent) );
+	
+	akme.detachEvent = ( function(old) { return function (elem, type, fn) {
+		var self = elem;
+		var key = type+"Ary";
+		var ary = self[key];
+		if (ary) for (var i=0; i<ary.length; i++) {
+			var wrapper = ary[i];
+			if (wrapper.fn === fn) {
+				Array.prototype.splice.call(ary, i, 1);
+				old.call(self, wrapper);
+				break;
+			}
+		}
+	} }(Element.prototype.detachEvent) );
+
+	// ev.currentTarget W3C is where the event listener was registered.
+	var div = document.getElementsByTagName("div")[0];
+	akme.attachEvent(div, "on"+"click", function(ev) {
+		console.log(ev +" srcElement "+ ev.srcElement.style.backgroundColor);
+		console.log(ev +" target "+ ev.target.style.backgroundColor);
+		console.log(ev +" currentTarget "+ ev.currentTarget.style.backgroundColor);
+	});
+
+}
+</script>
+</body>
+</html>
