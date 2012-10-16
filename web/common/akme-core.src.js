@@ -695,7 +695,7 @@ if (!akme.core) akme.core = {};
 		if (keys instanceof Array) for (var i=0; i<keys.length; i++) {
 			a[a.length] = this.read(keys[i]);
 		} else if (keys instanceof Object) for (var key in keys) {
-			a[a.length] = this.read(keys[key]);
+			a[a.length] = this.read(key);
 		} else if (typeof keys === "function") {
 			a[a.length] = this.read(keys());
 		} else {
