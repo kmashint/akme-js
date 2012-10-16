@@ -24,7 +24,7 @@
 	function CouchAccess(name, url) {
 		this.name = name;
 		this.url = url;
-		this.dataConstructor = $.getProperty(window, name);
+		this.dataConstructor = $.getProperty($.THIS, name);
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		//$.extendDestroy(this, function(){});
 	};
