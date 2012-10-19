@@ -41,6 +41,7 @@ interface Storage {
 		Storage, {CLASS: CLASS} 
 	), { // super-static prototype, public functions
 		getItem : getItem,
+		getItemJSON : getItemJSON, 
 		setItem : setItem,
 		removeItem : removeItem,
 		getAll : getAll,
@@ -66,10 +67,27 @@ interface Storage {
 	}
 	
 	/**
+	 * Get an item value converted to JS from JSON given the collection/type name and key.
+	 */
+	function getItemJSON(/*string*/ type, /*string*/ key) { 
+		var value = akme.parseJSON(this.getStorage().getItem(type+SPLIT_CHAR+key));
+		this.doEvent({ type:"getItem", keyType:type, key:key, value:value });
+		return value;
+	}
+	
+	/**
 	 * Set the item value given the collection/type name and key.
 	 */
 	function setItem(/*string*/ type, /*string*/ key, /*string*/ value) { 
 		this.getStorage().setItem(type+SPLIT_CHAR+key, value);
+		this.doEvent({ type:"setItem", keyType:type, key:key, value:value });
+	}
+
+	/**
+	 * Set the item value converting JS to JSON for the given collection/type name and key.
+	 */
+	function setItem(/*string*/ type, /*string*/ key, /*string*/ value) { 
+		this.getStorage().setItem(type+SPLIT_CHAR+key, akme.formatJSON(value));
 		this.doEvent({ type:"setItem", keyType:type, key:key, value:value });
 	}
 

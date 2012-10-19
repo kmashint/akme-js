@@ -81,6 +81,31 @@ $(document).ready(function(){
 		});
 	}
 	
+	
+	var xhr = akme.xhr.open("HEAD", "http://localhost/shiftdb", false);
+	xhr.send();
+	if (xhr.status < 500) {
+		
+		module("CouchAccess");
+		var couchAccess = new akme.core.CouchAccess("shiftdb", "http://localhost/shiftdb");
+		
+		test(couchAccess.constructor.CLASS, function() {
+			couchAccess.key = function(a,b,c) { return a+"_"+b+"_"+c; };
+			var key = couchAccess.key(1,2,3);
+			var val = couchAccess.read(key);
+			equal(val, null, "val is initially null, not found");
+			val = {a:["A","B","C"]};
+			couchAccess.write(key, val);
+			var obj = couchAccess.read(key);
+			equal(akme.formatJSON(obj.a), akme.formatJSON(val.a), 'obj is val ["A","B","C"]');
+			couchAccess.remove(key);
+			val = couchAccess.read(key);
+			equal(val, null, "val is finally null, not found");
+		});
+		
+	}
+	
+	
 	module("W3C standards via fix-ie8");
 		
 	var manualTest = document.getElementById("manualTest"); 

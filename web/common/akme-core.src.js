@@ -667,9 +667,9 @@ if (!akme.core) akme.core = {};
 	function Access() {
 		//$.extendDestroy(this, function(){});
 	};
-	$.extend($.copyAll( // class constructor
+	$.extend($.copyAll( // class-constructor function
 		Access, {CLASS: CLASS}
-	), { // super-static prototype, public functions
+	), { // super-static-prototype object
 		clear : null, // any use as related to JPA EntityManager?
 		flush : null, // any use as related to JPA EntityManager?
 		sync : null, // instead of refresh? sync is better with HTML5 Offline Apps
@@ -2373,6 +2373,7 @@ interface Storage {
 		Storage, {CLASS: CLASS} 
 	), { // super-static prototype, public functions
 		getItem : getItem,
+		getItemJSON : getItemJSON, 
 		setItem : setItem,
 		removeItem : removeItem,
 		getAll : getAll,
@@ -2398,10 +2399,27 @@ interface Storage {
 	}
 	
 	/**
+	 * Get an item value converted to JS from JSON given the collection/type name and key.
+	 */
+	function getItemJSON(/*string*/ type, /*string*/ key) { 
+		var value = akme.parseJSON(this.getStorage().getItem(type+SPLIT_CHAR+key));
+		this.doEvent({ type:"getItem", keyType:type, key:key, value:value });
+		return value;
+	}
+	
+	/**
 	 * Set the item value given the collection/type name and key.
 	 */
 	function setItem(/*string*/ type, /*string*/ key, /*string*/ value) { 
 		this.getStorage().setItem(type+SPLIT_CHAR+key, value);
+		this.doEvent({ type:"setItem", keyType:type, key:key, value:value });
+	}
+
+	/**
+	 * Set the item value converting JS to JSON for the given collection/type name and key.
+	 */
+	function setItem(/*string*/ type, /*string*/ key, /*string*/ value) { 
+		this.getStorage().setItem(type+SPLIT_CHAR+key, akme.formatJSON(value));
 		this.doEvent({ type:"setItem", keyType:type, key:key, value:value });
 	}
 
@@ -2538,7 +2556,8 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 	function CouchAccess(name, url) {
 		this.name = name;
 		this.url = url;
-		this.dataConstructor = $.getProperty($.THIS, name);
+		var dataConstructor = $.getProperty($.THIS, name);
+		if (typeof dataConstructor === "function") this.dataConstructor = dataConstructor;
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		//$.extendDestroy(this, function(){});
 	};
@@ -2597,12 +2616,10 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 		var xhr = callWithRetry("GET", url, {"Accept": CONTENT_TYPE_JSON}, null);
 		var type = akme.xhr.getResponseContentType(xhr);
 		if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
-		var value = (type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
+		var value = (xhr.status < 400 && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
 		if (value) {
 			akme.sessionStorage.setItem(self.name, key, value);
 			value = akme.parseJSON(value, reviver);
-			//delete value._id;
-			//delete value._rev;
 		} else {
 			akme.sessionStorage.removeItem(self.name, key);
 		}

@@ -24,7 +24,8 @@
 	function CouchAccess(name, url) {
 		this.name = name;
 		this.url = url;
-		this.dataConstructor = $.getProperty($.THIS, name);
+		var dataConstructor = $.getProperty($.THIS, name);
+		if (typeof dataConstructor === "function") this.dataConstructor = dataConstructor;
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		//$.extendDestroy(this, function(){});
 	};
@@ -83,12 +84,10 @@
 		var xhr = callWithRetry("GET", url, {"Accept": CONTENT_TYPE_JSON}, null);
 		var type = akme.xhr.getResponseContentType(xhr);
 		if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
-		var value = (type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
+		var value = (xhr.status < 400 && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
 		if (value) {
 			akme.sessionStorage.setItem(self.name, key, value);
 			value = akme.parseJSON(value, reviver);
-			//delete value._id;
-			//delete value._rev;
 		} else {
 			akme.sessionStorage.removeItem(self.name, key);
 		}
