@@ -6,14 +6,13 @@
 // See Spring AbstractApplicationContext for related basics.
 // See afmain refreshSpringBean.jsp for refreshing a single bean.
 //
-(function($) {
-	if ($.getContext) return;  // One-time.
+(function($,CLASS) {
+	if ($.getProperty($.THIS,CLASS)) return; // One-time.
 	
 	//
 	// Private static declarations / closure
 	//
-	var CLASS = "akme.getContext",
-		CONTEXT,
+	var CONTEXT,
 		//LOCK = [true], // var lock = LOCK.pop(); if (lock) try { ... } finally { if (lock) LOCK.push(lock); }
 		INSTANCE_COUNT = 0,
 		INSTANCE_MAP = {},
@@ -40,9 +39,9 @@
 	self.refresh();
 	CONTEXT = self;
 
-	$.getContext = function() {
+	$.setProperty($.THIS, CLASS, function() {
 		return CONTEXT;
-	};
+	});
 
 	//
 	// Functions
@@ -124,4 +123,4 @@
 		return typeof INSTANCE_MAP[id] === "function";
 	}
 
-})(akme);
+})(akme, "akme.getContext");

@@ -150,3 +150,166 @@
 	}
 	
 })(akme,"akme.core.CouchAccess");
+
+
+/**
+ * akme.core.CouchAsyncAccess
+ */
+(function($,CLASS){
+	if ($.getProperty($.THIS,CLASS)) return; // One-time.
+	
+	//
+	// Private static declarations / closure
+	//
+	var CONTENT_TYPE_JSON = "application/json";
+		//CONTENT_TYPE_URLE = "application/x-www-form-urlencoded";
+	
+	//
+	// Initialise constructor or singleton instance and public functions
+	//
+	function CouchAsyncAccess(name, url) {
+		this.name = name;
+		this.url = url;
+		var dataConstructor = $.getProperty($.THIS, name);
+		if (typeof dataConstructor === "function") this.dataConstructor = dataConstructor;
+		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
+		//$.extendDestroy(this, function(){});
+	};
+	$.extend($.copyAll(
+			CouchAsyncAccess, {CLASS: CLASS}
+	), $.copyAll(new $.core.Access, {
+		findOne : findOne, // return Object
+		read : read, // return Object
+		write : write, // given Object return Object
+		remove : remove // given Object return Object
+	}));
+	$.setProperty($.THIS, CLASS, CouchAsyncAccess);
+	
+	//
+	// Functions
+	//
+	
+	function reviver(key, value) {
+		if ("jsonReviver" in this.constructor) return this.constructor.jsonReviver.call(this, key, value);
+		else return value;
+	}
+	
+	function replacer(key, value) {
+		if ("jsonReplacer" in this.constructor) return this.constructor.jsonReplacer.call(this, key, value);
+		else return value;
+	}
+	
+	function callAsync(method, url, headers, content, callbackFnOrOb) {
+		//var self = this;
+		var xhr = akme.xhr.open(method, url, true);
+		for (var key in headers) xhr.setRequestHeader(key, headers[key]);
+		xhr.onreadystatechange = function(ev) {if (xhr.readyState==4) akme.handleEvent(callbackFnOrOb, ev); }
+		if (typeof content !== "undefined") xhr.send(content);
+		else xhr.send();
+		return xhr;
+	}
+
+	function findOne(map) {
+		var ary = this.find(map);
+		return ary.length === 0 ? ary[0] : null;
+	}
+	
+	/**
+	 * This maintains a copy of the key/value in sessionStorage.
+	 */
+	function read(key, /*function(result)*/ callbackFnOrOb) { 
+		//if (console.logEnabled) console.log(this.name +".read("+ key +")");
+		var self = this;
+		var url = self.url+"/"+encodeURIComponent(key);
+		var xhr = callAsync("GET", url, {"Accept": CONTENT_TYPE_JSON}, null, handleState);
+		function handleState(ev) {
+			var type = akme.xhr.getResponseContentType(xhr);
+			if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
+			var value = (xhr.status < 400 && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
+			if (value) {
+				akme.sessionStorage.setItem(self.name, key, value);
+				value = akme.parseJSON(value, reviver);
+			} else {
+				akme.sessionStorage.removeItem(self.name, key);
+			}
+			if (self.dataConstructor && value) value = new self.dataConstructor(value);
+			self.doEvent({ type:"read", keyType:self.name, key:key, value:value });
+			akme.handleEvent(callbackFnOrOb, value);
+			self = xhr = callbackFnOrOb = null; // closure cleanup 
+		}
+		return xhr;
+	}
+
+	/**
+	 * This maintains a copy of the key/value in sessionStorage.
+	 * This is so the caller doesn't have to manage the _id and _rev directly that are required to PUT in CouchDB.
+	 */
+	function write(key, value, /*function(result)*/ callbackFnOrOb) { 
+		//if (console.logEnabled) console.log(this.name +".write("+ key +",...)");
+		var self = this;
+		var valueMap = akme.sessionStorage.getItemJSON(self.name, key);
+		if (valueMap && valueMap._id) {
+			value._id = valueMap._id;
+			value._rev = valueMap._rev;
+		}
+		var url = self.url+"/"+encodeURIComponent(key);
+		var xhr = callAsync("PUT", url, 
+				{"Accept": CONTENT_TYPE_JSON, "Content-Type": CONTENT_TYPE_JSON}, 
+				typeof value == "string" ? value : akme.formatJSON(value, replacer),
+				handleState);
+		function handleState(ev) {
+			var type = akme.xhr.getResponseContentType(xhr);
+			if (console.logEnabled) console.log("PUT "+ url, xhr.status, xhr.statusText, type);
+			var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? akme.parseJSON(xhr.responseText) : xhr.responseText;
+			if (result.ok && result.rev) {
+				value._id = result.id;
+				value._rev = result.rev;
+				akme.sessionStorage.setItem(self.name, key, akme.formatJSON(value, replacer));
+			}
+			self.doEvent({ type:"write", keyType:self.name, key:key, value:value });
+			akme.handleEvent(callbackFnOrOb, result);
+			self = xhr = callbackFnOrOb = null; // closure cleanup 
+		};
+		return xhr;
+	}
+	
+	/**
+	 * Remove the given revision or the latest if no rev is given.
+	 * Given the complexity of multiple async it's better to move the HEAD server-side just like authentication. 
+	 */
+	function remove(key, rev, /*function(result)*/ callbackFnOrOb) { 
+		//if (console.logEnabled) console.log(this.name +".remove("+ key +")");
+		// Save-empty rather than delete would reduce the 404 responses, but then there are blank records, normally a bad thing.
+		var self = this; // closure
+		var xhr = null; // closure
+		var url = null; // closure
+		if (!rev) {
+			url = self.url+"/"+encodeURIComponent(key);
+			xhr = callAsync("HEAD", url, {"Accept": CONTENT_TYPE_JSON}, null, handleStateHEAD);
+		}
+		function handleStateHEAD(ev) {
+			xhr = ev.target;
+			rev = xhr.getResponseHeader("ETag");
+			if (rev) rev = rev.replace(/^"|"$/g, "");
+			if (!rev) rev = "";
+			callDELETE();
+		};
+		function callDELETE() {
+			url = self.url+"/"+encodeURIComponent(key)+"?rev="+encodeURIComponent(rev);
+			xhr = callAsync("DELETE", url, {"Accept": CONTENT_TYPE_JSON}, null, handleState);
+		};
+		function handleState(ev) {
+			var type = akme.xhr.getResponseContentType(xhr);
+			if (console.logEnabled) console.log("DELETE "+ url, xhr.status, xhr.statusText, type);
+			var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? akme.parseJSON(xhr.responseText) : xhr.responseText;
+			if (result.ok && result.rev) {
+				akme.sessionStorage.removeItem(self.name, key);
+			}
+			self.doEvent({ type:"remove", keyType:self.name, key:key });
+			akme.handleEvent(callbackFnOrOb, result);
+			self = xhr = callbackFnOrOb = url = rev = null; // closure cleanup
+		};
+		return xhr;
+	}
+	
+})(akme,"akme.core.CouchAsyncAccess");

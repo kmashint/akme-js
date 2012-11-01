@@ -55,6 +55,23 @@ akme.copyAll(this.akme, {
 		else if (this.isW3C) elem.addEventListener(evnt, fnOrHandleEvent, false);
 		else elem.attachEvent("on"+evnt, typeof fnOrHandleEvent.handleEvent === "function" ? this.fixHandleEvent(fnOrHandleEvent).handleEvent : fnOrHandleEvent);
 	},
+	onContent : function (fnOrHandleEvent) {
+		var elem = document;
+		var evnt = "DOMContentLoaded";
+		if (this.isW3C) elem.addEventListener(evnt, fnOrHandleEvent, false);
+		else {
+			// http://unixpapa.com/js/dyna.html
+			if (notComplete()) elem.attachEvent("onreadystatechange", notComplete);
+			function notComplete(ev) {
+				//if (console) console.log(elem, " readyState ", elem.readyState, " ev ", ev, " type ", ev.type);
+				if ("loaded"!=elem.readyState && "complete"!=elem.readyState) return true;
+				else {
+					if (typeof listener === "function") listener.call(elem, {type:evnt});
+					else listener.handleEvent.call(listener, {type:evnt});
+				}
+			};
+		}
+	},
 	onLoad : function (fnOrHandleEvent) { this.onEvent(window, "load", fnOrHandleEvent); },
 	onUnload : function (fnOrHandleEvent) { this.onEvent(window, "unload", fnOrHandleEvent); },
 	unEvent : function (elem, evnt, fnOrHandleEvent) {
@@ -421,7 +438,7 @@ akme.copyAll(this.akme, {
 
 
 if (!akme.xhr) akme.xhr = {
-	DATE_1970 : "Thu, 1 Jan 1970 00:00:00 GMT",
+	DATE_1970 : "Thu, 01 Jan 1970 00:00:00 GMT",
 	HTTP_OK : 200,
 	HTTP_NO_CONTENT : 204,
 	HTTP_NOT_MODIFIED : 304,
@@ -461,9 +478,15 @@ if (!akme.xhr) akme.xhr = {
 	},
 	 
 	getXML: function ( url ) { //simply grab of an xml file and return the xml document
-		var xhr = this.open('GET', url, false );
+		var xhr = this.open('GET', url, false);
 		xhr.send(null);
 		return this.getResponseXML( xhr );
+	},
+	 
+	getJSON: function ( url ) { //simply grab of an xml file and return the xml document
+		var xhr = this.open('GET', url, false);
+		xhr.send(null);
+		return this.getResponseJSON( xhr );
 	},
 	 
 	getResponseContentType : function(/*XMLHttpRequest*/ xhr) {
@@ -487,7 +510,55 @@ if (!akme.xhr) akme.xhr = {
 			xml = null;
 		}
 		return xml;
+	},
+	
+	getResponseJSON : function(/*XMLHttpRequest*/ xhr, reviver) {
+		return JSON.parse(xhr.responseText, reviver);
+	},
+	
+	parseHeaders : function(/*XMLHttpRequest*/ xhr) {
+		var headers = {};
+		var headerStr = xhr.getAllResponseHeaders();
+		if (headerStr) {
+			var headerAry = headerStr.split("\n");
+			for (var i=0, pos=0; i<headerAry.length && headerAry[i]>" "; i++) {
+				pos = headerAry[i].indexOf(": ");
+				headers[headerAry[i].substring(0,pos)] = headerAry[i].substring(pos+2).split("\r")[0];
+			}
+		}
+		return headers;
+	},
+	
+	callAsync : function(method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
+		var xhr = this.open('GET', url, true);
+		for (var key in headers) xhr.setRequestHeader(key, headers[key]);
+		if (!(typeof content === 'string' || content instanceof String)) {
+			if (/xml;|xml$/.test(headers["Content-Type"])) {
+				content = akme.formatXML(content);
+			} else if (/json;|json$/.test(headers["Content-Type"])) {
+				content = akme.formatJSON(content);
+			}
+		}
+		var self = this; // closure
+		xhr.onreadystatechange = function(ev) {
+			var headers = self.parseHeaders(xhr);
+			var content;
+			if (/xml;|xml$/.test(headers["Content-Type"])) {
+				content = self.getResponseXML(xhr);
+			} else if (/json;|json$/.test(headers["Content-Type"])) {
+				content = self.getResponseJSON(xhr);
+			} else {
+				content = xhr.responseText;
+			}
+			akme.handleEvent(callbackFnOrOb, headers, content);
+			self = xhr = callbackFnOrOb = null; // closure cleanup
+		};
+		if (typeof content !== 'undefined') xhr.send(content);
+		else xhr.send();
+		
+		return xhr;
 	}
+	
 };
 
 
@@ -570,7 +641,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 		if (deny) { console.warn(this.id+" deny "+ ev.origin); return; }
 		var data = this.parseMessage(ev.data);
 		if (!data.headers.call || typeof this[data.headers.call] !== 'function') return;
-		this[data.headers.call](data.headers, data.content, ev.origin, ev.source);
+		this[data.headers.call](data.headers, data.content, ev);
 	},
 	formatMessage : function(headers, content) {
 		var a = [];
