@@ -66,8 +66,8 @@ akme.copyAll(this.akme, {
 				//if (console) console.log(elem, " readyState ", elem.readyState, " ev ", ev, " type ", ev.type);
 				if ("loaded"!=elem.readyState && "complete"!=elem.readyState) return true;
 				else {
-					if (typeof listener === "function") listener.call(elem, {type:evnt});
-					else listener.handleEvent.call(listener, {type:evnt});
+					if (typeof fnOrHandleEvent === "function") fnOrHandleEvent.call(elem, {type:evnt});
+					else fnOrHandleEvent.handleEvent.call(fnOrHandleEvent, {type:evnt});
 				}
 			};
 		}
