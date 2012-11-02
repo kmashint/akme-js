@@ -86,7 +86,6 @@
 	 * Set the given object/instance to the given key/id, returning any existing one or null.
 	 */
 	function set(id, instance) {
-		// TODO: any real concurrency issues here?
 		if (!(id in INSTANCE_MAP)) INSTANCE_COUNT++;
 		var old = INSTANCE_MAP[id];
 		INSTANCE_MAP[id] = instance;
@@ -98,7 +97,6 @@
 	 * Removes the instance at the given id, returning the existing one.
 	 */
 	function remove(id) {
-		// TODO: any real concurrency issues here?
 		if (id in INSTANCE_MAP) INSTANCE_COUNT--;
 		var old = INSTANCE_MAP[id];
 		delete INSTANCE_MAP[id];
