@@ -1098,14 +1098,10 @@ if( !window.XMLSerializer ){
 	// Helper for MSIE, MSIE9.
 	// http://www.erichynds.com/jquery/working-with-xml-jquery-and-javascript/
 	// http://www.vistax64.com/vista-news/284014-domparser-xmlserializer-ie9-beta.html
-	window.XMLSerializer = function(){
-		this.serializeToString = function(xmlobj) {return xmlobj.xml;};
-	};
+	window.XMLSerializer = function(){};
 }
-if (document['documentMode'] && document.documentMode == 9) {
-	window.XMLSerializer.prototype.serializeToString = function( XMLObject ){
-		return XMLObject.xml;
-	};
+if( !window.XMLSerializer.prototype.serializeToString ){
+	window.XMLSerializer.prototype.serializeToString = function(xmlobj) {return xmlobj.xml;};
 }
 
 if (!this.XMLHttpRequest) this.XMLHttpRequest = function() {
@@ -1588,21 +1584,47 @@ if (!akme.xhr) akme.xhr = {
 		return JSON.parse(xhr.responseText, reviver);
 	},
 	
-	parseHeaders : function(/*XMLHttpRequest*/ xhr) {
+	/** 
+	 * Ensure standard My-Name formatting of HTTP header names.
+	 */
+	formatHttpHeaderName : function(name) {
+		var a = name.split("-");
+		for (var i=0; i<a.length; i++) {
+			a[i] = a[i].charAt(0).toUpperCase() + a[i].substring(1);
+		}
+		return a.join("-");
+	},
+	
+	/** 
+	 * Parse header text returned by XMLHttpRequest.getAllResponseHeaders().
+	 */
+	parseHeaders : function(text) { // also see akme.core.MessageBroker
 		var headers = {};
-		var headerStr = xhr.getAllResponseHeaders();
-		if (headerStr) {
-			var headerAry = headerStr.split("\n");
-			for (var i=0, pos=0; i<headerAry.length && headerAry[i]>" "; i++) {
-				pos = headerAry[i].indexOf(": ");
-				headers[headerAry[i].substring(0,pos)] = headerAry[i].substring(pos+2).split("\r")[0];
-			}
+		for (var pos1=0, pos2=text.indexOf("\n"); pos2 != -1; pos1=pos2+1, pos2=text.indexOf("\n", pos1)) {
+			var pos3 = text.indexOf(": ", pos1);
+			if (pos3 != -1) headers[this.formatHttpHeaderName(text.substring(pos1,pos3))] = text.substring(pos3+2, pos2).split("\r")[0];
 		}
 		return headers;
 	},
 	
+	/**
+	 * 
+	 * @param method
+	 * @param url
+	 * @param headers
+	 * @param content
+	 * @param callbackFnOrOb
+	 */
 	callAsync : function(method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
 		var xhr = this.open('GET', url, true);
+		for (var key in headers) {
+			var name = this.formatHttpHeaderName(key);
+			xhr.setRequestHeader(name, headers[key]);
+			if (name != key) {
+				headers[name] = headers[key];
+				delete headers[key];
+			}
+		}
 		for (var key in headers) xhr.setRequestHeader(key, headers[key]);
 		if (!(typeof content === 'string' || content instanceof String)) {
 			if (/xml;|xml$/.test(headers["Content-Type"])) {
@@ -1612,8 +1634,10 @@ if (!akme.xhr) akme.xhr = {
 			}
 		}
 		var self = this; // closure
-		xhr.onreadystatechange = function(ev) {
-			var headers = self.parseHeaders(xhr);
+		xhr.onreadystatechange = function() {
+			var xhr = this;
+			if (!xhr.readyState !== 4) return;
+			var headers = self.parseHeaders(xhr.getAllResponseHeaders());
 			var content;
 			if (/xml;|xml$/.test(headers["Content-Type"])) {
 				content = self.getResponseXML(xhr);
@@ -1627,7 +1651,6 @@ if (!akme.xhr) akme.xhr = {
 		};
 		if (typeof content !== 'undefined') xhr.send(content);
 		else xhr.send();
-		
 		return xhr;
 	}
 	
@@ -1674,7 +1697,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 	this.callbackKey = 0;
 	this.callbackMap = {};
 	this.callbackTime = {};
-}, {name:"akme.core.MessageBroker"}), {
+}, {CLASS:"akme.core.MessageBroker"}), {
 	destroy : function() {
 		for (var key in this.callbackMap) delete this.callbackMap[key];
 		for (var key in this.callbackTime) delete this.callbackTime[key];
@@ -1701,8 +1724,8 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			content = akme.formatJSON(content);
 		}
 		var msg = this.formatMessage(headers, content);
-		var targetOrigin = iframe.src.substring(0, iframe.src.indexOf("/", 8));
-		iframe.contentWindow.postMessage(msg, targetOrigin); // "*" is insecure
+		var targetOrigin = frame.src.substring(0, frame.src.indexOf("/", 8));
+		frame.contentWindow.postMessage(msg, targetOrigin); // "*" is insecure
 		return headers["callback"];
 	},
 	handleEvent : function(ev) { // ev.data, ev.origin, ev.source
@@ -1746,6 +1769,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 		if (headers) for (var key in headers) xhr.setRequestHeader(key, headers[key]);
 		var self = this;
 		xhr.onreadystatechange = function() {
+			var xhr = this;
 			if (xhr.readyState !== 4) return;
 			var headers = {
 				call : "XMLHttpResponse",
@@ -1755,13 +1779,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			};
 			if (callback) headers.callback = callback;
 			var headerStr = xhr.getAllResponseHeaders();
-			if (headerStr) {
-				var headerAry = headerStr.split("\n");
-				for (var i=0, pos=0; i<headerAry.length && headerAry[i]>" "; i++) {
-					pos = headerAry[i].indexOf(": ");
-					headers[headerAry[i].substring(0,pos)] = headerAry[i].substring(pos+2).split("\r")[0];
-				}
-			}
+			if (headerStr) akme.copyAll(headers, akme.xhr.parseHeaders(headerStr));
 			var content = xhr["responseText"] ? xhr.responseText : "";
 			if (/xml;|xml$/.test(headers["Content-Type"]) || /html;|html$/.test(headers["Content-Type"])) {
 				// Remove DOCTYPE ... SYSTEM if found since the DTD reference will be invalid after postMessage.
@@ -1773,7 +1791,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 				}
 			}
 			var result = self.formatMessage(headers, content);
-			if (window.console) console.log(this.id+' '+location.protocol+'//'+location.host+' XMLHttpRequest postMessage back '+ String(messageEvent.origin || origin));
+			if (window.console) console.log(self.id+' '+location.protocol+'//'+location.host+' XMLHttpRequest postMessage back '+ String(messageEvent.origin || origin));
 			if (messageEvent.source) messageEvent.source.postMessage(result, messageEvent.origin);
 			else source.postMessage(result, origin);
 			self = xhr = callback = messageEvent = source = origin = null; // closure cleanup
