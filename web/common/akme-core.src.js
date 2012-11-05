@@ -1596,6 +1596,21 @@ if (!akme.xhr) akme.xhr = {
 	},
 	
 	/** 
+	 * Ensure standard My-Name formatting of HTTP header names for particular ones in the given nameAry.
+	 */
+	fixHttpHeaderNames : function(headerMap, nameAry) {
+		for (var i=0; i<nameAry.length; i++) { nameAry[i] = nameAry[i].toLowerCase(); }
+		for (var key in headerMap) {
+			if (Array.indexOf(nameAry, key.toLowerCase()) == -1) continue;
+			var name = this.formatHttpHeaderName(key);
+			if (name != key) {
+				headers[name] = headers[key];
+				delete headers[key];
+			}
+		}
+	},
+	
+	/** 
 	 * Parse header text returned by XMLHttpRequest.getAllResponseHeaders().
 	 */
 	parseHeaders : function(text) { // also see akme.core.MessageBroker
@@ -1717,6 +1732,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			self = key = callbackFnOrOb = null; // closure cleanup
 		};
 		self.callbackTime[key] = new Date().getTime();
+		akme.xhr.fixHttpHeaderNames(headers, ["Content-Type"]);
 		if (/xml;|xml$/.test(headers["Content-Type"]) && !(content instanceof String) && content instanceof Object) {
 			content = akme.formatXML(content);
 		}
