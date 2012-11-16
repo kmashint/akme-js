@@ -551,15 +551,22 @@ if (!akme.xhr) akme.xhr = {
 	},
 	
 	/**
-	 * 
-	 * @param method
-	 * @param url
-	 * @param headers
-	 * @param content
-	 * @param callbackFnOrOb
+	 * Use a new XHR to call the given method and url with optional headers and optional content.
+	 * Will use the callback when readyState==4 (DONE).
 	 */
 	callAsync : function(method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
-		var xhr = this.open('GET', url, true);
+		var xhr = this.open(method, url, true);
+		callAsyncXHR(xhr, headers, content, callbackFnOrOb);
+		return xhr;
+	},
+	
+	/**
+	 * Use the given XHR to call with the given method and url with optional headers and optional content.
+	 * Will use the callback when readyState==4 (DONE).
+	 */
+	callAsyncXHR : function(/*XMLHttpRequest*/ xhr, method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
+		xhr.open(method, url, true);
+		xhr.setRequestHeader("X-Requested-With","XMLHttpRequest");
 		for (var key in headers) {
 			var name = this.formatHttpHeaderName(key);
 			xhr.setRequestHeader(name, headers[key]);
@@ -594,7 +601,7 @@ if (!akme.xhr) akme.xhr = {
 		};
 		if (typeof content !== 'undefined') xhr.send(content);
 		else xhr.send();
-		return xhr;
+		return;
 	}
 	
 };
