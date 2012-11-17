@@ -230,7 +230,10 @@
 		xhr.open(method, url, true);
 		xhr.setRequestHeader("X-Requested-With","XMLHttpRequest");
 		for (var key in headers) xhr.setRequestHeader(key, headers[key]);
-		xhr.onreadystatechange = function() { var xhr=this; if (xhr.readyState==4) akme.handleEvent(callbackFnOrOb, {target:xhr}); };
+		xhr.onreadystatechange = function() { 
+			var xhr=this; 
+			if (xhr.readyState==4) akme.handleEvent(callbackFnOrOb, {type:"readystatechange", target:xhr}); 
+		};
 		if (typeof content !== "undefined") xhr.send(content);
 		else xhr.send();
 		return;
@@ -339,7 +342,7 @@
 		var url = null; // closure
 		if (!rev) {
 			url = self.url+"/"+encodeURIComponent(key); 
-			callAsync("HEAD", url, {"Accept": CONTENT_TYPE_JSON}, null, handleStateHEAD);
+			callAsyncXHR(xhr, "HEAD", url, {"Accept": CONTENT_TYPE_JSON}, null, handleStateHEAD);
 		} else {
 			callDELETE();
 		}
@@ -352,8 +355,7 @@
 		};
 		function callDELETE() {
 			url = self.url+"/"+encodeURIComponent(key)+"?rev="+encodeURIComponent(rev);
-			xhr.open("DELETE", url, true);
-			callAsyncXHR(xhr, {"Accept": CONTENT_TYPE_JSON}, null, handleState);
+			callAsyncXHR(xhr, "DELETE", url, {"Accept": CONTENT_TYPE_JSON}, null, handleState);
 		};
 		function handleState(ev) {
 			xhr = ev.target;

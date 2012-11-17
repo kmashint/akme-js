@@ -556,7 +556,7 @@ if (!akme.xhr) akme.xhr = {
 	 */
 	callAsync : function(method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
 		var xhr = this.open(method, url, true);
-		callAsyncXHR(xhr, headers, content, callbackFnOrOb);
+		this.callAsyncXHR(xhr, headers, content, callbackFnOrOb);
 		return xhr;
 	},
 	

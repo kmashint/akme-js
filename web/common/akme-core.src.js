@@ -1623,15 +1623,22 @@ if (!akme.xhr) akme.xhr = {
 	},
 	
 	/**
-	 * 
-	 * @param method
-	 * @param url
-	 * @param headers
-	 * @param content
-	 * @param callbackFnOrOb
+	 * Use a new XHR to call the given method and url with optional headers and optional content.
+	 * Will use the callback when readyState==4 (DONE).
 	 */
 	callAsync : function(method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
-		var xhr = this.open('GET', url, true);
+		var xhr = this.open(method, url, true);
+		this.callAsyncXHR(xhr, headers, content, callbackFnOrOb);
+		return xhr;
+	},
+	
+	/**
+	 * Use the given XHR to call with the given method and url with optional headers and optional content.
+	 * Will use the callback when readyState==4 (DONE).
+	 */
+	callAsyncXHR : function(/*XMLHttpRequest*/ xhr, method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
+		xhr.open(method, url, true);
+		xhr.setRequestHeader("X-Requested-With","XMLHttpRequest");
 		for (var key in headers) {
 			var name = this.formatHttpHeaderName(key);
 			xhr.setRequestHeader(name, headers[key]);
@@ -1666,7 +1673,7 @@ if (!akme.xhr) akme.xhr = {
 		};
 		if (typeof content !== 'undefined') xhr.send(content);
 		else xhr.send();
-		return xhr;
+		return;
 	}
 	
 };
@@ -2666,10 +2673,11 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 	$.extend($.copyAll(
 		CouchAccess, {CLASS: CLASS}
 	), $.copyAll(new $.core.Access, {
-		findOne : findOne, // return Object
-		read : read, // return Object
-		write : write, // given Object return Object
-		remove : remove // given Object return Object
+		findOne : findOne, // given Object return Object
+		info : info, // given key return Object
+		read : read, // given key return Object
+		write : write, // given key, Object return Object
+		remove : remove // given key return Object
 	}));
 	$.setProperty($.THIS, CLASS, CouchAccess);
 	
@@ -2707,6 +2715,25 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 	function findOne(map) {
 		var ary = this.find(map);
 		return ary.length === 0 ? ary[0] : null;
+	}
+	
+	/**
+	 * Just get an Object/Map of the HEAD/header info related to the key including the ETag or ver (ETag less the quotes).
+	 */
+	function info(key) {
+		var self = this;
+		var url = self.url+"/"+encodeURIComponent(key);
+		var xhr = callWithRetry("HEAD", url, {"Accept": CONTENT_TYPE_JSON}, null);
+		var headers = {id: key, status: xhr.status, statusText: xhr.statusText};
+		for (var name in {"Cache-Control":1,"Content-Encoding":1,"Content-Type":1,"Date":1,
+				"ETag":1,"Expires":1,"Last-Modified":1,"Pragma":1,"Server":1,"Vary":1}) {
+			var val = xhr.getResponseHeader(name);
+			if (val) headers[name] = val;
+		}
+		if (headers["ETag"]) headers["ver"] = headers["ETag"].replace(/^"|"$/g, "");
+		if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers["ver"]);
+		this.doEvent({ type:"info", keyType:this.name, key:key, info:headers });
+		return headers;
 	}
 	
 	/**
@@ -2810,12 +2837,13 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 		//$.extendDestroy(this, function(){});
 	};
 	$.extend($.copyAll(
-			CouchAsyncAccess, {CLASS: CLASS}
+		CouchAsyncAccess, {CLASS: CLASS}
 	), $.copyAll(new $.core.Access, {
-		findOne : findOne, // return Object
-		read : read, // return Object
-		write : write, // given Object return Object
-		remove : remove // given Object return Object
+		findOne : findOne, // given Object return Object
+		info : info, // given key return Object
+		read : read, // given key return Object
+		write : write, // given key, Object return Object
+		remove : remove // given key return Object
 	}));
 	$.setProperty($.THIS, CLASS, CouchAsyncAccess);
 	
@@ -2832,22 +2860,56 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 		if ("jsonReplacer" in this.constructor) return this.constructor.jsonReplacer.call(this, key, value);
 		else return value;
 	}
-	
+
 	function callAsync(method, url, headers, content, callbackFnOrOb) {
-		//var self = this;
-		var xhr = akme.xhr.open(method, url, true);
-		for (var key in headers) xhr.setRequestHeader(key, headers[key]);
-		xhr.onreadystatechange = function(ev) {if (xhr.readyState==4) akme.handleEvent(callbackFnOrOb, ev); }
-		if (typeof content !== "undefined") xhr.send(content);
-		else xhr.send();
+		var xhr = new XMLHttpRequest();
+		callAsyncXHR(xhr, method, url, headers, content, callbackFnOrOb);
 		return xhr;
 	}
 
+	function callAsyncXHR(xhr, method, url, headers, content, callbackFnOrOb) {
+		xhr.open(method, url, true);
+		xhr.setRequestHeader("X-Requested-With","XMLHttpRequest");
+		for (var key in headers) xhr.setRequestHeader(key, headers[key]);
+		xhr.onreadystatechange = function() { 
+			var xhr=this; 
+			if (xhr.readyState==4) akme.handleEvent(callbackFnOrOb, {type:"readystatechange", target:xhr}); 
+		};
+		if (typeof content !== "undefined") xhr.send(content);
+		else xhr.send();
+		return;
+	}
+	
 	function findOne(map) {
 		var ary = this.find(map);
 		return ary.length === 0 ? ary[0] : null;
 	}
 	
+	/**
+	 * Just get an Object/Map of the HEAD/header info related to the key including the ETag or ver (ETag less the quotes).
+	 */
+	function info(key, /*function(result)*/ callbackFnOrOb) { 
+		//if (console.logEnabled) console.log(this.name +".read("+ key +")");
+		var self = this;
+		var url = self.url+"/"+encodeURIComponent(key);
+		var xhr = callAsync("HEAD", url, {"Accept": CONTENT_TYPE_JSON}, null, handleState);
+		function handleState(ev) {
+			var xhr = ev.target;
+			var headers = {id: key, status: xhr.status, statusText: xhr.statusText};
+			for (var name in {"Cache-Control":1,"Content-Encoding":1,"Content-Type":1,"Date":1,
+					"ETag":1,"Expires":1,"Last-Modified":1,"Pragma":1,"Server":1,"Vary":1}) {
+				var val = xhr.getResponseHeader(name);
+				if (val) headers[name] = val;
+			}
+			if (headers["ETag"]) headers["ver"] = headers["ETag"].replace(/^"|"$/g, "");
+			if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers["ver"]);
+			self.doEvent({ type:"info", keyType:self.name, key:key, info:headers });
+			akme.handleEvent(callbackFnOrOb, headers);
+			self = xhr = callbackFnOrOb = null; // closure cleanup 
+		}
+		return xhr;
+	}
+
 	/**
 	 * This maintains a copy of the key/value in sessionStorage.
 	 */
@@ -2857,6 +2919,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 		var url = self.url+"/"+encodeURIComponent(key);
 		var xhr = callAsync("GET", url, {"Accept": CONTENT_TYPE_JSON}, null, handleState);
 		function handleState(ev) {
+			var xhr = ev.target;
 			var type = akme.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
 			var value = (xhr.status < 400 && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
@@ -2892,6 +2955,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 				typeof value == "string" ? value : akme.formatJSON(value, replacer),
 				handleState);
 		function handleState(ev) {
+			var xhr = ev.target;
 			var type = akme.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("PUT "+ url, xhr.status, xhr.statusText, type);
 			var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? akme.parseJSON(xhr.responseText) : xhr.responseText;
@@ -2915,14 +2979,16 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 		//if (console.logEnabled) console.log(this.name +".remove("+ key +")");
 		// Save-empty rather than delete would reduce the 404 responses, but then there are blank records, normally a bad thing.
 		var self = this; // closure
-		var xhr = null; // closure
+		var xhr = new XMLHttpRequest(); // closure
 		var url = null; // closure
 		if (!rev) {
-			url = self.url+"/"+encodeURIComponent(key);
-			xhr = callAsync("HEAD", url, {"Accept": CONTENT_TYPE_JSON}, null, handleStateHEAD);
+			url = self.url+"/"+encodeURIComponent(key); 
+			callAsyncXHR(xhr, "HEAD", url, {"Accept": CONTENT_TYPE_JSON}, null, handleStateHEAD);
+		} else {
+			callDELETE();
 		}
 		function handleStateHEAD(ev) {
-			xhr = ev.target;
+			var xhr = ev.target;
 			rev = xhr.getResponseHeader("ETag");
 			if (rev) rev = rev.replace(/^"|"$/g, "");
 			if (!rev) rev = "";
@@ -2930,9 +2996,10 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 		};
 		function callDELETE() {
 			url = self.url+"/"+encodeURIComponent(key)+"?rev="+encodeURIComponent(rev);
-			xhr = callAsync("DELETE", url, {"Accept": CONTENT_TYPE_JSON}, null, handleState);
+			callAsyncXHR(xhr, "DELETE", url, {"Accept": CONTENT_TYPE_JSON}, null, handleState);
 		};
 		function handleState(ev) {
+			xhr = ev.target;
 			var type = akme.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("DELETE "+ url, xhr.status, xhr.statusText, type);
 			var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? akme.parseJSON(xhr.responseText) : xhr.responseText;
