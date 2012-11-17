@@ -97,7 +97,7 @@ akme.copyAll(this.akme, {
 	 * Cross-browser cancel of regular DOM events.
 	 */
 	cancelEvent: function (ev) {
-		if (evt.preventDefault) { ev.preventDefault(); ev.stopPropagation(); }
+		if (ev.preventDefault) { ev.preventDefault(); ev.stopPropagation(); }
 		else { ev.returnValue = false; ev.cancelBubble = true; }
 	},
 	
@@ -344,7 +344,8 @@ akme.copyAll(this.akme, {
 	 */
 	importElementsReplaceById : function(doc, thatParent, callbackFn) {
 		var a = [];
-		var scriptTracker = {
+		var scriptTracker = null;
+		scriptTracker = {
 			count : 0,
 			callbackFn : null,
 			check : function() { 
@@ -392,11 +393,11 @@ akme.copyAll(this.akme, {
 							scriptTracker.load(clone);
 							if (elem.text > "") clone.text = elem.text;
 							if (!scriptChild) {
-								var dead = akme.replaceChild(elem.parentNode, clone, elem);
+								akme.replaceChild(elem.parentNode, clone, elem);
 							}
 							else importChild = clone;
 						}
-						var dead = akme.replaceChild(thisChild.parentNode, importChild, thisChild);
+						akme.replaceChild(thisChild.parentNode, importChild, thisChild);
 						a[a.length] = importChild;
 					} else {
 						parentAry[parentAry.length]=(child);
@@ -790,11 +791,12 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 		if (typeof content === "object") {
 			content = akme.formatJSON(content);
 		}
+		var reqHeaders = headers;
 		var headers = {
 			call : "StorageResponse",
-			method : headers.method,
-			type : headers.type,
-			key : headers.key
+			method : reqHeaders.method,
+			type : reqHeaders.type,
+			key : reqHeaders.key
 		};
 		if (callback) headers.callback = callback;
 
