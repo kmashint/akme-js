@@ -2732,7 +2732,6 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
 			var val = xhr.getResponseHeader(name);
 			if (val) headers[name] = val;
 		}
-		if (headers["ETag"]) headers["ver"] = headers["ETag"].replace(/^"|"$/g, "");
 		if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers["ver"]);
 		this.doEvent({ type:"info", keyType:this.name, key:key, info:headers });
 		return headers;
