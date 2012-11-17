@@ -83,13 +83,14 @@
 		var self = this;
 		var url = self.url+"/"+encodeURIComponent(key);
 		var xhr = callWithRetry("HEAD", url, {"Accept": CONTENT_TYPE_JSON}, null);
-		var headers = {id: key, status: xhr.status, statusText: xhr.statusText};
+		var ver = xhr.getResponseHeader("ETag");
+		var headers = {id: key, ver: (ver ? ver.replace(/^"|"$/g, "") : null), 
+				status: xhr.status, statusText: xhr.statusText};
 		for (var name in {"Cache-Control":1,"Content-Encoding":1,"Content-Type":1,"Date":1,
 				"ETag":1,"Expires":1,"Last-Modified":1,"Pragma":1,"Server":1,"Vary":1}) {
 			var val = xhr.getResponseHeader(name);
 			if (val) headers[name] = val;
 		}
-		if (headers["ETag"]) headers["ver"] = headers["ETag"].replace(/^"|"$/g, "");
 		if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers["ver"]);
 		this.doEvent({ type:"info", keyType:this.name, key:key, info:headers });
 		return headers;
@@ -254,17 +255,18 @@
 		var xhr = callAsync("HEAD", url, {"Accept": CONTENT_TYPE_JSON}, null, handleState);
 		function handleState(ev) {
 			var xhr = ev.target;
-			var headers = {id: key, status: xhr.status, statusText: xhr.statusText};
+			var ver = xhr.getResponseHeader("ETag");
+			var headers = {id: key, ver: (ver ? ver.replace(/^"|"$/g, "") : null), 
+				status: xhr.status, statusText: xhr.statusText};
 			for (var name in {"Cache-Control":1,"Content-Encoding":1,"Content-Type":1,"Date":1,
 					"ETag":1,"Expires":1,"Last-Modified":1,"Pragma":1,"Server":1,"Vary":1}) {
 				var val = xhr.getResponseHeader(name);
 				if (val) headers[name] = val;
 			}
-			if (headers["ETag"]) headers["ver"] = headers["ETag"].replace(/^"|"$/g, "");
 			if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers["ver"]);
 			self.doEvent({ type:"info", keyType:self.name, key:key, info:headers });
 			akme.handleEvent(callbackFnOrOb, headers);
-			self = xhr = callbackFnOrOb = null; // closure cleanup 
+			self = xhr = key = callbackFnOrOb = null; // closure cleanup 
 		}
 		return xhr;
 	}
@@ -291,7 +293,7 @@
 			if (self.dataConstructor && value) value = new self.dataConstructor(value);
 			self.doEvent({ type:"read", keyType:self.name, key:key, value:value });
 			akme.handleEvent(callbackFnOrOb, value);
-			self = xhr = callbackFnOrOb = null; // closure cleanup 
+			self = xhr = key = callbackFnOrOb = null; // closure cleanup 
 		}
 		return xhr;
 	}
@@ -325,7 +327,7 @@
 			}
 			self.doEvent({ type:"write", keyType:self.name, key:key, value:value });
 			akme.handleEvent(callbackFnOrOb, result);
-			self = xhr = callbackFnOrOb = null; // closure cleanup 
+			self = xhr = key = value = callbackFnOrOb = null; // closure cleanup 
 		};
 		return xhr;
 	}
@@ -367,7 +369,7 @@
 			}
 			self.doEvent({ type:"remove", keyType:self.name, key:key });
 			akme.handleEvent(callbackFnOrOb, result);
-			self = xhr = callbackFnOrOb = url = rev = null; // closure cleanup
+			self = xhr = url = key = rev = callbackFnOrOb = null; // closure cleanup
 		};
 		return xhr;
 	}
