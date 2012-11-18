@@ -86,8 +86,8 @@
 		var ver = xhr.getResponseHeader("ETag");
 		var headers = {id: key, ver: (ver ? ver.replace(/^"|"$/g, "") : null), 
 				status: xhr.status, statusText: xhr.statusText};
-		for (var name in {"Cache-Control":1,"Content-Encoding":1,"Content-Type":1,"Date":1,
-				"ETag":1,"Expires":1,"Last-Modified":1,"Pragma":1,"Server":1,"Vary":1}) {
+		for (var name in {"Cache-Control":1,"Content-Encoding":1,"Content-Length":1,"Content-Type":1,
+				"Date":1,"ETag":1,"Expires":1,"Last-Modified":1,"Pragma":1,"Server":1,"Vary":1}) {
 			var val = xhr.getResponseHeader(name);
 			if (val) headers[name] = val;
 		}
@@ -258,8 +258,8 @@
 			var ver = xhr.getResponseHeader("ETag");
 			var headers = {id: key, ver: (ver ? ver.replace(/^"|"$/g, "") : null), 
 				status: xhr.status, statusText: xhr.statusText};
-			for (var name in {"Cache-Control":1,"Content-Encoding":1,"Content-Type":1,"Date":1,
-					"ETag":1,"Expires":1,"Last-Modified":1,"Pragma":1,"Server":1,"Vary":1}) {
+			for (var name in {"Cache-Control":1,"Content-Encoding":1,"Content-Length":1,"Content-Type":1,
+					"Date":1,"ETag":1,"Expires":1,"Last-Modified":1,"Pragma":1,"Server":1,"Vary":1}) {
 				var val = xhr.getResponseHeader(name);
 				if (val) headers[name] = val;
 			}
