@@ -688,7 +688,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 		if (deny) { console.warn(this.id+" deny "+ ev.origin); return; }
 		var data = this.parseMessage(ev.data);
 		if (!data.headers.call || typeof this[data.headers.call] !== 'function') return;
-		this[data.headers.call](data.headers, data.content, ev);
+		this[data.headers.call].call(this, data.headers, data.content, ev);
 	},
 	formatMessage : function(headers, content) {
 		var a = [];
