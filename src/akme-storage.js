@@ -43,6 +43,7 @@ interface Storage {
 		getItem : getItem,
 		getItemJSON : getItemJSON, 
 		setItem : setItem,
+		setItemJSON : setItemJSON,
 		removeItem : removeItem,
 		getAll : getAll,
 		setAll : setAll,
@@ -86,7 +87,7 @@ interface Storage {
 	/**
 	 * Set the item value converting JS to JSON for the given collection/type name and key.
 	 */
-	function setItem(/*string*/ type, /*string*/ key, /*string*/ value) { 
+	function setItemJSON(/*string*/ type, /*string*/ key, /*string*/ value) { 
 		this.getStorage().setItem(type+SPLIT_CHAR+key, akme.formatJSON(value));
 		this.doEvent({ type:"setItem", keyType:type, key:key, value:value });
 	}

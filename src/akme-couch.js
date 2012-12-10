@@ -76,7 +76,7 @@
 	 * Clear the sessionStorage cache of any of these objects.
 	 */
 	function clear() {
-		$.sessionStorage.removeAll(self.name);
+		$.sessionStorage.removeAll(this.name);
 	}
 
 	function findOne(map) {
@@ -156,7 +156,6 @@
 	 * Remove the given revision or the latest if no rev is given.
 	 */
 	function remove(key, rev) { //if (console.logEnabled) console.log(this.name +".remove("+ key +")");
-		// TODO: KM: Perhaps change from a DELETE to just a save-empty with just key-rev?
 		// Save-empty rather than delete would reduce the 404 responses, but then there are blank records, normally a bad thing.
 		var self = this;
 		if (!rev) {
@@ -253,7 +252,7 @@
 	 * Clear the sessionStorage cache of any of these objects.
 	 */
 	function clear() {
-		$.sessionStorage.removeAll(self.name);
+		$.sessionStorage.removeAll(this.name);
 	}
 
 	function findOne(map) {
