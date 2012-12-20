@@ -35,6 +35,7 @@
 		clear : clear, // given Object return undefined/void
 		findOne : findOne, // given Object return Object
 		info : info, // given key return Object
+		copy : copy, // given oldKey, newKey return Object
 		read : read, // given key return Object
 		write : write, // given key, Object return Object
 		remove : remove // given key return Object
@@ -101,6 +102,26 @@
 		}
 		if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers["rev"]);
 		this.doEvent({ type:"info", keyType:this.name, key:key, info:headers });
+		return headers;
+	}
+	
+	/**
+	 * Copy the existing key to the newKey, supply newKey?rev=... to overwrite an existing newKey.
+	 */
+	function copy(key, newKey) {
+		var self = this;
+		var url = self.url+"/"+encodeURIComponent(key);
+		var xhr = callWithRetry("COPY", url, {"Accept": CONTENT_TYPE_JSON, "Destination": newKey}, null);
+		var rev = xhr.getResponseHeader("ETag");
+		var headers = {id: key, rev: (rev ? rev.replace(/^"|"$/g, "") : null), 
+				status: xhr.status, statusText: xhr.statusText};
+		for (var name in {"Cache-Control":1,"Content-Encoding":1,"Content-Length":1,"Content-Type":1,
+				"Date":1,"ETag":1,"Expires":1,"Last-Modified":1,"Pragma":1,"Server":1,"Vary":1,"Warning":1}) {
+			var val = xhr.getResponseHeader(name);
+			if (val) headers[name] = val;
+		}
+		if (console.logEnabled) console.log("COPY "+ url, newKey, xhr.status, xhr.statusText, headers["rev"]);
+		this.doEvent({ type:"copy", keyType:this.name, key:key, newKey:newKey, info:headers });
 		return headers;
 	}
 	
@@ -209,6 +230,7 @@
 		clear : clear, // given Object return undefined/void
 		findOne : findOne, // given Object return Object
 		info : info, // given key return Object
+		copy : copy, // given key,newKey return Object
 		read : read, // given key return Object
 		write : write, // given key, Object return Object
 		remove : remove // given key return Object
@@ -263,7 +285,7 @@
 	/**
 	 * Just get an Object/Map of the HEAD/header info related to the key including the ETag or rev (ETag less the quotes).
 	 */
-	function info(key, /*function(result)*/ callbackFnOrOb) { 
+	function info(key, newKey, /*function(result)*/ callbackFnOrOb) { 
 		//if (console.logEnabled) console.log(this.name +".read("+ key +")");
 		var self = this;
 		var url = self.url+"/"+encodeURIComponent(key);
@@ -280,6 +302,32 @@
 			}
 			if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers["rev"]);
 			self.doEvent({ type:"info", keyType:self.name, key:key, info:headers });
+			$.handleEvent(callbackFnOrOb, headers);
+			self = xhr = key = callbackFnOrOb = null; // closure cleanup 
+		}
+		return xhr;
+	}
+
+	/**
+	 * Copy the existing key to the newKey, supply newKey?rev=... to overwrite an existing newKey.
+	 */
+	function copy(key, newKey, /*function(result)*/ callbackFnOrOb) { 
+		//if (console.logEnabled) console.log(this.name +".read("+ key +")");
+		var self = this;
+		var url = self.url+"/"+encodeURIComponent(key);
+		var xhr = callAsync("COPY", url, {"Accept": CONTENT_TYPE_JSON, "Destination": newKey}, null, handleState);
+		function handleState(ev) {
+			var xhr = ev.target;
+			var rev = xhr.getResponseHeader("ETag");
+			var headers = {id: key, rev: (rev ? rev.replace(/^"|"$/g, "") : null), 
+				status: xhr.status, statusText: xhr.statusText};
+			for (var name in {"Cache-Control":1,"Content-Encoding":1,"Content-Length":1,"Content-Type":1,
+					"Date":1,"ETag":1,"Expires":1,"Last-Modified":1,"Pragma":1,"Server":1,"Vary":1,"Warning":1}) {
+				var val = xhr.getResponseHeader(name);
+				if (val) headers[name] = val;
+			}
+			if (console.logEnabled) console.log("COPY "+ url, newKey, xhr.status, xhr.statusText, headers["rev"]);
+			self.doEvent({ type:"info", keyType:self.name, key:key, newKey:newKey, info:headers });
 			$.handleEvent(callbackFnOrOb, headers);
 			self = xhr = key = callbackFnOrOb = null; // closure cleanup 
 		}
