@@ -94,6 +94,39 @@ akme.copyAll(this.akme, {
 		return (ev.target.nodeType === 1) ? ev.target : ev.target.parentNode;
 	},
 	/**
+	 * Return the element to which the listener was attached, taking an objectOrFunctionMatch to handle IE8.
+	 * The objectOrFunctionMatcher can be a function or an object, where the following pairs are equivalent:
+	 * 
+	 *   EITHER function(elem) { return elem.id=="myId"; } 
+	 *   OR { id:"myId" },
+	 *   
+	 *   EITHER function(elem) { return fw.hasClass(elem,"myClass"); }
+	 *   OR { "class":"myClass" },
+	 *   
+	 *   EITHER function(elem) { return fw.hasClass(elem,"myClass") && elem.getAttribute("attribute")=="myAttribute"; }
+	 *   OR { "class":"myClass", "attribute":"myAttribute" }
+	 */
+	getEventCurrentTarget : function (ev,objectOrFunctionMatcher) {
+		if (ev.currentTarget) return ev.currentTarget;
+		var t = this.getEventElement(ev);
+		if (typeof objectOrFunctionMatcher == "function") while (t && t.nodeType == 1) {
+			if (objectOrFunctionMatcher(t)) return t;
+			t = t.parentNode;
+		}
+		else while (t && t.nodeType == 1) {
+			var found = true;
+			for (var k in objectOrFunctionMatcher) {
+				if ("class"==k) {
+					if (!fw.hasClass(t, objectOrFunctionMatcher[k])) found = false;
+				}
+				else if (t.getAttribute(k) != objectOrFunctionMatcher[k]) found = false;
+			}
+			if (found) return t;
+			t = t.parentNode;
+		}
+		return t;
+	},
+	/**
 	 * Cross-browser cancel of regular DOM events.
 	 */
 	cancelEvent: function (ev) {
