@@ -145,10 +145,11 @@ $(document).ready(function(){
 	module("Raphael SVG/VML");
 	
 	var div = document.createElement("div");
-	div.id = 'raphael';
+	akme.copyAll(div, {id: 'raphael'});
 	akme.copyAll(div.style, {width: '615px', height: '175px'});
 	document.body.appendChild(div);	
 	var paper = new Raphael("raphael");
+	div.insertBefore(document.createTextNode(div.id), div.firstChild);
 	console.log(" width ", paper.width, " height ", paper.height);
 	var rect = paper.rect(1, 1, paper.width-15, paper.height-15, 15);
 	rect.attr("fill", "transparent");
@@ -161,8 +162,10 @@ $(document).ready(function(){
 	setTimeout(function() { goRaphael(); }, 700);
 	
 	var $div2 = $(document.createElement("div"))
+		.attr({id:"jquery"})
 		.css({width: "600px", height: "160px", margin: "0", "background-color": "goldenrod"})
 		.appendTo(document.body);
+	$(document.createTextNode($div2.attr("id"))).insertBefore($div2);
 	var $img2 = $(document.createElement("img"))
 		.attr({src: "../akme-logo.gif", width: 42, height: 42, border: 0})
 		.css({"margin-top": "0px"})
