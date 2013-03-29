@@ -618,6 +618,11 @@ if (!this.akme) this.akme = {
 	trim : function (str) {
 		return str.replace(this.WHITESPACE_TRIM_REGEXP, "");
 	},
+	
+	limitLengthWithDots : function (str, len) {
+		str = String(str);
+		return str.length > len ? str.substring(0,len-3)+"...": str;
+	},
 		
 	padLeft : function (val, size, ch) {
 		var s = String(val);

@@ -619,6 +619,11 @@ if (!this.akme) this.akme = {
 	trim : function (str) {
 		return str.replace(this.WHITESPACE_TRIM_REGEXP, "");
 	},
+	
+	limitLengthWithDots : function (str, len) {
+		str = String(str);
+		return str.length > len ? str.substring(0,len-3)+"...": str;
+	},
 		
 	padLeft : function (val, size, ch) {
 		var s = String(val);
@@ -1289,22 +1294,25 @@ akme.copyAll(this.akme, {
 	},
 	
 	/**
-	 * Helper to fix memory leak in IE8.
+	 * Helper to fix memory leaks in IE8.
 	 */
-	replaceChild : function (parentNode, newChild, oldChild) {
-		var dead = parentNode.replaceChild(newChild, oldChild);
-		if (dead && !this.isW3C) {
-			// elem.replaceChild leaks even in poor IE8.
-			// Remove any iframe onload handlers otherwise they fire again with appendChild.
-			var elems = dead.getElementsByTagName("iframe");
-			for (var j=0; j<elems.length; j++) elems[j].onload = "";
-			var recycler = document.getElementById("recycleBin");
-			if (recycler) {
-				recycler.appendChild(dead);
-				recycler.innerHTML = "";
-			}
-		}
+	recycleChild : function (dead) {
+		if (!dead || this.isW3C) return dead;
+		var recycler = document.getElementById("recycleBin");
+		if (!recycler) return dead;
+		// elem.replaceChild leaks in poor IE8.
+		// Remove any iframe onload handlers otherwise they fire again with appendChild.
+		var elems = dead.getElementsByTagName("iframe");
+		for (var j=0; j<elems.length; j++) elems[j].onload = "";
+		recycler.appendChild(dead);
+		recycler.innerHTML = "";
 		return dead;
+	},
+	removeChild : function (oldChild) {
+		return this.recycleChild(oldChild.parentNode.removeChild(oldChild));
+	},
+	replaceChild : function (parentNode, newChild, oldChild) {
+		return this.recycleChild(parentNode.replaceChild(newChild, oldChild));
 	},
 	
 	replaceTextDataAsArrayOrNull : function (text, dataMap) {

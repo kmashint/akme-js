@@ -81,10 +81,10 @@ $(document).ready(function(){
 		});
 	}
 	
-	
+	alert("Cancel the next popup if you don't want to test CouchDB");
 	var xhr = akme.xhr.open("HEAD", "http://localhost/shiftdb", false);
 	xhr.send();
-	if (xhr.status < 500) {
+	if (xhr.status < 400) {
 		
 		module("CouchAccess");
 		var couchAccess = new akme.core.CouchAccess("shiftdb", "http://localhost/shiftdb");
