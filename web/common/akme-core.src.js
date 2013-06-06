@@ -2310,7 +2310,7 @@ if (!akme.form) akme.form = {
 		for (var i=0; i<form.elements.length; i++) {
 			var elem = form.elements[i];
 			if (!("name" in elem) || elem.name.length === 0) continue;
-			var value = fw.form.getValue(elem);
+			var value = this.getValue(elem);
 			var j = -1;
 			
 			if (elem.name in map) {
@@ -2337,7 +2337,7 @@ if (!akme.form) akme.form = {
 			if (!wasAry) value = [value];
 			if (!(elem instanceof NodeList)) elem = [elem];
 			for (var i=0; i<value.length && i<elem.length; i++) {
-				fw.form.setValue(elem[i], value[i]);
+				this.setValue(elem[i], value[i]);
 				if (console.logEnabled) console.log("set ", form.name, 
 						wasAry ? elem[i].name+"["+i+"]" : elem.name, 
 						wasAry ? elem[i].value : elem.value);
@@ -2374,7 +2374,7 @@ akme.selectHelper = akme.selectHelper || {
 			this.timestamp = now;
 		}
 		this.elem = elem;
-		if ((uc == 32 || uc >= 48) && !String.fromCharCode(uc).match(fw.PRINTABLE_EXCLUDE_REGEXP)) {
+		if ((uc == 32 || uc >= 48) && !String.fromCharCode(uc).match(akme.PRINTABLE_EXCLUDE_REGEXP)) {
 			if (uc != 32) this.text += String.fromCharCode(uc);
 			this.find(elem);
 			if (evnt.cancelable) evnt.preventDefault();
