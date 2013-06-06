@@ -59,8 +59,8 @@ $(document).ready(function(){
 			equal( akme.sessionStorage.getItem("test","x"), "1", "get test.x === String(1)" );
 			ok( !akme.sessionStorage.removeItem("test","x"), "remove test.x" );
 			equal( typeof akme.sessionStorage.destroy, "function", "has destroy function" );
-			equal( typeof akme.sessionStorage.events, "function", "private events()" );
-			equal( typeof akme.sessionStorage.events(), "undefined", "private events() returns undefined" );
+			equal( typeof akme.sessionStorage.privates, "function", "private privates()" );
+			equal( typeof akme.sessionStorage.privates(), "undefined", "private privates() returns undefined" );
 			
 			var evtFcn = function(ev){ 
 				ok(true, "Storage "+ ev.type +" "+ ev.value +" should fire events"); 

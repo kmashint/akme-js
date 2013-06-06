@@ -1014,7 +1014,7 @@ if (!akme.core) akme.core = {};
 	self.refresh();
 	CONTEXT = self;
 
-	$.setProperty($.THIS, CLASS, fw.copyAll(function() {
+	$.setProperty($.THIS, CLASS, $.copyAll(function() {
 		return CONTEXT;
 	}, {CLASS: CLASS}));
 
