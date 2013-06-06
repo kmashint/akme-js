@@ -108,14 +108,10 @@ if (!Object.keys) {
 if (!Array.indexOf) Array.indexOf = (Array.prototype.indexOf) ? 
 function(ary) { return Array.prototype.indexOf.apply(ary, Array.prototype.slice.call(arguments,1)); } :
 function (ary, searchElement /*, fromIndex */ ) {
-     if (ary == null) {  
-         throw new TypeError();  
-     }  
+     if (ary == null) throw new TypeError();  
      var t = Object(ary);
      var len = t.length >>> 0;
-     if (len === 0) {
-         return -1;  
-     }  
+     if (len === 0) return -1;  
      var n = 0;  
      if (arguments.length > 1) {  
          n = Number(arguments[2]);
@@ -125,19 +121,40 @@ function (ary, searchElement /*, fromIndex */ ) {
              n = (n > 0 || -1) * Math.floor(Math.abs(n));  
          }  
      }  
-     if (n >= len) {
-         return -1;  
-     }  
+     if (n >= len) return -1;  
      var k = n >= 0 ? n : Math.max(len - Math.abs(n), 0);
      for (; k < len; k++) {
-         if (k in t && t[k] === searchElement) {  
+         if (k in t && t[k] === searchElement)
              return k;  
-         }  
      }  
-		return -1;
+	 return -1;
 };
 
-
+if (!Array.lastIndexOf) Array.lastIndexOf = (Array.prototype.lastIndexOf) ? 
+function(ary) { return Array.prototype.lastIndexOf.apply(ary, Array.prototype.slice.call(arguments,1)); } :
+function(ary, searchElement /*, fromIndex*/) {
+    if (ary == null) throw new TypeError();
+    var t = Object(ary);
+    var len = t.length >>> 0;
+    if (len === 0) return -1; 
+    var n = len;
+    if (arguments.length > 1) {
+      n = Number(arguments[1]);
+      if (n != n)
+        n = 0;
+      else if (n != 0 && n != (1 / 0) && n != -(1 / 0))
+        n = (n > 0 || -1) * Math.floor(Math.abs(n));
+    }
+    var k = n >= 0
+          ? Math.min(n, len - 1)
+          : len - Math.abs(n);
+    for (; k >= 0; k--) {
+      if (k in t && t[k] === searchElement)
+        return k;
+    }
+    return -1;
+};
+ 
 if (!Array.every) Array.every = (Array.prototype.every) ? 
 function(ary) { return Array.prototype.every.apply(ary, Array.prototype.slice.call(arguments,1)); } :
 function(ary, fun /*, thisp */) {  
@@ -885,17 +902,17 @@ if (!akme.core) akme.core = {};
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES() { return this.events.call(PRIVATES); }
+	function PRIVATES() { return this.privates.call(PRIVATES); }
 
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
 	function EventSource() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
-		var p = {}; // private closure
+		var p = {eventMap:{}}; // private closure
 		function privates() { return this === PRIVATES ? p : undefined; };
 		
-		this.events = privates;
+		this.privates = privates;
 		this.onEvent = onEvent;
 		this.unEvent = unEvent;
 		this.doEvent = doEvent;
@@ -912,53 +929,57 @@ if (!akme.core) akme.core = {};
 
 	function destroy() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+".destroy()");
-		var map = PRIVATES.call(this);
-		for (var key in map) delete map[key];
+		var p = PRIVATES.call(this);
+		for (var key in p.eventMap) delete p.eventMap[key];
 	}
 	
 	/**
 	 * Append the given function to the event handlers for the named event.
 	 * The fnOrHandleEventObject can be a function(ev){...} or { handleEvent:function(ev){...} }.
 	 */
-	function onEvent(type, fnOrHandleEventOb) {
+	function onEvent(type, fnOrHandleEventOb, once) {
 		if (!(typeof fnOrHandleEventOb === "function" || typeof fnOrHandleEventOb.handleEvent === "function")) {
 			throw new TypeError(this.constructor.CLASS+".onEvent given neither function(ev){...} nor { handleEvent:function(ev){...} }");
 		}
-		var EVENTS = PRIVATES.call(this);
-		var a = EVENTS[type];
-		if (!a) { a = []; EVENTS[type] = a; }
-		a.push($.fixHandleEvent(fnOrHandleEventOb));
+		var p = PRIVATES.call(this), a = p.eventMap[type];
+		if (!a) { a = []; p.eventMap[type] = a; }
+		var handler = $.fixHandleEvent(fnOrHandleEventOb);
+		a.push({handler:handler, once:!!once});
 	}
-
+	
 	/**
 	 * Remove the given function from the event handlers for the named event.
 	 * The fnOrHandleEventObject can be a function(ev){...} or { handleEvent:function(ev){...} }.
 	 */
 	function unEvent(type, fnOrHandleEventOb) {
-		var EVENTS = PRIVATES.call(this);
-		var a = EVENTS[type];
+		var p = PRIVATES.call(this);
+		var a = p.eventMap[type];
 		if (!a) return;
-		for (var i=0; i<a.length; i++) if (a[i] === fnOrHandleEventOb) { a.splice(i,1); }
+		for (var i=0; i<a.length; i++) if (a[i].handler === fnOrHandleEventOb) { a.splice(i,1); }
 	}
 
+	/**
+	 * Fire the actual event, looping through and calling handlers/listeners registered with onEvent.
+	 */
 	function doEvent(ev) {
-		var EVENTS = PRIVATES.call(this);
-		var a = EVENTS[ev.type];
+		var p = PRIVATES.call(this);
+		var a = p.eventMap[ev.type];
 		if (a) for (var i=0; i<a.length; i++) {
 			var eh = a[i];
-			if (typeof eh === "function") eh(ev);
-			else eh.handleEvent.call(eh, ev);
+			if (typeof eh.handler === "function") eh.handler.call(undefined, ev);
+			else eh.handler.handleEvent.call(eh.handler, ev);
+			if (eh.once) a.splice(i--,1);
 		}
 	}
 
 })(akme,"akme.core.EventSource");
-// akme.getContext
+// akme.getContext, akme.App
 // Javascript Types: undefined, null, boolean, number, string, function, or object; Date and Array are typeof object.
 // Javascript typeof works for a function or object but cannot always be trusted, e.g. typeof String(1) is string but typeof new String(1) is object.
 // instanceof is better, but will not work between frames/windows/js-security-contexts due to different underlying prototypes.
 // This limitation of instanceof is another reason to use postMessage between frames.
 // See Spring AbstractApplicationContext for related basics.
-// See afmain refreshSpringBean.jsp for refreshing a single bean.
+// See refreshSpring.jsp for refreshing a single bean.
 //
 (function($,CLASS) {
 	if ($.getProperty($.THIS,CLASS)) return; // One-time.
@@ -993,9 +1014,9 @@ if (!akme.core) akme.core = {};
 	self.refresh();
 	CONTEXT = self;
 
-	$.setProperty($.THIS, CLASS, function() {
+	$.setProperty($.THIS, CLASS, fw.copyAll(function() {
 		return CONTEXT;
-	});
+	}, {CLASS: CLASS}));
 
 	//
 	// Functions
@@ -1075,7 +1096,8 @@ if (!akme.core) akme.core = {};
 		return typeof INSTANCE_MAP[id] === "function";
 	}
 
-})(akme, "akme.getContext");// akme-dom.js
+})(akme, "akme.getContext");
+// akme-dom.js
 
 this.DOMParser = this.DOMParser || function() {
 	this.xmldoc = null;
@@ -1177,10 +1199,10 @@ akme.copyAll(this.akme, {
 	 *   EITHER function(elem) { return elem.id=="myId"; } 
 	 *   OR { id:"myId" },
 	 *   
-	 *   EITHER function(elem) { return fw.hasClass(elem,"myClass"); }
+	 *   EITHER function(elem) { return akme.hasClass(elem,"myClass"); }
 	 *   OR { "class":"myClass" },
 	 *   
-	 *   EITHER function(elem) { return fw.hasClass(elem,"myClass") && elem.getAttribute("attribute")=="myAttribute"; }
+	 *   EITHER function(elem) { return akme.hasClass(elem,"myClass") && elem.getAttribute("attribute")=="myAttribute"; }
 	 *   OR { "class":"myClass", "attribute":"myAttribute" }
 	 */
 	getEventCurrentTarget : function (ev,objectOrFunctionMatcher) {
@@ -1194,7 +1216,7 @@ akme.copyAll(this.akme, {
 			var found = true;
 			for (var k in objectOrFunctionMatcher) {
 				if ("class"==k) {
-					if (!fw.hasClass(t, objectOrFunctionMatcher[k])) found = false;
+					if (!this.hasClass(t, objectOrFunctionMatcher[k])) found = false;
 				}
 				else if (t.getAttribute(k) != objectOrFunctionMatcher[k]) found = false;
 			}
@@ -1793,11 +1815,29 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 		frame.contentWindow.postMessage(msg, targetOrigin); // "*" is insecure
 		return headers["callback"];
 	},
+	submitAsync : function(elem, callbackFnOrOb) {
+		var headers = {call:"SubmitRequest"};
+		var key = this.newCallbackKey();
+		headers["callback"] = this.id+".callbackMap."+key;
+		var self = this; // closure
+		self.callbackMap[key] = function(headers, content) {
+			delete self.callbackMap[key];
+			delete self.callbackTime[key];
+			akme.handleEvent(callbackFnOrOb, headers, content);
+			self = key = callbackFnOrOb = null; // closure cleanup
+		};
+		self.callbackTime[key] = new Date().getTime();
+		self[headers["call"]](headers, {type:'submit', target:elem});
+		return headers["callback"];
+	},
 	handleEvent : function(ev) { // ev.data, ev.origin, ev.source
 		var deny = true;
-		for (var i=0; i<this.allowOrigins.length; i++) {
-			if (this.allowOrigins[i] === ev.origin) {deny = false; break;}
-		}
+   		var hasDomain = location.hostname.indexOf(".") !== -1 || 
+		location.hostname.indexOf(".local",location.hostname.length-6) == location.hostname.length-6;
+		if (ev.origin == location.href.substring(0, location.href.indexOf('/', 8)) ||
+	   			(!hasDomain && ev.origin.substring(ev.origin.indexOf('/')) ==
+	   				location.href.substring(location.href.indexOf('/'), location.href.indexOf('/', 8))
+	   			)) deny = false; // allow self both http and https
 		if (deny) { console.warn(this.id+" deny "+ ev.origin); return; }
 		var data = this.parseMessage(ev.data);
 		if (!data.headers.call || typeof this[data.headers.call] !== 'function') return;
@@ -1925,6 +1965,40 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			return;
 		}
 		if (console.logEnabled) alert(akme.formatJSON(headers)+"\n\n"+content);
+	},
+	SubmitRequest : function(headers, ev) {
+		var self = this;
+		var elem = ev.target;
+		// TODO: handle <a href=... target=...>...</a> in addition to <form ...>...</form>.
+		var elemName = elem.nodeName.toLowerCase();
+		if ("form" == elemName) {
+			if (typeof elem.onsubmit === "function" && !elem.onsubmit(ev)) returnNullResponse();
+			var callback = elem.elements["callback"];
+			if (!callback) {
+				callback = elem.ownerDocument.createElement("input");
+				callback.setAttribute("type", "hidden");
+				callback.setAttribute("name", "callback");
+				elem.appendChild(callback);
+			}
+			callback.value = headers["callback"];
+			elem.submit();
+			return;
+		} else {
+			if (console.logEnabled) console.log("submitAsync called with unknown Element ", elem);
+			returnNullResponse();
+		}
+		function returnNullResponse() {
+			self.SubmitResponse({call:"SubmitResponse", callback:headers["callback"]}, null);
+			return;
+		}
+	},
+	SubmitResponse : function(headers, content) {
+		var callbackFnOrOb = akme.getProperty(window, headers["callback"]);
+		if (callbackFnOrOb) {
+			if (/json;|json$/.test(headers["Content-Type"]) && content) content = akme.parseJSON(content);
+			akme.handleEvent(callbackFnOrOb, headers, content);
+		}
+		else if (console.logEnabled) alert(akme.formatJSON(headers)+"\n\n"+content);
 	}
 });
 // Add more to the akme object.

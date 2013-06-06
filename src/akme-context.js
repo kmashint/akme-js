@@ -1,10 +1,10 @@
-// akme.getContext
+// akme.getContext, akme.App
 // Javascript Types: undefined, null, boolean, number, string, function, or object; Date and Array are typeof object.
 // Javascript typeof works for a function or object but cannot always be trusted, e.g. typeof String(1) is string but typeof new String(1) is object.
 // instanceof is better, but will not work between frames/windows/js-security-contexts due to different underlying prototypes.
 // This limitation of instanceof is another reason to use postMessage between frames.
 // See Spring AbstractApplicationContext for related basics.
-// See afmain refreshSpringBean.jsp for refreshing a single bean.
+// See refreshSpring.jsp for refreshing a single bean.
 //
 (function($,CLASS) {
 	if ($.getProperty($.THIS,CLASS)) return; // One-time.
@@ -39,9 +39,9 @@
 	self.refresh();
 	CONTEXT = self;
 
-	$.setProperty($.THIS, CLASS, function() {
+	$.setProperty($.THIS, CLASS, fw.copyAll(function() {
 		return CONTEXT;
-	});
+	}, {CLASS: CLASS}));
 
 	//
 	// Functions

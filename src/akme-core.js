@@ -107,14 +107,10 @@ if (!Object.keys) {
 if (!Array.indexOf) Array.indexOf = (Array.prototype.indexOf) ? 
 function(ary) { return Array.prototype.indexOf.apply(ary, Array.prototype.slice.call(arguments,1)); } :
 function (ary, searchElement /*, fromIndex */ ) {
-     if (ary == null) {  
-         throw new TypeError();  
-     }  
+     if (ary == null) throw new TypeError();  
      var t = Object(ary);
      var len = t.length >>> 0;
-     if (len === 0) {
-         return -1;  
-     }  
+     if (len === 0) return -1;  
      var n = 0;  
      if (arguments.length > 1) {  
          n = Number(arguments[2]);
@@ -124,19 +120,40 @@ function (ary, searchElement /*, fromIndex */ ) {
              n = (n > 0 || -1) * Math.floor(Math.abs(n));  
          }  
      }  
-     if (n >= len) {
-         return -1;  
-     }  
+     if (n >= len) return -1;  
      var k = n >= 0 ? n : Math.max(len - Math.abs(n), 0);
      for (; k < len; k++) {
-         if (k in t && t[k] === searchElement) {  
+         if (k in t && t[k] === searchElement)
              return k;  
-         }  
      }  
-		return -1;
+	 return -1;
 };
 
-
+if (!Array.lastIndexOf) Array.lastIndexOf = (Array.prototype.lastIndexOf) ? 
+function(ary) { return Array.prototype.lastIndexOf.apply(ary, Array.prototype.slice.call(arguments,1)); } :
+function(ary, searchElement /*, fromIndex*/) {
+    if (ary == null) throw new TypeError();
+    var t = Object(ary);
+    var len = t.length >>> 0;
+    if (len === 0) return -1; 
+    var n = len;
+    if (arguments.length > 1) {
+      n = Number(arguments[1]);
+      if (n != n)
+        n = 0;
+      else if (n != 0 && n != (1 / 0) && n != -(1 / 0))
+        n = (n > 0 || -1) * Math.floor(Math.abs(n));
+    }
+    var k = n >= 0
+          ? Math.min(n, len - 1)
+          : len - Math.abs(n);
+    for (; k >= 0; k--) {
+      if (k in t && t[k] === searchElement)
+        return k;
+    }
+    return -1;
+};
+ 
 if (!Array.every) Array.every = (Array.prototype.every) ? 
 function(ary) { return Array.prototype.every.apply(ary, Array.prototype.slice.call(arguments,1)); } :
 function(ary, fun /*, thisp */) {  
@@ -884,17 +901,17 @@ if (!akme.core) akme.core = {};
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES() { return this.events.call(PRIVATES); }
+	function PRIVATES() { return this.privates.call(PRIVATES); }
 
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
 	function EventSource() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
-		var p = {}; // private closure
+		var p = {eventMap:{}}; // private closure
 		function privates() { return this === PRIVATES ? p : undefined; };
 		
-		this.events = privates;
+		this.privates = privates;
 		this.onEvent = onEvent;
 		this.unEvent = unEvent;
 		this.doEvent = doEvent;
@@ -911,42 +928,46 @@ if (!akme.core) akme.core = {};
 
 	function destroy() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+".destroy()");
-		var map = PRIVATES.call(this);
-		for (var key in map) delete map[key];
+		var p = PRIVATES.call(this);
+		for (var key in p.eventMap) delete p.eventMap[key];
 	}
 	
 	/**
 	 * Append the given function to the event handlers for the named event.
 	 * The fnOrHandleEventObject can be a function(ev){...} or { handleEvent:function(ev){...} }.
 	 */
-	function onEvent(type, fnOrHandleEventOb) {
+	function onEvent(type, fnOrHandleEventOb, once) {
 		if (!(typeof fnOrHandleEventOb === "function" || typeof fnOrHandleEventOb.handleEvent === "function")) {
 			throw new TypeError(this.constructor.CLASS+".onEvent given neither function(ev){...} nor { handleEvent:function(ev){...} }");
 		}
-		var EVENTS = PRIVATES.call(this);
-		var a = EVENTS[type];
-		if (!a) { a = []; EVENTS[type] = a; }
-		a.push($.fixHandleEvent(fnOrHandleEventOb));
+		var p = PRIVATES.call(this), a = p.eventMap[type];
+		if (!a) { a = []; p.eventMap[type] = a; }
+		var handler = $.fixHandleEvent(fnOrHandleEventOb);
+		a.push({handler:handler, once:!!once});
 	}
-
+	
 	/**
 	 * Remove the given function from the event handlers for the named event.
 	 * The fnOrHandleEventObject can be a function(ev){...} or { handleEvent:function(ev){...} }.
 	 */
 	function unEvent(type, fnOrHandleEventOb) {
-		var EVENTS = PRIVATES.call(this);
-		var a = EVENTS[type];
+		var p = PRIVATES.call(this);
+		var a = p.eventMap[type];
 		if (!a) return;
-		for (var i=0; i<a.length; i++) if (a[i] === fnOrHandleEventOb) { a.splice(i,1); }
+		for (var i=0; i<a.length; i++) if (a[i].handler === fnOrHandleEventOb) { a.splice(i,1); }
 	}
 
+	/**
+	 * Fire the actual event, looping through and calling handlers/listeners registered with onEvent.
+	 */
 	function doEvent(ev) {
-		var EVENTS = PRIVATES.call(this);
-		var a = EVENTS[ev.type];
+		var p = PRIVATES.call(this);
+		var a = p.eventMap[ev.type];
 		if (a) for (var i=0; i<a.length; i++) {
 			var eh = a[i];
-			if (typeof eh === "function") eh(ev);
-			else eh.handleEvent.call(eh, ev);
+			if (typeof eh.handler === "function") eh.handler.call(undefined, ev);
+			else eh.handler.handleEvent.call(eh.handler, ev);
+			if (eh.once) a.splice(i--,1);
 		}
 	}
 
