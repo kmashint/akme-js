@@ -119,8 +119,8 @@ $(document).ready(function(){
 		throws( function(){ 
 			try { return akme.parseXML('<o a="1" b="2" c="3"'); } catch (er) { console.log(er); throw er; }
 			}, 
-			(navigator.userAgent.indexOf("MSIE ") != -1) ? /SYNTAX_ERR/ : SyntaxError, 
-			"parseXML should fail to parse with a SyntaxError");
+			SyntaxError, 
+			"parseXML should fail to parse with a SyntaxError" );
 		
 	});
 	
