@@ -5,7 +5,7 @@
 	// http://www.w3schools.com/Xml/xml_parser.asp
 	// http://www.w3schools.com/dom/dom_errors_crossbrowser.asp
 	// http://help.dottoro.com/ljcilrao.php
-	// Mozilla DOMParser: if (xmldoc.documentElement.nodeName=="parsererror") ... xmldoc.documentElement.childNodes[0].nodeValue
+	// Mozilla or Chrome DOMParser: if (xmldoc.getElementsByTagName("parsererror").length) ...
 	if (!DOMParser) DOMParser = function DOMParser(){ 
 		this.xmldoc = new ActiveXObject("Msxml2.DOMDocument"); 
 		this.xmldoc.async = false; 
