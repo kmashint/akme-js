@@ -1918,7 +1918,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 		var callbackFnOrOb = akme.getProperty(window, headers["callback"]);
 		if (callbackFnOrOb && (headers.status == 200 || headers.status == 204 || headers.status == 304)) {
 			if (/xml;|xml$/.test(headers["Content-Type"])) {
-				var resx = null;
+				var resx = content;
 				try { resx = akme.parseXML(content, "application/xml"); }
 				catch (er) { headers.status = 500; headers.statusText = String(er); }
 				if (callbackFnOrOb && typeof resx === 'object' && ("childNodes" in resx)) {
@@ -1931,7 +1931,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 				akme.handleEvent(callbackFnOrOb, headers, resx);
 			}
 			else if (/json;|json$/.test(headers["Content-Type"])) {
-				var reso = null;
+				var reso = content;
 				try { reso = akme.parseJSON(content); }
 				catch (er) { headers.status = 500; headers.statusText = String(er); }
 				akme.handleEvent(callbackFnOrOb, headers, reso);
