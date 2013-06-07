@@ -5,6 +5,7 @@ $(document).ready(function(){
 
 	console.logEnabled = true;
 	
+	
 	module(akme.core.IndexedMap.CLASS);
 
 	test("basic set/get/remove/clear", function() {
