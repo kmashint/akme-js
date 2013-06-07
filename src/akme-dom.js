@@ -819,7 +819,9 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 		var callbackFnOrOb = akme.getProperty(window, headers["callback"]);
 		if (callbackFnOrOb && (headers.status == 200 || headers.status == 204 || headers.status == 304)) {
 			if (/xml;|xml$/.test(headers["Content-Type"])) {
-				var resx = akme.parseXML(content, "application/xml");
+				var resx = null;
+				try { resx = akme.parseXML(content, "application/xml"); }
+				catch (er) { headers.status = 500; headers.statusText = String(er); }
 				if (callbackFnOrOb && typeof resx === 'object' && ("childNodes" in resx)) {
 					if (resx.firstChild.nodeName.lastIndexOf(":Envelope") !== -1 &&
 							resx.firstChild.lastChild.nodeName.lastIndexOf(":Body") !== -1) {
@@ -832,7 +834,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			else if (/json;|json$/.test(headers["Content-Type"])) {
 				var reso = null;
 				try { reso = akme.parseJSON(content); }
-				catch (er) { if (er instanceof SyntaxError) headers.status = 500; else throw er; }
+				catch (er) { headers.status = 500; headers.statusText = String(er); }
 				akme.handleEvent(callbackFnOrOb, headers, reso);
 			} // else if (/x-www-form-urlencoded;|x-www-form-urlencoded$/.test(headers["Content-Type"]))
 			else {
