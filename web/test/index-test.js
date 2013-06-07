@@ -4,7 +4,7 @@
 $(document).ready(function(){
 
 	console.logEnabled = true;
-
+	akme.parseXML('<o a="1" b="2" c="3"');
 	
 	module(akme.core.IndexedMap.CLASS);
 
@@ -112,7 +112,16 @@ $(document).ready(function(){
 		equal( akme.parseJSON('{"a":1,"b":2,"c":3}')["c"], 3, "parseJSON should give c=3" );
 		throws( function(){
 			return akme.parseJSON('{"a":1,"b":2,"c":3')["c"];
-		}, Error, "parseJSON should fail to parse");
+		}, SyntaxError, "parseJSON should fail to parse with a SyntaxError");
+	});
+	test("XML", function(){
+		equal( akme.parseXML('<o a="1" b="2" c="3"/>').firstChild.getAttribute("c"), 3, "parseXML should give c=3" );
+		throws( function(){ 
+			try { return akme.parseXML('<o a="1" b="2" c="3"'); } catch (er) { console.log(er); throw er; }
+			}, 
+			(navigator.userAgent.indexOf("MSIE ") != -1) ? /SYNTAX_ERR/ : SyntaxError, 
+			"parseXML should fail to parse with a SyntaxError");
+		
 	});
 	
 	module("W3C standards via fix-ie8");
