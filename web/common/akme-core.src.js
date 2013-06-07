@@ -1099,27 +1099,38 @@ if (!akme.core) akme.core = {};
 })(akme, "akme.getContext");
 // akme-dom.js
 
-this.DOMParser = this.DOMParser || function() {
-	this.xmldoc = null;
+(function(DOMParser){
 	// IE8 and earlier do not support DOMParser directly.
 	// http://www.w3schools.com/Xml/xml_parser.asp
 	// http://www.w3schools.com/dom/dom_errors_crossbrowser.asp
 	// http://help.dottoro.com/ljcilrao.php
-	try { if (!this.xmldoc) this.xmldoc = new ActiveXObject("Msxml2.DOMDocument"); } catch (ex) {}
-    if (!this.xmldoc) throw new Error("This browser does not support DOMParser or Msxml2.DOMDocument.");
-	this.xmldoc.async = false;
-	this.parseFromString = function(text, contentType) {
-		this.xmldoc.loadXML(text);
-		if (this.xmldoc.parseError.errorCode != 0) {
-			var err = this.xmldoc.parseError;
-			throw new Error("DOMParser error "+ err.errorCode +" at line "+ err.line +" pos "+ err.linepos
-				+": "+ err.reason);
-		}
-		// Real DOMParser: if (xmldoc.documentElement.nodeName=="parsererror") ... xmldoc.documentElement.childNodes[0].nodeValue
-		return this.xmldoc;
+	// Mozilla DOMParser: if (xmldoc.documentElement.nodeName=="parsererror") ... xmldoc.documentElement.childNodes[0].nodeValue
+	if (!DOMParser) DOMParser = function DOMParser(){ 
+		this.xmldoc = new ActiveXObject("Msxml2.DOMDocument"); 
+		this.xmldoc.async = false; 
 	};
-    return this;
-};
+	var oldParse = DOMParser.prototype.parseFromString;
+	DOMParser.prototype.parseFromString = function(text, contentType) {
+		if (this.xmldoc) { // MSIE 8
+			this.xmldoc.loadXML(text);
+			if (this.xmldoc.parseError.errorCode != 0) {
+				var err = this.xmldoc.parseError;
+				throw new SyntaxError("DOMParser error "+ err.errorCode +" at line "+ err.line +" pos "+ err.linepos
+					+": "+ err.reason);
+			}
+			return this.xmldoc;
+		} else {
+			this.xmldoc = oldParse.call(this, text, contentType);
+			if (!this.xmldoc || !this.xmldoc.documentElement) { 
+				throw new SyntaxError("Invalid XML: "+ text);
+			}
+			else if (this.xmldoc.getElementsByTagName("parsererror").length) {
+				throw new SyntaxError(this.xmldoc.documentElement.innerHTML);
+			}
+			return this.xmldoc;
+		}
+	};
+})(DOMParser);
 
 if( !window.XMLSerializer ){
 	// Helper for MSIE, MSIE9.
@@ -1918,7 +1929,9 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 				akme.handleEvent(callbackFnOrOb, headers, resx);
 			}
 			else if (/json;|json$/.test(headers["Content-Type"])) {
-				var reso = akme.parseJSON(content);
+				var reso = null;
+				try { reso = akme.parseJSON(content); }
+				catch (er) { if (er instanceof SyntaxError) headers.status = 500; else throw er; }
 				akme.handleEvent(callbackFnOrOb, headers, reso);
 			} // else if (/x-www-form-urlencoded;|x-www-form-urlencoded$/.test(headers["Content-Type"]))
 			else {
