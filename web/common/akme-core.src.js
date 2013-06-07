@@ -1120,7 +1120,8 @@ if (!akme.core) akme.core = {};
 			}
 			return this.xmldoc;
 		} else {
-			this.xmldoc = oldParse.call(this, text, contentType);
+			try { this.xmldoc = oldParse.call(this, text, contentType); }
+			catch (er) { if (!(er instanceof SyntaxError)) throw new SyntaxError(er); }
 			if (!this.xmldoc || !this.xmldoc.documentElement) { 
 				throw new SyntaxError("Invalid XML: "+ text);
 			}
