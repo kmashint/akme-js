@@ -17,7 +17,7 @@ interface Storage {
 */
 
 /**
- * akme.score.Storage
+ * akme.core.Storage
  * Provide underlying functions for akme.localStorage and akme.sessionStorage.
  * This gives the Storage API a collection/type name in addition to the key.
  * The underlying W3C Storage can be retrieved from akme.localStorage.getStorage() or akme.sessionStorage.getStorage().

@@ -436,8 +436,10 @@ if (!this.akme) this.akme = {
 	/**
 	 * Concat a collection to an array and return it, helpful for HTMLCollection results of getElementsByTagName.
 	 */
-	concat : function (ary, coll) {
-		for (var i=0; i<coll.length; i++) ary[ary.length]=(coll[i]);
+	concat : function (ary /*, coll, ... */) {
+		for (var j=1; j<arguments.length; j++) { var coll = arguments[j];
+			for (var i=0; i<coll.length; i++) ary[ary.length]=(coll[i]);
+		}
 		return ary;
 	},
 	/**

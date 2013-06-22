@@ -6,6 +6,16 @@ $(document).ready(function(){
 	console.logEnabled = true;
 	
 	
+	module("akme dom");
+	test("get/setAttributes", function(){
+		var elem = akme.setAttributes(document.createElement("div"), {id:123});
+		var map1 = {id:234};
+		var map2 = akme.getAttributes(elem, map1);
+		equal( map2.id, 123, "map.id == 123");
+		equal( map2.id, map1.id, "map2.id == map1.id");
+	});
+	
+	
 	module(akme.core.IndexedMap.CLASS);
 
 	test("basic set/get/remove/clear", function() {

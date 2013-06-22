@@ -437,8 +437,10 @@ if (!this.akme) this.akme = {
 	/**
 	 * Concat a collection to an array and return it, helpful for HTMLCollection results of getElementsByTagName.
 	 */
-	concat : function (ary, coll) {
-		for (var i=0; i<coll.length; i++) ary[ary.length]=(coll[i]);
+	concat : function (ary /*, coll, ... */) {
+		for (var j=1; j<arguments.length; j++) { var coll = arguments[j];
+			for (var i=0; i<coll.length; i++) ary[ary.length]=(coll[i]);
+		}
 		return ary;
 	},
 	/**
@@ -1578,6 +1580,17 @@ akme.copyAll(this.akme, {
 		elem.style.display = elem.style.display != "none" ? "none" : "";
 	},
 	
+	getAttributes : function(elem, /*optional-to*/map) {
+		map = map || {}, attrs = elem.attributes;
+		for (var i=0; i<attrs.length; i++) map[attrs[i].name] = elem.getAttribute(attrs[i].name); // getAttribute for symmetry
+		return map;
+	},
+	
+	setAttributes : function(elem, /*required-from*/map) {
+		for (var key in map) elem.setAttribute(key, map[key]);
+		return elem;
+	}
+	
 });
 
 
@@ -2591,7 +2604,7 @@ interface Storage {
 */
 
 /**
- * akme.score.Storage
+ * akme.core.Storage
  * Provide underlying functions for akme.localStorage and akme.sessionStorage.
  * This gives the Storage API a collection/type name in addition to the key.
  * The underlying W3C Storage can be retrieved from akme.localStorage.getStorage() or akme.sessionStorage.getStorage().

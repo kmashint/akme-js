@@ -479,6 +479,17 @@ akme.copyAll(this.akme, {
 		elem.style.display = elem.style.display != "none" ? "none" : "";
 	},
 	
+	getAttributes : function(elem, /*optional-to*/map) {
+		map = map || {}, attrs = elem.attributes;
+		for (var i=0; i<attrs.length; i++) map[attrs[i].name] = elem.getAttribute(attrs[i].name); // getAttribute for symmetry
+		return map;
+	},
+	
+	setAttributes : function(elem, /*required-from*/map) {
+		for (var key in map) elem.setAttribute(key, map[key]);
+		return elem;
+	}
+	
 });
 
 
