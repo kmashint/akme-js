@@ -1101,18 +1101,19 @@ if (!akme.core) akme.core = {};
 })(akme, "akme.getContext");
 // akme-dom.js
 
-(function(DOMParser){
+(function(self){
 	// IE8 and earlier do not support DOMParser directly.
 	// http://www.w3schools.com/Xml/xml_parser.asp
 	// http://www.w3schools.com/dom/dom_errors_crossbrowser.asp
 	// http://help.dottoro.com/ljcilrao.php
 	// Mozilla or Chrome DOMParser: if (xmldoc.getElementsByTagName("parsererror").length) ...
-	if (!DOMParser) DOMParser = function DOMParser(){ 
+	function DOMParser(){ 
 		this.xmldoc = new ActiveXObject("Msxml2.DOMDocument"); 
 		this.xmldoc.async = false; 
-	};
-	var oldParse = DOMParser.prototype.parseFromString;
-	DOMParser.prototype.parseFromString = function(text, contentType) {
+	}
+	if (!self.DOMParser) self.DOMParser = DOMParser;
+	var oldParse = self.DOMParser.prototype.parseFromString;
+	self.DOMParser.prototype.parseFromString = function(text, contentType) {
 		if (this.xmldoc) { // MSIE 8
 			this.xmldoc.loadXML(text);
 			if (this.xmldoc.parseError.errorCode != 0) {
@@ -1133,23 +1134,27 @@ if (!akme.core) akme.core = {};
 			return this.xmldoc;
 		}
 	};
-})(DOMParser);
+})(this);
 
-if( !window.XMLSerializer ){
+(function(self){
 	// Helper for MSIE, MSIE9.
 	// http://www.erichynds.com/jquery/working-with-xml-jquery-and-javascript/
 	// http://www.vistax64.com/vista-news/284014-domparser-xmlserializer-ie9-beta.html
-	window.XMLSerializer = function(){};
-}
-if( !window.XMLSerializer.prototype.serializeToString ){
-	window.XMLSerializer.prototype.serializeToString = function(xmlobj) {return xmlobj.xml;};
-}
+	// https://github.com/clientside/amplesdk/issues/127
+	if (!self.XMLSerializer) self.XMLSerializer = function(){};
+	if (!self.XMLSerializer.prototype.serializeToString || (document.documentMode && document.documentMode == 9)) 
+		self.XMLSerializer.prototype.serializeToString = function(xmlobj) { return xmlobj.xml; };
+})(this);
 
-if (!this.XMLHttpRequest) this.XMLHttpRequest = function() {
-	try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); }
-	catch (er) { throw new Error("This browser does not support XMLHttpRequest."); }
-};
-// Use new ActiveXObject("Msxml2.ServerXMLHTTP.6.0") to avoid Access is Denied in HTA.
+(function(self){
+	// Use new ActiveXObject("Msxml2.ServerXMLHTTP.6.0") to avoid Access is Denied in HTA.
+	// For Microsoft Scripting in general: try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); }
+	// catch (er) { throw new ReferenceError("This browser does not support XMLHttpRequest."); }
+	if (!self.XMLHttpRequest) self.XMLHttpRequest = function() { 
+		try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); }
+		catch (er) { throw new Error("This browser does not support XMLHttpRequest."); }
+	}
+})(this);
 
 
 akme.copyAll(this.akme, {
