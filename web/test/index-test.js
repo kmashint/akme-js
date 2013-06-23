@@ -58,10 +58,36 @@ $(document).ready(function(){
 		ok(car instanceof my.Car, "car should be instanceof my.Car");
 		ok(car instanceof my.Vehicle, "car should be instanceof my.Vehicle");
 	});
+	
+	module("akme private objects");
+	test("", function(){
+		(function($,CLASS){
+
+			var PRIVATES = {};
+
+			function X(){
+				var p = {x:1};
+				this.PRIVATES = function() { return (this === PRIVATES) ? p : undefined; };
+			};
+			X.prototype = {get:get};
+			$.setProperty($.THIS, CLASS, X);
+			
+			function get(key) {
+				return this.PRIVATES.call(PRIVATES)[key];
+			}
+
+		})(akme,"my.X");
+		
+		var x = new my.X();
+		equal(x.get("x"), 1, "x should be 1");
+		equal(typeof x.PRIVATES, "function", "x.privates should be function");
+		equal(typeof x.PRIVATES(), "undefined", "x.privates() should be undefined");
+		equal(typeof x.PRIVATES.call({}), "undefined", "x.privates(function(){}) should be undefined");
+		
+	});
 
 	
 	module(akme.core.IndexedMap.CLASS);
-
 	test("basic set/get/remove/clear", function() {
 		equal( typeof akme.core.IndexedMap, "function", "exists" );
 		var imap = new akme.core.IndexedMap();
@@ -79,7 +105,6 @@ $(document).ready(function(){
 		equal( typeof imap.get("y"), "undefined", "y undefined after clear" );
 		equal( typeof imap.get("z"), "undefined", "z undefined after clear" );
 	});
-
 	test("copy/link", function() {
 		var obj = {}, ary = [];
 		ary.push( {cd:"akme", name:"AKME Solutions"} );
@@ -96,19 +121,33 @@ $(document).ready(function(){
 
 	
 	module(akme.core.EventSource.CLASS);
-
 	test("basics", function() {
 		equal( typeof akme.core.EventSource, "function", "exists" );
 	});
 
 	
 	module("akme dom");
-	test("get/setAttributes", function(){
+	test("get/setAttributes on DOM Element", function(){
 		var elem = akme.setAttributes(document.createElement("div"), {id:123});
 		var map1 = {id:234};
 		var map2 = akme.getAttributes(elem, map1);
 		equal( map2.id, 123, "map.id == 123");
 		equal( map2.id, map1.id, "map2.id == map1.id");
+	});
+	test("JSON", function(){
+		equal( akme.parseJSON('{"a":1,"b":2,"c":3}')["c"], 3, "parseJSON should give c=3" );
+		throws( function(){
+			return akme.parseJSON('{"a":1,"b":2,"c":3')["c"];
+		}, SyntaxError, "parseJSON should fail to parse with a SyntaxError");
+	});
+	test("XML", function(){
+		equal( akme.parseXML('<o a="1" b="2" c="3"/>').firstChild.getAttribute("c"), 3, "parseXML should give c=3" );
+		throws( function(){ 
+			try { return akme.parseXML('<o a="1" b="2" c="3"'); } catch (er) { console.log(er); throw er; }
+			}, 
+			SyntaxError, 
+			"parseXML should fail to parse with a SyntaxError" );
+		
 	});
 	
 	
@@ -123,8 +162,8 @@ $(document).ready(function(){
 			equal( akme.sessionStorage.getItem("test","x"), "1", "get test.x === String(1)" );
 			ok( !akme.sessionStorage.removeItem("test","x"), "remove test.x" );
 			equal( typeof akme.sessionStorage.destroy, "function", "has destroy function" );
-			equal( typeof akme.sessionStorage.privates, "function", "private privates()" );
-			equal( typeof akme.sessionStorage.privates(), "undefined", "private privates() returns undefined" );
+			equal( typeof akme.sessionStorage.PRIVATES, "function", "private privates()" );
+			equal( typeof akme.sessionStorage.PRIVATES(), "undefined", "private privates() returns undefined" );
 			
 			var evtFcn = function(ev){ 
 				ok(true, "Storage "+ ev.type +" "+ ev.value +" should fire events"); 
@@ -170,23 +209,6 @@ $(document).ready(function(){
 		}
 	}
 	
-	module("JSON and XML Parsing");
-	
-	test("JSON", function(){
-		equal( akme.parseJSON('{"a":1,"b":2,"c":3}')["c"], 3, "parseJSON should give c=3" );
-		throws( function(){
-			return akme.parseJSON('{"a":1,"b":2,"c":3')["c"];
-		}, SyntaxError, "parseJSON should fail to parse with a SyntaxError");
-	});
-	test("XML", function(){
-		equal( akme.parseXML('<o a="1" b="2" c="3"/>').firstChild.getAttribute("c"), 3, "parseXML should give c=3" );
-		throws( function(){ 
-			try { return akme.parseXML('<o a="1" b="2" c="3"'); } catch (er) { console.log(er); throw er; }
-			}, 
-			SyntaxError, 
-			"parseXML should fail to parse with a SyntaxError" );
-		
-	});
 	
 	module("W3C standards via fix-ie8");
 		

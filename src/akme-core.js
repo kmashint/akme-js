@@ -1,6 +1,4 @@
 // fw-core.js
-// First declare some backported (from Mozilla JavaScript documentation) methods from later ECMAScript/JavaScript if missing.
-// Then on to akme.*.
 
 // Simple ability to ensure console.log and allow for use of if (console.logEnabled).
 // http://www.tuttoaster.com/learning-javascript-and-dom-with-console/
@@ -22,6 +20,7 @@ if (!Function.prototype.getShortName) Function.prototype.getShortName = function
 	else return;
 };
 
+// Cross-reference JS 1.5 Array methods against the JS 1.3 Array constructor for backwards compatibility.
 if (!Array.indexOf) Array.indexOf = 
 	function(ary) { return Array.prototype.indexOf.apply(ary, Array.prototype.slice.call(arguments,1)); };
 
@@ -49,7 +48,7 @@ if (!Array.reduce) Array.reduce =
 if (!Array.reduceRight) Array.reduceRight = 
 	function(ary) { return Array.prototype.reduceRight.apply(ary, Array.prototype.slice.call(arguments,1)); };
 
-
+// Define various convenience methods directly on the akme root object.
 if (!this.akme) this.akme = {
 	THIS : this, // reference the global object, e.g. will be window in a web browser
 	WHITESPACE_TRIM_REGEXP : /^\s*|\s*$/gm,
@@ -69,7 +68,7 @@ if (!this.akme) this.akme = {
 	 * Uses new object.constructor() and then copies hasOwnProperty/non-prototype properties by key.
 	 */
 	clone : function (obj) {
-		if (obj === null || obj === undefined) return obj;
+		if (obj === undefined || obj === null) return obj;
 		if (typeof obj.clone === "function") return obj.clone();
 		var clone = new obj.constructor();
 		for (var key in obj) if (obj.hasOwnProperty(key)) clone[key] = obj[key];
@@ -79,7 +78,7 @@ if (!this.akme) this.akme = {
 	 * Copy hasOwnProperty/non-prototype key/values from the map to the obj, returning the same obj.
 	 */
 	copy : function (obj, map) {
-		if (map === null || typeof map === "undefined") return obj;
+		if (map === undefined || map === null) return obj;
 		for (var key in map) if (map.hasOwnProperty(key)) obj[key] = map[key];
 		return obj;
 	},
@@ -87,7 +86,7 @@ if (!this.akme) this.akme = {
 	 * Copy key/values from the map to the obj, returning the same obj.
 	 */
 	copyAll : function (obj, map) {
-		if (map === null || typeof map === "undefined") return obj;
+		if (map === undefined || map === null) return obj;
 		for (var key in map) obj[key] = map[key];
 		return obj;
 	},
@@ -95,7 +94,7 @@ if (!this.akme) this.akme = {
 	 * Copy values from the map to the obj for existing keys in the obj, returning the same obj.
 	 */
 	copyExisting : function (obj, map) {
-		if (map === null || typeof map === "undefined") return obj;
+		if (map === undefined || map === null) return obj;
 		for (var key in map) if (key in obj) obj[key] = map[key];
 		return obj;
 	},
@@ -104,7 +103,7 @@ if (!this.akme) this.akme = {
 	 * If valName is undefined or null then the entire array values it used.
 	 */
 	copyArrayToObject : function (obj, ary, keyName, valName) {
-		if (typeof valName != 'undefined') for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i][valName];
+		if (valName === undefined) for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i][valName];
 		else for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i];
 		return obj;
 	},
@@ -374,17 +373,15 @@ if (!akme.core) akme.core = {};
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES() { return this.privates.call(PRIVATES); }
+	var PRIVATES = {};
 
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
 	function IndexedMap() {
 		var p = { map : {}, ary : [] }; // private closure
-		function privates() { return this === PRIVATES ? p : undefined; };
-		
+		this.PRIVATES = function() { return this === PRIVATES ? p : undefined; };
 		this.length = p.ary.length;
-		this.privates = privates;
 	};
 	$.extend($.copyAll( // class constructor
 		IndexedMap, {CLASS: CLASS} 
@@ -411,37 +408,37 @@ if (!akme.core) akme.core = {};
 	//
 
 	// Public functions that use PRIVATES and in turn the privileged this.privates().
-	function linkMapTo (obj,key) { obj[key] = PRIVATES.call(this).map; return this; };
-	function size () { return PRIVATES.call(this).ary.length; };
-	function keys () { return PRIVATES.call(this).ary.slice(0); };
-	function key (idx) { return PRIVATES.call(this).ary[idx]; };
+	function linkMapTo (obj,key) { obj[key] = this.PRIVATES.call(PRIVATES).map; return this; };
+	function size () { return this.PRIVATES.call(PRIVATES).ary.length; };
+	function keys () { return this.PRIVATES.call(PRIVATES).ary.slice(0); };
+	function key (idx) { return this.PRIVATES.call(PRIVATES).ary[idx]; };
 	function keySlice (start, end) { 
-		return end ? PRIVATES.call(this).ary.slice(start, end) : PRIVATES.call(this).ary.slice(start);
+		return end ? this.PRIVATES.call(PRIVATES).ary.slice(start, end) : this.PRIVATES.call(PRIVATES).ary.slice(start);
 	};
-	function value (idx) { var p = PRIVATES.call(this); return p.map[p.ary[idx]]; };
+	function value (idx) { var p = this.PRIVATES.call(PRIVATES); return p.map[p.ary[idx]]; };
 	function values () {
-		var p = PRIVATES.call(this); 
+		var p = this.PRIVATES.call(PRIVATES); 
 		var r = new Array(p.ary.length);
 		for (var i = 0; i < p.ary.length; i++) r[i] = p.map[p.ary[i]];
 		return r;
 	};
 	function valueSlice (start, end) {
-		var p = PRIVATES.call(this);
+		var p = this.PRIVATES.call(PRIVATES);
 		if (!(end >= 0)) end = p.ary.length;
 		var r = new Array(end-start);
 		for (var i = start; i < end; i++) r[i-start] = p.map[p.ary[i]];
 		return r;
 	};
-	function get (key) { return PRIVATES.call(this).map[key]; };
+	function get (key) { return this.PRIVATES.call(PRIVATES).map[key]; };
 	function set (key, val) {
-		var p = PRIVATES.call(this); 
+		var p = this.PRIVATES.call(PRIVATES); 
 		if (!(key in p.map)) {
 			p.ary[p.ary.length] = key; this.length = p.ary.length; 
 		}
 		p.map[key] = val;
 	};
 	function remove (key) {
-		var p = PRIVATES.call(this); 
+		var p = this.PRIVATES.call(PRIVATES); 
 		if (!(key in p.map)) return;
 		for (var i=0; i<p.ary.length; i++) if (p.ary[i]===key) {
 			p.ary.splice(i, 1); this.length = p.ary.length; break;
@@ -449,7 +446,7 @@ if (!akme.core) akme.core = {};
 		delete p.map[key];
 	};
 	function clear () {
-		var p = PRIVATES.call(this); 
+		var p = this.PRIVATES.call(PRIVATES); 
 		p.ary.splice(0, p.ary.length);
 		this.length = 0;
 		for (var key in p.map) delete p.map[key];
@@ -505,7 +502,7 @@ if (!akme.core) akme.core = {};
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES() { return this.privates.call(PRIVATES); }
+	var PRIVATES = {};
 
 	//
 	// Initialise constructor or singleton instance and public functions
@@ -513,9 +510,7 @@ if (!akme.core) akme.core = {};
 	function EventSource() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
 		var p = {eventMap:{}}; // private closure
-		function privates() { return this === PRIVATES ? p : undefined; };
-		
-		this.privates = privates;
+		this.PRIVATES = function() { return this === PRIVATES ? p : undefined; };
 		this.onEvent = onEvent;
 		this.unEvent = unEvent;
 		this.doEvent = doEvent;
@@ -532,7 +527,7 @@ if (!akme.core) akme.core = {};
 
 	function destroy() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+".destroy()");
-		var p = PRIVATES.call(this);
+		var p = this.PRIVATES.call(PRIVATES);
 		for (var key in p.eventMap) delete p.eventMap[key];
 	}
 	
@@ -544,7 +539,7 @@ if (!akme.core) akme.core = {};
 		if (!(typeof fnOrHandleEventOb === "function" || typeof fnOrHandleEventOb.handleEvent === "function")) {
 			throw new TypeError(this.constructor.CLASS+".onEvent given neither function(ev){...} nor { handleEvent:function(ev){...} }");
 		}
-		var p = PRIVATES.call(this), a = p.eventMap[type];
+		var p = this.PRIVATES.call(PRIVATES), a = p.eventMap[type];
 		if (!a) { a = []; p.eventMap[type] = a; }
 		var handler = $.fixHandleEvent(fnOrHandleEventOb);
 		a.push({handler:handler, once:!!once});
@@ -555,7 +550,7 @@ if (!akme.core) akme.core = {};
 	 * The fnOrHandleEventObject can be a function(ev){...} or { handleEvent:function(ev){...} }.
 	 */
 	function unEvent(type, fnOrHandleEventOb) {
-		var p = PRIVATES.call(this);
+		var p = this.PRIVATES.call(PRIVATES);
 		var a = p.eventMap[type];
 		if (!a) return;
 		for (var i=0; i<a.length; i++) if (a[i].handler === fnOrHandleEventOb) { a.splice(i,1); }
@@ -565,7 +560,7 @@ if (!akme.core) akme.core = {};
 	 * Fire the actual event, looping through and calling handlers/listeners registered with onEvent.
 	 */
 	function doEvent(ev) {
-		var p = PRIVATES.call(this);
+		var p = this.PRIVATES.call(PRIVATES);
 		var a = p.eventMap[ev.type];
 		if (a) for (var i=0; i<a.length; i++) {
 			var eh = a[i];

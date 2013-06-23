@@ -17,7 +17,7 @@ interface Storage {
 */
 
 /**
- * akme.core.Storage
+ * akme.dom.Storage
  * Provide underlying functions for akme.localStorage and akme.sessionStorage.
  * This gives the Storage API a collection/type name in addition to the key.
  * The underlying W3C Storage can be retrieved from akme.localStorage.getStorage() or akme.sessionStorage.getStorage().
@@ -169,13 +169,13 @@ interface Storage {
 		this.doEvent({ type:"clear", count:count });
 	}
 	
-})(akme,"akme.core.Storage");
+})(akme,"akme.dom.Storage");
 
 
 /**
  * akme.localStorage
  */
-if (!akme.localStorage) akme.localStorage = new akme.core.Storage({
+if (!akme.localStorage) akme.localStorage = new akme.dom.Storage({
 	name : "localStorage",
 	length : typeof localStorage !== "undefined" ? localStorage.length : 0,
 	size : function() { this.length = localStorage.length; return this.length; },
@@ -189,7 +189,7 @@ if (!akme.localStorage) akme.localStorage = new akme.core.Storage({
 /**
  * akme.sessionStorage
  */
-if (!akme.sessionStorage) akme.sessionStorage = new akme.core.Storage({
+if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 	name : "sessionStorage",
 	length : typeof sessionStorage !== "undefined" ? sessionStorage.length : 0,
 	size : function() { this.length = sessionStorage.length; return this.length; },
