@@ -5,16 +5,60 @@ $(document).ready(function(){
 
 	console.logEnabled = true;
 	
-	
-	module("akme dom");
-	test("get/setAttributes", function(){
-		var elem = akme.setAttributes(document.createElement("div"), {id:123});
-		var map1 = {id:234};
-		var map2 = akme.getAttributes(elem, map1);
-		equal( map2.id, 123, "map.id == 123");
-		equal( map2.id, map1.id, "map2.id == map1.id");
+	module("akme.extend");
+	test("JS inheritance directly", function() {
+		if (!window.my) window.my = {};
+		
+		my.Vehicle = function Vehicle(){};
+		(function(self,CLASS){
+			  // function scope for a module
+			  var DEFAULT_WHEELS = 4;
+
+			  function Car() { 
+			    // nested function scope for constructor
+			    console.log(this.constructor.CLASS +".constructor() with wheels="+this.wheels);
+			  };
+			  Car.CLASS = CLASS;
+			  Car.constructor = my.Vehicle; // super constructor
+			  Car.prototype = new Car.constructor; // super-static prototype
+			  Car.prototype.constructor = Car;
+			  Car.prototype.wheels = DEFAULT_WHEELS;
+			  self.my.Car = Car;
+
+		})(window,"my.Car");
+		
+		equal(typeof my.Car, "function", "my.Car should be a constructor function");
+		ok(my.Car.prototype instanceof my.Vehicle, "my.Car.prototype should be instanceof my.Vehicle");
+		ok(my.Car.constructor === my.Vehicle, "my.Car.constructor should be my.Vehicle, the super-constructor, aka this.constructor.constructor");
+		var car = new my.Car;
+		ok(car instanceof my.Car, "car should be instanceof my.Car");
+		ok(car instanceof my.Vehicle, "car should be instanceof my.Vehicle");
 	});
-	
+	test("JS inheritance with akme.extend", function() {
+		(function($,CLASS){
+			$.setProperty($.THIS, "my.Vehicle", function Vehicle(){});
+			// function scope for a module
+			var DEFAULT_WHEELS = 4;
+
+			function Car() { 
+			    // nested function scope for constructor
+			    console.log(this.constructor.CLASS +".constructor() with wheels="+this.wheels);
+			};
+			$.extend(
+				$.copyAll(Car, {CLASS : CLASS}), // constructor function
+				$.copyAll(new my.Vehicle, {wheels: DEFAULT_WHEELS}) // super-static prototype
+				);
+			$.setProperty($.THIS, CLASS, Car);
+		})(akme,"my.Car");
+		
+		equal(typeof my.Car, "function", "my.Car should be a constructor function");
+		ok(my.Car.prototype instanceof my.Vehicle, "my.Car.prototype should be instanceof my.Vehicle");
+		ok(my.Car.constructor === my.Vehicle, "my.Car.constructor should be my.Vehicle, the super-constructor, aka this.constructor.constructor");
+		var car = new my.Car;
+		ok(car instanceof my.Car, "car should be instanceof my.Car");
+		ok(car instanceof my.Vehicle, "car should be instanceof my.Vehicle");
+	});
+
 	
 	module(akme.core.IndexedMap.CLASS);
 
@@ -57,6 +101,16 @@ $(document).ready(function(){
 		equal( typeof akme.core.EventSource, "function", "exists" );
 	});
 
+	
+	module("akme dom");
+	test("get/setAttributes", function(){
+		var elem = akme.setAttributes(document.createElement("div"), {id:123});
+		var map1 = {id:234};
+		var map2 = akme.getAttributes(elem, map1);
+		equal( map2.id, 123, "map.id == 123");
+		equal( map2.id, map1.id, "map2.id == map1.id");
+	});
+	
 	
 	if (akme.sessionStorage) {
 	
