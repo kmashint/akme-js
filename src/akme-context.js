@@ -76,7 +76,7 @@
 	 */
 	function get(id) {
 		var o = INSTANCE_MAP[id];
-		if (typeof o === "function") o = akme.newApplyArgs(o, Array.prototype.slice.call(arguments, 1));
+		if (typeof o === "function") o = $.newApplyArgs(o, Array.prototype.slice.call(arguments, 1));
 		if (o === undefined) o = null;
 		this.doEvent({ type:"get", context:CONTEXT, id:id, instance:o });
 		return o;

@@ -21,7 +21,9 @@ if (!Function.prototype.getShortName) Function.prototype.getShortName = function
 	else return;
 };
 
+//
 // Cross-reference JS 1.5 Array methods against the JS 1.3 Array constructor for backwards compatibility.
+//
 if (!Array.indexOf) Array.indexOf = 
 	function(ary) { return Array.prototype.indexOf.apply(ary, Array.prototype.slice.call(arguments,1)); };
 
@@ -49,7 +51,9 @@ if (!Array.reduce) Array.reduce =
 if (!Array.reduceRight) Array.reduceRight = 
 	function(ary) { return Array.prototype.reduceRight.apply(ary, Array.prototype.slice.call(arguments,1)); };
 
+//
 // Define various convenience methods directly on the akme root object.
+//
 if (!this.akme) this.akme = {
 	THIS : this, // reference the global object, e.g. will be window in a web browser
 	WHITESPACE_TRIM_REGEXP : /^\s*|\s*$/gm,
@@ -650,7 +654,7 @@ if (!akme.core) akme.core = {};
 	 */
 	function get(id) {
 		var o = INSTANCE_MAP[id];
-		if (typeof o === "function") o = akme.newApplyArgs(o, Array.prototype.slice.call(arguments, 1));
+		if (typeof o === "function") o = $.newApplyArgs(o, Array.prototype.slice.call(arguments, 1));
 		if (o === undefined) o = null;
 		this.doEvent({ type:"get", context:CONTEXT, id:id, instance:o });
 		return o;
