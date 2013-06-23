@@ -14,7 +14,7 @@ if (typeof console.logEnabled === "undefined") console.logEnabled = false;
 /**
  * Utility method on functions to return a short version of a dot-delimited constructor name.
  * Useful for constructor functions, e.g. with obj.constructor.name as "akme.core.EventSource" 
- * and obj.constructor.getShortName() gives "Event".
+ * and obj.constructor.getShortName() gives "EventSource".
  * If given a parameter, it will look for a name on that function, or object, instead of this function.
  */
 if (!Function.prototype.getShortName) Function.prototype.getShortName = function (fn) {
@@ -23,9 +23,36 @@ if (!Function.prototype.getShortName) Function.prototype.getShortName = function
 	else return;
 };
 
+if (!Array.indexOf) Array.indexOf = 
+	function(ary) { return Array.prototype.indexOf.apply(ary, Array.prototype.slice.call(arguments,1)); };
+
+if (!Array.lastIndexOf) Array.lastIndexOf = 
+	function(ary) { return Array.prototype.lastIndexOf.apply(ary, Array.prototype.slice.call(arguments,1)); };
+
+if (!Array.every) Array.every = 
+	function(ary) { return Array.prototype.every.apply(ary, Array.prototype.slice.call(arguments,1)); };
+
+if (!Array.filter) Array.filter = 
+	function(ary) { return Array.prototype.filter.apply(ary, Array.prototype.slice.call(arguments,1)); };
+
+if (!Array.forEach) Array.forEach = 
+	function(ary) { Array.prototype.forEach.apply(ary, Array.prototype.slice.call(arguments,1)); };
+
+if (!Array.map) Array.map = 
+	function(ary) { return Array.prototype.map.apply(ary, Array.prototype.slice.call(arguments,1)); };
+
+if (!Array.some) Array.some =  
+	function(ary) { return Array.prototype.some.apply(ary, Array.prototype.slice.call(arguments,1)); };
+
+if (!Array.reduce) Array.reduce = 
+	function(ary) { return Array.prototype.reduce.apply(ary, Array.prototype.slice.call(arguments,1)); };
+
+if (!Array.reduceRight) Array.reduceRight = 
+	function(ary) { return Array.prototype.reduceRight.apply(ary, Array.prototype.slice.call(arguments,1)); };
+
 
 if (!this.akme) this.akme = {
-	THIS : this,
+	THIS : this, // reference the global object, e.g. will be window in a web browser
 	WHITESPACE_TRIM_REGEXP : /^\s*|\s*$/gm,
 	PRINTABLE_EXCLUDE_REGEXP : /[^\x20-\x7e\xc0-\xff]/g,
 		
