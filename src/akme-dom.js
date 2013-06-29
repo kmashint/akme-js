@@ -52,7 +52,7 @@
 	if (!self.XMLHttpRequest) self.XMLHttpRequest = function() { 
 		try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); }
 		catch (er) { throw new Error("This browser does not support XMLHttpRequest."); }
-	}
+	};
 })(this);
 
 
@@ -511,7 +511,7 @@ if (!akme.xhr) akme.xhr = {
 	CONTENT_XHTML : {"Content-Type": "application/xhtml+xml"},
 	CONTENT_XML : {"Content-Type": "text/xml"},
 	CONTENT_JSON : {"Content-Type": "application/json"},
-	NO_CACHE_HEADER_MAP : { "Pragma": "no-cache", "Cache-Control": "no-cache, no-store, max-age=0, must-revalidate" },
+	NO_CACHE_HEADER_MAP : { "Pragma": "no-cache", "Cache-Control": "no-cache, no-store" },
 	PRIVATE_CACHE_HEADER_MAP : { "Pragma": "private", "Cache-Control": "private" },
 	PRIVATE_VALID_CACHE_HEADER_MAP : { "Pragma": "private", "Cache-Control": "private, must-revalidate" },
 	PUBLIC_CACHE_HEADER_MAP : { "Pragma": "public", "Cache-Control": "public" },

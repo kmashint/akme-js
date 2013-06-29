@@ -21,6 +21,27 @@ if (!Function.prototype.getShortName) Function.prototype.getShortName = function
 	else return;
 };
 
+/**
+ * Return values related to hasOwnProperty keys.
+ */
+if (!Object.values) Object.values = function(obj) {
+	var v = [], k = Object.keys(obj);
+	for (var i=0; i<k.length; i++) v.push(obj[k[i]]);
+	return v;
+};
+
+/**
+ * Perform a binary search on the given array for the given object assuming a pre-sorted array.
+ */
+if (!Array.binarySearch) Array.binarySearch = function (a,o) {
+    var l = 0, u = a.length, m = 0;
+    while ( l <= u ) { 
+        if ( o > a[( m = Math.floor((l+u)/2) )] ) l = m+1;
+        else u = (o == a[m]) ? -2 : m - 1;
+    }
+    return (u == -2) ? m : -1;
+};
+
 //
 // Cross-reference JS 1.5 Array methods against the JS 1.3 Array constructor for backwards compatibility.
 //
@@ -270,14 +291,50 @@ if (!this.akme) this.akme = {
 		return Math.round(number/factor+0.5)*factor;
 	},
 
+	/** Set the given dateTimeLong (no millis) or the defaultDt if not valid. */
+	setValidDateTimeInt: function(defaultDt, dateTimeLong) {
+		var d = Math.floor(dateTimeLong / 1000000);
+		var t = (dateTimeLong % 1000000);
+		return this.setValidDateTime(defaultDt, 
+				Math.floor(d / 10000), Math.floor(d / 100) % 100, d % 100,
+				Math.floor(t / 10000), Math.floor(t / 100) % 100, t % 100);
+	},
+	
+	/** Set the given date and optional time and optional millis or the defaultDt if not valid. */
+	setValidDateTime: function(defaultDt, ye, mo, da, ho, mi, se, ms) {
+		var dt = new Date(ye, parseInt(mo||1,10)-1, parseInt(da||1,10), parseInt(ho||0,10), parseInt(mi||0,10), parseInt(se||0,10), parseInt(ms||0,10));
+		if (dt.getFullYear()!=ye || dt.getMonth()+1!=mo || dt.getDate()!=da) dt = defaultDt;
+		else if (arguments.length >= 5 && (dt.getHours()!=ho || dt.getMinutes()!=mi || dt.getSeconds()!=se)) dt = defaultDt;
+		else if (arguments.length >= 8 && dt.getMilliseconds()!=ms) dt = defaultDt;
+		return dt;
+	},
+	
+	parseDate : function (dateStr) { // Based on example from Paul Sowden.
+	    var d = dateStr.match(/([0-9]{4})(-([0-9]{2})(-([0-9]{2})([T ]([0-9]{2}):([0-9]{2})(:([0-9]{2})(\.([0-9]+))?)?(Z|(([-+])([0-9]{2}):([0-9]{2})))?)?)?)?/);
+	    var date = new Date(d[1], parseInt(d[3]||1,10)-1, parseInt(d[5]||1,10), 
+	    		parseInt(d[7]||0,10), parseInt(d[8]||0,10), parseInt(d[10]||0,10), d[12] ? Number("0."+d[12])*1000 : 0);
+	    //var offset = 0;
+	    //if (d[14]) {
+	    //    offset = (Number(d[16]) * 60) + Number(d[17]);
+	    //    offset *= ((d[15] == '-') ? 1 : -1);
+	    //}
+	    //offset -= date.getTimezoneOffset();
+	    //time = Number(date) + (offset * 60 * 1000);
+	    return date;
+	},
+	
 	formatIsoDate : function (date) {
 		return date.getFullYear()+'-'+this.padLeft(date.getMonth() + 1, 2, '0')+'-'+this.padLeft(date.getDate(), 2, '0');
+	},
+
+	formatIsoDateTime : function (dt, delimiter) {
+		if (!delimiter) delimiter = "T";
+        var dn = (dt.getFullYear()*10000+(dt.getMonth()+1)*100+dt.getDate()) * 1000000 +
+        	dt.getHours()*10000+dt.getMinutes()*100+dt.getSeconds();
+        return String(dn).replace(/^(....)(..)(..)(..)(..)(..)/, "$1-$2-$3"+delimiter+"$4:$5:$6."+String(dt.getMilliseconds()+1000).substring(1));
 	}
 
 };
-
-
-if (!akme.core) akme.core = {};
 
 
 /**
@@ -378,14 +435,14 @@ if (!akme.core) akme.core = {};
 	//
 	// Private static declarations / closure
 	//
-	var PRIVATES = {};
+	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
 
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
 	function IndexedMap() {
 		var p = { map : {}, ary : [] }; // private closure
-		this.PRIVATES = function() { return this === PRIVATES ? p : undefined; };
+		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
 		this.length = p.ary.length;
 	};
 	$.extend($.copyAll( // class constructor
@@ -413,37 +470,37 @@ if (!akme.core) akme.core = {};
 	//
 
 	// Public functions that use PRIVATES and in turn the privileged this.privates().
-	function linkMapTo (obj,key) { obj[key] = this.PRIVATES.call(PRIVATES).map; return this; };
-	function size () { return this.PRIVATES.call(PRIVATES).ary.length; };
-	function keys () { return this.PRIVATES.call(PRIVATES).ary.slice(0); };
-	function key (idx) { return this.PRIVATES.call(PRIVATES).ary[idx]; };
+	function linkMapTo (obj,key) { obj[key] = PRIVATES(this).map; return this; };
+	function size () { return PRIVATES(this).ary.length; };
+	function keys () { return PRIVATES(this).ary.slice(0); };
+	function key (idx) { return PRIVATES(this).ary[idx]; };
 	function keySlice (start, end) { 
-		return end ? this.PRIVATES.call(PRIVATES).ary.slice(start, end) : this.PRIVATES.call(PRIVATES).ary.slice(start);
+		return end ? PRIVATES(this).ary.slice(start, end) : PRIVATES(this).ary.slice(start);
 	};
-	function value (idx) { var p = this.PRIVATES.call(PRIVATES); return p.map[p.ary[idx]]; };
+	function value (idx) { var p = PRIVATES(this); return p.map[p.ary[idx]]; };
 	function values () {
-		var p = this.PRIVATES.call(PRIVATES); 
+		var p = PRIVATES(this); 
 		var r = new Array(p.ary.length);
 		for (var i = 0; i < p.ary.length; i++) r[i] = p.map[p.ary[i]];
 		return r;
 	};
 	function valueSlice (start, end) {
-		var p = this.PRIVATES.call(PRIVATES);
+		var p = PRIVATES(this);
 		if (!(end >= 0)) end = p.ary.length;
 		var r = new Array(end-start);
 		for (var i = start; i < end; i++) r[i-start] = p.map[p.ary[i]];
 		return r;
 	};
-	function get (key) { return this.PRIVATES.call(PRIVATES).map[key]; };
+	function get (key) { return PRIVATES(this).map[key]; };
 	function set (key, val) {
-		var p = this.PRIVATES.call(PRIVATES); 
+		var p = PRIVATES(this); 
 		if (!(key in p.map)) {
 			p.ary[p.ary.length] = key; this.length = p.ary.length; 
 		}
 		p.map[key] = val;
 	};
 	function remove (key) {
-		var p = this.PRIVATES.call(PRIVATES); 
+		var p = PRIVATES(this); 
 		if (!(key in p.map)) return;
 		for (var i=0; i<p.ary.length; i++) if (p.ary[i]===key) {
 			p.ary.splice(i, 1); this.length = p.ary.length; break;
@@ -451,7 +508,7 @@ if (!akme.core) akme.core = {};
 		delete p.map[key];
 	};
 	function clear () {
-		var p = this.PRIVATES.call(PRIVATES); 
+		var p = PRIVATES(this); 
 		p.ary.splice(0, p.ary.length);
 		this.length = 0;
 		for (var key in p.map) delete p.map[key];
@@ -507,7 +564,7 @@ if (!akme.core) akme.core = {};
 	//
 	// Private static declarations / closure
 	//
-	var PRIVATES = {};
+	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
 
 	//
 	// Initialise constructor or singleton instance and public functions
@@ -515,7 +572,7 @@ if (!akme.core) akme.core = {};
 	function EventSource() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
 		var p = {eventMap:{}}; // private closure
-		this.PRIVATES = function() { return this === PRIVATES ? p : undefined; };
+		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
 		this.onEvent = onEvent;
 		this.unEvent = unEvent;
 		this.doEvent = doEvent;
@@ -532,7 +589,7 @@ if (!akme.core) akme.core = {};
 
 	function destroy() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+".destroy()");
-		var p = this.PRIVATES.call(PRIVATES);
+		var p = PRIVATES(this);
 		for (var key in p.eventMap) delete p.eventMap[key];
 	}
 	
@@ -544,7 +601,7 @@ if (!akme.core) akme.core = {};
 		if (!(typeof fnOrHandleEventOb === "function" || typeof fnOrHandleEventOb.handleEvent === "function")) {
 			throw new TypeError(this.constructor.CLASS+".onEvent given neither function(ev){...} nor { handleEvent:function(ev){...} }");
 		}
-		var p = this.PRIVATES.call(PRIVATES), a = p.eventMap[type];
+		var p = PRIVATES(this), a = p.eventMap[type];
 		if (!a) { a = []; p.eventMap[type] = a; }
 		var handler = $.fixHandleEvent(fnOrHandleEventOb);
 		a.push({handler:handler, once:!!once});
@@ -555,7 +612,7 @@ if (!akme.core) akme.core = {};
 	 * The fnOrHandleEventObject can be a function(ev){...} or { handleEvent:function(ev){...} }.
 	 */
 	function unEvent(type, fnOrHandleEventOb) {
-		var p = this.PRIVATES.call(PRIVATES);
+		var p = PRIVATES(this);
 		var a = p.eventMap[type];
 		if (!a) return;
 		for (var i=0; i<a.length; i++) if (a[i].handler === fnOrHandleEventOb) { a.splice(i,1); }
@@ -565,7 +622,7 @@ if (!akme.core) akme.core = {};
 	 * Fire the actual event, looping through and calling handlers/listeners registered with onEvent.
 	 */
 	function doEvent(ev) {
-		var p = this.PRIVATES.call(PRIVATES);
+		var p = PRIVATES(this);
 		var a = p.eventMap[ev.type];
 		if (a) for (var i=0; i<a.length; i++) {
 			var eh = a[i];
@@ -754,7 +811,7 @@ if (!akme.core) akme.core = {};
 	if (!self.XMLHttpRequest) self.XMLHttpRequest = function() { 
 		try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); }
 		catch (er) { throw new Error("This browser does not support XMLHttpRequest."); }
-	}
+	};
 })(this);
 
 
@@ -1213,7 +1270,7 @@ if (!akme.xhr) akme.xhr = {
 	CONTENT_XHTML : {"Content-Type": "application/xhtml+xml"},
 	CONTENT_XML : {"Content-Type": "text/xml"},
 	CONTENT_JSON : {"Content-Type": "application/json"},
-	NO_CACHE_HEADER_MAP : { "Pragma": "no-cache", "Cache-Control": "no-cache, no-store, max-age=0, must-revalidate" },
+	NO_CACHE_HEADER_MAP : { "Pragma": "no-cache", "Cache-Control": "no-cache, no-store" },
 	PRIVATE_CACHE_HEADER_MAP : { "Pragma": "private", "Cache-Control": "private" },
 	PRIVATE_VALID_CACHE_HEADER_MAP : { "Pragma": "private", "Cache-Control": "private, must-revalidate" },
 	PUBLIC_CACHE_HEADER_MAP : { "Pragma": "public", "Cache-Control": "public" },
