@@ -735,7 +735,9 @@ if (!this.akme) this.akme = {
 	 * Resolve with success and invoke done callbacks.
 	 */
 	function resolve() {
-		applyToArray(PRIVATES(this).doneAry, undefined, arguments);
+		var p = PRIVATES(this);
+		p.state = 1;
+		applyToArray(p.doneAry, undefined, arguments);
 	}
 	
 	/**
@@ -743,14 +745,18 @@ if (!this.akme) this.akme = {
 	 * applying the first argument as "this" for the callbacks.
 	 */
 	function resolveWith(self) {
-		applyToArray(PRIVATES(this).doneAry, self, Array.prototype.slice.call(arguments,1));
+		var p = PRIVATES(this);
+		p.state = 1;
+		applyToArray(p.doneAry, self, Array.prototype.slice.call(arguments,1));
 	}
 	
 	/**
 	 * Reject with failure and invoke fail callbacks.
 	 */
 	function reject() {
-		applyToArray(PRIVATES(this).failAry, undefined, arguments);
+		var p = PRIVATES(this);
+		p.state = 2;
+		applyToArray(p.failAry, undefined, arguments);
 	}
 	
 	/**
@@ -758,7 +764,9 @@ if (!this.akme) this.akme = {
 	 * applying the first argument as "this" for the callbacks.
 	 */
 	function rejectWith(self) {
-		applyToArray(PRIVATES(this).failAry, self, Array.prototype.slice.call(arguments,1));
+		var p = PRIVATES(this);
+		p.state = 2;
+		applyToArray(p.failAry, self, Array.prototype.slice.call(arguments,1));
 	}
 	
 	/**
