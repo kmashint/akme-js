@@ -646,13 +646,14 @@ if (!this.akme) this.akme = {
 	function applyToArray(ary, self, args) { 
 		for (var i=0; i<ary.length; i++) ary[i].apply(self, args);
 	}
+	var STATE = ["pending","resolved","rejected"];
 	
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
 	function Promise() {
 		if (!(this instanceof Promise)) return $.newApplyArgs(Promise, arguments);
-		var p = { alwaysAry: [], doneAry: [], failAry: [], partAry: [] }; // private closure
+		var p = { state: 0, alwaysAry: [], doneAry: [], failAry: [], partAry: [] }; // private closure
 		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
 	};
 	$.extend($.copyAll( // class constructor
@@ -764,7 +765,7 @@ if (!this.akme) this.akme = {
 	 * Return the current state as "pending", "resolved", "rejected".
 	 */
 	function state() {
-		
+		return STATE[PRIVATES(this).state];
 	}
 	
 	/**
