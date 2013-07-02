@@ -425,7 +425,6 @@ if (!this.akme) this.akme = {
 })(akme,"akme.core.Data");
 
 
-
 /**
  * akme.core.IndexedMap
  */
@@ -633,6 +632,160 @@ if (!this.akme) this.akme = {
 	}
 
 })(akme,"akme.core.EventSource");
+
+
+/**
+ * akme.core.Promise
+ */
+(function($,CLASS){
+	if ($.getProperty($.THIS,CLASS)) return; // One-time.
+
+	//
+	// Private static declarations / closure
+	//
+	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
+	function applyToArray(ary, self, args) { 
+		for (var i=0; i<ary.length; i++) ary[i].apply(self, args);
+	}
+	
+	//
+	// Initialise constructor or singleton instance and public functions
+	//
+	function Promise() {
+		if (!(this instanceof Promise)) return $.newApplyArgs(Promise, arguments);
+		var p = { alwaysAry: [], doneAry: [], failAry: [], partAry: [] }; // private closure
+		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
+	};
+	$.extend($.copyAll( // class constructor
+		Promise, {CLASS: CLASS, make: make, promise: make} 
+	), { // super-static prototype with public functions
+		always: always,
+		done: done,
+		fail: fail,
+		notify: notify,
+		notifyWith: notifyWith,
+		progress: progress,
+		resolve: resolve,
+		resolveWith: resolveWith,
+		reject: reject,
+		rejectWith: rejectWith,
+		state: state,
+		then: then,
+		when: when
+	});
+	$.setProperty($.THIS, CLASS, Promise);
+	
+	//
+	// Functions
+	//
+	
+	/**
+	 * Register the given function(s) to be called on resolution or rejection, 
+	 * success or failure (i.e. finally).
+	 */
+	function always() {
+		$.concat(PRIVATES(this).alwaysAry, arguments);
+	}
+	
+	/**
+	 * Register the given function(s) to be called when resolved with success.
+	 */
+	function done() {
+		$.concat(PRIVATES(this).doneAry, arguments);
+	}
+	
+	/**
+	 * Register the given function(s) to be called when rejected with failure.
+	 */
+	function fail() {
+		$.concat(PRIVATES(this).failAry, arguments);
+	}
+	
+	/**
+	 * Make a promise calling the given function before progress starts.
+	 * This is similar to jQuery.Deferred.promise() and is cross-listed here as Promise.promise().
+	 */
+	function make(startFn) {
+		
+	}
+	
+	/**
+	 * Notify partial progress callbacks.
+	 */
+	function notify() {
+		applyToArray(PRIVATES(this).partAry, undefined, arguments);
+	}
+	
+	/**
+	 * Notify partial progress callbacks,
+	 * applying the first argument as "this" for the callbacks.
+	 */
+	function notifyWith(self) {
+		applyToArray(PRIVATES(this).partAry, self, Array.prototype.slice.call(arguments,1));
+	}
+	
+	/**
+	 * Register the given function(s) to be called when partial progress is made.
+	 */
+	function progress() {
+		$.concat(PRIVATES(this).partAry, arguments);
+	}
+	
+	/**
+	 * Resolve with success and invoke done callbacks.
+	 */
+	function resolve() {
+		applyToArray(PRIVATES(this).doneAry, undefined, arguments);
+	}
+	
+	/**
+	 * Resolve with success and invoke done callbacks,
+	 * applying the first argument as "this" for the callbacks.
+	 */
+	function resolveWith(self) {
+		applyToArray(PRIVATES(this).doneAry, self, Array.prototype.slice.call(arguments,1));
+	}
+	
+	/**
+	 * Reject with failure and invoke fail callbacks.
+	 */
+	function reject() {
+		applyToArray(PRIVATES(this).failAry, undefined, arguments);
+	}
+	
+	/**
+	 * Reject with failure and invoke fail callbacks,
+	 * applying the first argument as "this" for the callbacks.
+	 */
+	function rejectWith(self) {
+		applyToArray(PRIVATES(this).failAry, self, Array.prototype.slice.call(arguments,1));
+	}
+	
+	/**
+	 * Return the current state as "pending", "resolved", "rejected".
+	 */
+	function state() {
+		
+	}
+	
+	/**
+	 * Return a Promise based on given object(s) which may in turn be Promise(s).
+	 */
+	function when() {
+		
+	}
+	
+	/**
+	 * Register functions to be called when done, failed, or partial progress is made.
+	 */
+	function then(doneFn, failFn, partFn) {
+		var p = PRIVATES(this);
+		if (doneFn) p.doneAry.push(doneFn);
+		if (failFn) p.failAry.push(failFn);
+		if (partFn) p.partAry.push(partFn);
+	}
+	
+})(akme,"akme.core.Promise");
 // akme.getContext, akme.App
 // Javascript Types: undefined, null, boolean, number, string, function, or object; Date and Array are typeof object.
 // Javascript typeof works for a function or object but cannot always be trusted, e.g. typeof String(1) is string but typeof new String(1) is object.

@@ -125,6 +125,14 @@ $(document).ready(function(){
 		equal( typeof akme.core.EventSource, "function", "exists" );
 	});
 
+	module(akme.core.Promise.CLASS);
+	test("basics", function() {
+		var promise = new akme.core.Promise();
+		promise.done(function(){ ok(true); });
+		promise.resolve();
+		promise.fail(function(){ ok(true); });
+		promise.reject();
+	});
 	
 	module("akme dom");
 	test("get/setAttributes on DOM Element", function(){
