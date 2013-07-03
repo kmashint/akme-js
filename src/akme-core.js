@@ -437,14 +437,14 @@ if (!this.akme) this.akme = {
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
+	function PRIVATES(self) { return self.PRIVATES.call(PRIVATES); };
 
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
 	function IndexedMap() {
 		var p = { map : {}, ary : [] }; // private closure
-		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
+		this.PRIVATES = function() { return this === PRIVATES ? p : undefined; };
 		this.length = p.ary.length;
 	};
 	$.extend($.copyAll( // class constructor
@@ -566,7 +566,7 @@ if (!this.akme) this.akme = {
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
+	function PRIVATES(self) { return self.PRIVATES.call(PRIVATES); };
 
 	//
 	// Initialise constructor or singleton instance and public functions
@@ -574,7 +574,7 @@ if (!this.akme) this.akme = {
 	function EventSource() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
 		var p = {eventMap:{}}; // private closure
-		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
+		this.PRIVATES = function() { return this === PRIVATES ? p : undefined; };
 		this.onEvent = onEvent;
 		this.unEvent = unEvent;
 		this.doEvent = doEvent;
@@ -650,7 +650,7 @@ if (!this.akme) this.akme = {
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
+	function PRIVATES(self) { return self.PRIVATES.call(PRIVATES); };
 	function applyToArray(ary, self, args, once) { 
 		for (var i=0; i<ary.length; i++) ary[i].apply(self, args);
 		if (!!once) ary.length = 0;
@@ -663,7 +663,7 @@ if (!this.akme) this.akme = {
 	function Promise() {
 		if (!(this instanceof Promise)) return $.newApplyArgs(Promise, arguments);
 		var p = { state: 0, doneAry: [], failAry: [], partAry: [] }; // private closure
-		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
+		this.PRIVATES = function() { return this === PRIVATES ? p : undefined; };
 	};
 	$.extend($.copyAll( // class constructor
 		Promise, {CLASS: CLASS, make: make, promise: make, when: when} 
