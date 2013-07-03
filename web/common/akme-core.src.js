@@ -79,7 +79,11 @@ if (!this.akme) this.akme = {
 	THIS : this, // reference the global object, e.g. will be window in a web browser
 	WHITESPACE_TRIM_REGEXP : /^\s*|\s*$/gm,
 	PRINTABLE_EXCLUDE_REGEXP : /[^\x20-\x7e\xc0-\xff]/g,
-		
+
+	/**
+	 * Quick reference to standard slice.
+	 */
+	slice : Array.prototype.slice,
 	/**
 	 * Concat a collection to an array and return it, helpful for HTMLCollection results of getElementsByTagName.
 	 */
@@ -639,13 +643,18 @@ if (!this.akme) this.akme = {
  */
 (function($,CLASS){
 	if ($.getProperty($.THIS,CLASS)) return; // One-time.
+	
+	// jQuery Deferred is meant to be the private/producer scope.
+	// jQuery Promise meant to be the public/consumer scope.
+	// e.g. jQuery.ready.promise creates on first use a private readyList Deferred and returns readyList.promise(arg).
 
 	//
 	// Private static declarations / closure
 	//
 	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
-	function applyToArray(ary, self, args) { 
+	function applyToArray(ary, self, args, once) { 
 		for (var i=0; i<ary.length; i++) ary[i].apply(self, args);
+		if (!!once) ary.length = 0;
 	}
 	var STATE = ["pending","resolved","rejected"];
 	
@@ -654,11 +663,11 @@ if (!this.akme) this.akme = {
 	//
 	function Promise() {
 		if (!(this instanceof Promise)) return $.newApplyArgs(Promise, arguments);
-		var p = { state: 0, alwaysAry: [], doneAry: [], failAry: [], partAry: [] }; // private closure
+		var p = { state: 0, doneAry: [], failAry: [], partAry: [] }; // private closure
 		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
 	};
 	$.extend($.copyAll( // class constructor
-		Promise, {CLASS: CLASS, make: make, promise: make} 
+		Promise, {CLASS: CLASS, make: make, promise: make, when: when} 
 	), { // super-static prototype with public functions
 		always: always,
 		done: done,
@@ -666,6 +675,7 @@ if (!this.akme) this.akme = {
 		notify: notify,
 		notifyWith: notifyWith,
 		progress: progress,
+		promise: make, // cross-listed here for jQuery similarity
 		resolve: resolve,
 		resolveWith: resolveWith,
 		reject: reject,
@@ -677,6 +687,60 @@ if (!this.akme) this.akme = {
 	$.setProperty($.THIS, CLASS, Promise);
 	
 	//
+	// Class constructor functions
+	//
+	
+	/**
+	 * Make a promise calling the given function before progress starts.
+	 * This is similar to jQuery.Deferred.promise() and is cross-listed as Promise.promise().
+	 */
+	function make(startFn) {
+		var self = new Promise();
+		if (typeof startFn === "function") startFn.call(self, self);
+		return self;
+	}
+	
+	/**
+	 * Return a Promise based on given object(s) which may in turn be Promise(s).
+	 */
+	function when(sub /*, sub2, ... */) {
+		var resolveVals = $.concat(new Array(arguments.length), arguments);
+		var todo = args.length !== 1 || (sub && typeof sub.promise === "function") ? args.length : 0;
+		var promise = resolveVals === 1 ? sub : new Promise();
+		var resolveSelfs, progressVals, progressSelfs; 
+		if (todo > 1) {
+			resolveSelfs = new Array( todo );
+			progressVals = new Array( todo );
+			progressSelfs = new Array( todo );
+			for (var i=0; i<args.length; i++) {
+				var item = args[i];
+				if (item && typeof item.promise === "function") {
+					item.done( update(i, resolveSelfs, resolveVals) )
+						.fail( promise.fail )
+						.progress( update(i, progressSelfs, progressVals) );
+				} else {
+					--todo;
+				}
+			}
+		}
+		function update(i, selfs, values) {
+			return function( value ) {
+				contexts[i] = this;
+				values[i] = arguments.length > 1 ? $.slice.call( arguments ) : value;
+				if( values === progressVals ) {
+					promise.notifyWith( selfs, values );
+				} else if (!( --todo )) {
+					promise.resolveWith( selfs, values );
+				}
+			};
+		}
+		if ( !todo ) {
+			promise.resolveWith( resolveSelfs, resolveVals );
+		}
+		return promise;
+	}
+	
+	//
 	// Functions
 	//
 	
@@ -685,7 +749,10 @@ if (!this.akme) this.akme = {
 	 * success or failure (i.e. finally).
 	 */
 	function always() {
-		$.concat(PRIVATES(this).alwaysAry, arguments);
+		var p = PRIVATES(this);
+		$.concat(p.doneAry, arguments);
+		$.concat(p.failAry, arguments);
+		return this;
 	}
 	
 	/**
@@ -693,6 +760,7 @@ if (!this.akme) this.akme = {
 	 */
 	function done() {
 		$.concat(PRIVATES(this).doneAry, arguments);
+		return this;
 	}
 	
 	/**
@@ -700,14 +768,7 @@ if (!this.akme) this.akme = {
 	 */
 	function fail() {
 		$.concat(PRIVATES(this).failAry, arguments);
-	}
-	
-	/**
-	 * Make a promise calling the given function before progress starts.
-	 * This is similar to jQuery.Deferred.promise() and is cross-listed here as Promise.promise().
-	 */
-	function make(startFn) {
-		
+		return this;
 	}
 	
 	/**
@@ -715,6 +776,7 @@ if (!this.akme) this.akme = {
 	 */
 	function notify() {
 		applyToArray(PRIVATES(this).partAry, undefined, arguments);
+		return this;
 	}
 	
 	/**
@@ -722,7 +784,8 @@ if (!this.akme) this.akme = {
 	 * applying the first argument as "this" for the callbacks.
 	 */
 	function notifyWith(self) {
-		applyToArray(PRIVATES(this).partAry, self, Array.prototype.slice.call(arguments,1));
+		applyToArray(PRIVATES(this).partAry, self, $.slice.call(arguments,1));
+		return this;
 	}
 	
 	/**
@@ -730,13 +793,17 @@ if (!this.akme) this.akme = {
 	 */
 	function progress() {
 		$.concat(PRIVATES(this).partAry, arguments);
+		return this;
 	}
 	
 	/**
 	 * Resolve with success and invoke done callbacks.
 	 */
 	function resolve() {
-		applyToArray(PRIVATES(this).doneAry, undefined, arguments);
+		var p = PRIVATES(this);
+		p.state = 1;
+		applyToArray(p.doneAry, undefined, arguments, true);
+		return this;
 	}
 	
 	/**
@@ -744,14 +811,20 @@ if (!this.akme) this.akme = {
 	 * applying the first argument as "this" for the callbacks.
 	 */
 	function resolveWith(self) {
-		applyToArray(PRIVATES(this).doneAry, self, Array.prototype.slice.call(arguments,1));
+		var p = PRIVATES(this);
+		p.state = 1;
+		applyToArray(p.doneAry, self, $.slice.call(arguments,1), true);
+		return this;
 	}
 	
 	/**
 	 * Reject with failure and invoke fail callbacks.
 	 */
 	function reject() {
-		applyToArray(PRIVATES(this).failAry, undefined, arguments);
+		var p = PRIVATES(this);
+		p.state = 2;
+		applyToArray(p.failAry, undefined, arguments, true);
+		return this;
 	}
 	
 	/**
@@ -759,7 +832,10 @@ if (!this.akme) this.akme = {
 	 * applying the first argument as "this" for the callbacks.
 	 */
 	function rejectWith(self) {
-		applyToArray(PRIVATES(this).failAry, self, Array.prototype.slice.call(arguments,1));
+		var p = PRIVATES(this);
+		p.state = 2;
+		applyToArray(p.failAry, self, $.slice.call(arguments,1), true);
+		return this;
 	}
 	
 	/**
@@ -770,13 +846,6 @@ if (!this.akme) this.akme = {
 	}
 	
 	/**
-	 * Return a Promise based on given object(s) which may in turn be Promise(s).
-	 */
-	function when() {
-		
-	}
-	
-	/**
 	 * Register functions to be called when done, failed, or partial progress is made.
 	 */
 	function then(doneFn, failFn, partFn) {
@@ -784,8 +853,9 @@ if (!this.akme) this.akme = {
 		if (doneFn) p.doneAry.push(doneFn);
 		if (failFn) p.failAry.push(failFn);
 		if (partFn) p.partAry.push(partFn);
+		return this;
 	}
-	
+
 })(akme,"akme.core.Promise");
 // akme.getContext, akme.App
 // Javascript Types: undefined, null, boolean, number, string, function, or object; Date and Array are typeof object.
