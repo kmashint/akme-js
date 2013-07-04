@@ -151,16 +151,16 @@ if (!this.akme) this.akme = {
 	},
 	
 	/**
-	 * Return a nested value from a parent object and a property path string or array.
+	 * Return a nested value from a parent object and a property path string or array, or the given default if not found.
 	 * This supports a nested path by Array ["a","b","c"] or dot-delimited String "a.b.c".
 	 */
-	getProperty : function ( /*object*/ obj, /*Array or String*/ path ) {
+	getProperty : function ( /*object*/ obj, /*Array or String*/ path, def ) {
 		if ( typeof path === 'string' || path instanceof String ) { path = path.split('.'); }
 		var prop = obj;
 		var n = path.length;
 		for (var i=0; i<n; i++) {
 			if (path[i] in prop) prop = prop[path[i]];
-			else return;
+			else return def;
 		}
 		return prop;
 	},
@@ -660,6 +660,10 @@ if (!this.akme) this.akme = {
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
+	function PromiseMaker() {
+		if (!(this instanceof PromiseMaker)) return $.newApplyArgs(PromiseMaker, arguments);
+		
+	};
 	function Promise() {
 		if (!(this instanceof Promise)) return $.newApplyArgs(Promise, arguments);
 		var p = { state: 0, doneAry: [], failAry: [], partAry: [] }; // private closure
@@ -700,7 +704,7 @@ if (!this.akme) this.akme = {
 	}
 	
 	/**
-	 * Return a Promise based on given object(s) which may in turn be Promise(s).
+	 * Return a Promise based on given one or more objects which may in turn be Promises.
 	 */
 	function when(sub /*, sub2, ... */) {
 		var resolveVals = $.concat(new Array(arguments.length), arguments);
