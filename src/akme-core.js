@@ -722,7 +722,7 @@ if (!this.akme) this.akme = {
 							} : newPromise[act]
 						);
 					});
-					fcns = null;
+					fcns = null; // closure cleanup
 				}).promise();
 			}
 		};
