@@ -704,6 +704,7 @@ if (!this.akme) this.akme = {
 				return STATE[p.state];
 			},
 			/** Register functions to be called when done, failed, or partial progress is made. */
+			// TODO: testing ...
 			then: function(/* doneFn, failFn, partFn */) {
 				var fcns = arguments;
 				return new Promise(function( newPromise ) {
@@ -717,6 +718,7 @@ if (!this.akme) this.akme = {
 										.fail( newPromise.reject )
 										.progress( newPromise.notify );
 								} else {
+									// TODO: check if this needs to use newPromise[...].call() since jQuery may auto-unwrap arrays in args
 									newPromise[act+"With"](this === self ? newPromise : this, [r]);
 								}
 							} : newPromise[act]
@@ -756,6 +758,7 @@ if (!this.akme) this.akme = {
 	/**
 	 * Return a Promise based on given object(s) which may in turn be Promise(s).
 	 */
+	// TODO: testing ...
 	function when(sub /*, sub2, ... */) {
 		var resolveVals = $.concat([], arguments);
 		var todo = args.length !== 1 || (sub && typeof sub.promise === "function") ? args.length : 0;
@@ -819,7 +822,7 @@ if (!this.akme) this.akme = {
 		switch (p.state) {
 		case 0: p.state = 1; // fallthrough
 		case 1: applyToArray(p.doneAry, undefined, arguments, true); break;
-		case 2: throw new RangeError("cannot resolve after reject");
+		case 2: console.warn(String( new RangeError("cannot resolve after reject") ));
 		}
 		return this;
 	}
@@ -833,7 +836,7 @@ if (!this.akme) this.akme = {
 		switch (p.state) {
 		case 0: p.state = 1; // fallthrough
 		case 1: applyToArray(p.doneAry, self, $.slice.call(arguments,1), true); break;
-		case 2: throw new RangeError("cannot resolve after reject");
+		case 2: console.warn(String( new RangeError("cannot resolve after reject") ));
 		}
 		return this;
 	}
@@ -846,7 +849,7 @@ if (!this.akme) this.akme = {
 		switch (p.state) {
 		case 0: p.state = 2; // fallthrough
 		case 2: applyToArray(p.failAry, undefined, arguments, true); break;
-		case 1: throw new RangeError("cannot reject after resolve");
+		case 1: console.warn(String( new RangeError("cannot reject after resolve") ));
 		}
 		return this;
 	}
@@ -860,9 +863,9 @@ if (!this.akme) this.akme = {
 		switch (p.state) {
 		case 0: p.state = 2; // fallthrough
 		case 2: applyToArray(p.failAry, self, arguments, true); break;
-		case 1: throw new RangeError("cannot reject after resolve");
+		case 1: console.warn(String( new RangeError("cannot reject after resolve") ));
 		}
 		return this;
 	}
-	
+
 })(akme,"akme.core.Promise");
