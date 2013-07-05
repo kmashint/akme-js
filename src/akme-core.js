@@ -701,7 +701,7 @@ if (!this.akme) this.akme = {
 			},
 			/** Return the current state as "pending", "resolved", "rejected". */
 			state: function() {
-				return state.call(self);
+				return STATE[p.state];
 			},
 			/** Register functions to be called when done, failed, or partial progress is made. */
 			then: function(/* doneFn, failFn, partFn */) {
@@ -851,13 +851,6 @@ if (!this.akme) this.akme = {
 		p.state = 2;
 		applyToArray(p.failAry, self, $.slice.call(arguments,1), true);
 		return this;
-	}
-	
-	/**
-	 * Return the current state as "pending", "resolved", "rejected".
-	 */
-	function state() {
-		return STATE[PRIVATES(this).state];
 	}
 	
 })(akme,"akme.core.Promise");
