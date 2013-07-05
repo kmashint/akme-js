@@ -15,15 +15,13 @@ if ((document.documentMode && document.documentMode < 8) || !document.documentMo
 
 if ( document.documentMode && document.documentMode == 8 ) (function(){
 	
-	// reroute properties
-	routeProperty( Element, "innerText", "textContent", true, true );
-	routeProperty( Event, "srcElement", "target", true, false );
+	// reroute properties to W3C standards
+	attachProperty ( Element, "innerText", "textContent", true, true );
+	attachProperty ( Event, "srcElement", "target", true, false );
 
-	// attach members to mimic functionality from other browsers
-	//attachFunction( Element, "addEventListener", function (type, fn) { this.attachEvent("on"+type, fn); } );
-	//attachFunction( Element, "removeEventListener", function (type, fn) { this.detachEvent("on"+type, fn); } );
-	attachFunction( Event, "preventDefault", function () { this.returnValue = false; } );
-	attachFunction( Event, "stopPropagation", function () { this.cancelBubble = true; } );
+	// attach functions to W3C standards
+	attachFunction ( Event, "preventDefault", function () { this.returnValue = false; } );
+	attachFunction ( Event, "stopPropagation", function () { this.cancelBubble = true; } );
 	
 	/**
 	 * Helper for :target in IE8, will not work in IE7 or below.
@@ -45,15 +43,14 @@ if ( document.documentMode && document.documentMode == 8 ) (function(){
 		//alert("#"+ el.id +".("+ el.className +")")
 	});
 	
-	function routeProperty ( domConstructor, originalName, routedName, useGetter, useSetter ) {
+	function attachProperty ( domConstructor, originalName, attachName, useGetter, useSetter ) {
 	    useGetter = !!useGetter;
 	    useSetter = !!useSetter;
-	      
-	    var prpd = Object.getOwnPropertyDescriptor ( domConstructor.prototype, originalName );
+		var prpd = Object.getOwnPropertyDescriptor ( domConstructor.prototype, originalName );
 		var prpSetGet = {};
-		if ( useGetter ) prpSetGet.get = function () { return prpd.get.call( this ); };
-		if ( useSetter ) prpSetGet.set = function ( x ) { return prpd.set.call( this, x ); };
-		Object.defineProperty ( domConstructor.prototype, routedName, prpSetGet );
+		if ( useGetter ) prpSetGet.get = function () { return prpd.get.call ( this ); };
+		if ( useSetter ) prpSetGet.set = function ( x ) { return prpd.set.call ( this, x ); };
+		Object.defineProperty ( domConstructor.prototype, attachName, prpSetGet );
 	}
 	
 	function attachFunction ( domConstructor, name, delegate ) {

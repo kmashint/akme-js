@@ -151,16 +151,16 @@ if (!this.akme) this.akme = {
 	},
 	
 	/**
-	 * Return a nested value from a parent object and a property path string or array.
+	 * Return a nested value from a parent object and a property path string or array, or the given default if not found.
 	 * This supports a nested path by Array ["a","b","c"] or dot-delimited String "a.b.c".
 	 */
-	getProperty : function ( /*object*/ obj, /*Array or String*/ path ) {
+	getProperty : function ( /*object*/ obj, /*Array or String*/ path, def ) {
 		if ( typeof path === 'string' || path instanceof String ) { path = path.split('.'); }
 		var prop = obj;
 		var n = path.length;
 		for (var i=0; i<n; i++) {
 			if (path[i] in prop) prop = prop[path[i]];
-			else return;
+			else return def;
 		}
 		return prop;
 	},
@@ -437,14 +437,14 @@ if (!this.akme) this.akme = {
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
+	function PRIVATES(self) { return self.PRIVATES.call(PRIVATES); };
 
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
 	function IndexedMap() {
 		var p = { map : {}, ary : [] }; // private closure
-		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
+		this.PRIVATES = function() { return this === PRIVATES ? p : undefined; };
 		this.length = p.ary.length;
 	};
 	$.extend($.copyAll( // class constructor
@@ -566,7 +566,7 @@ if (!this.akme) this.akme = {
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
+	function PRIVATES(self) { return self.PRIVATES.call(PRIVATES); };
 
 	//
 	// Initialise constructor or singleton instance and public functions
@@ -574,7 +574,7 @@ if (!this.akme) this.akme = {
 	function EventSource() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
 		var p = {eventMap:{}}; // private closure
-		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
+		this.PRIVATES = function() { return this === PRIVATES ? p : undefined; };
 		this.onEvent = onEvent;
 		this.unEvent = unEvent;
 		this.doEvent = doEvent;
@@ -737,8 +737,7 @@ if (!this.akme) this.akme = {
 		resolve: resolve,
 		resolveWith: resolveWith,
 		reject: reject,
-		rejectWith: rejectWith,
-		then: then
+		rejectWith: rejectWith
 	});
 	$.setProperty($.THIS, CLASS, Promise);
 	
