@@ -672,29 +672,29 @@ if (!this.akme) this.akme = {
 		if (!(this instanceof Promise)) return $.newApplyArgs(Promise, arguments);
 		var p = { state: 0, doneAry: [], failAry: [], partAry: [] }; // private closure
 		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
-		function concatArgsAndReturn(ary, self, args, once, state) {
-			$.concat(ary, args);
-			if (state === p.state) applyToArray(ary, self, args, once);
+		function concatFunctionsAndReturn(ary, self, fcns, once, state) {
+			if (p.state === 0) $.concat(ary, fcns);
+			else if (state === p.state) applyToArray(fcns, self, undefined);
 			return self;
 		};
 		var self = this;
-		var promise = { // promise as closure-referenced subset of methods
+		var promise = { // promise as closure-referenced subset of methods around p and self
 			/** Register the given function(s) to be called on resolution or rejection, success or failure (i.e. finally). */
 			always: function() {
-				concatArgsAndReturn(p.doneAry, this, arguments, true, 1);
-				return concatArgsAndReturn(p.failAry, this, arguments, true, 2);
+				concatFunctionsAndReturn(p.doneAry, this, arguments, true, 1);
+				return concatFunctionsAndReturn(p.failAry, this, arguments, true, 2);
 			},
 			/** Register the given function(s) to be called when resolved with success. */
 			done: function() {
-				return concatArgsAndReturn(p.doneAry, this, arguments, true, 1);
+				return concatFunctionsAndReturn(p.doneAry, this, arguments, true, 1);
 			},
 			/** Register the given function(s) to be called when rejected with failure. */
 			fail: function() {
-				return concatArgsAndReturn(p.failAry, this, arguments, true, 2);
+				return concatFunctionsAndReturn(p.failAry, this, arguments, true, 2);
 			},
 			/** Register the given function(s) to be called when partial progress is made. */
 			progress: function() {
-				return concatArgsAndReturn(p.partAry, this, arguments, false, -1);
+				return concatFunctionsAndReturn(p.partAry, this, arguments, false, -1);
 			},
 			/** Purvey/inject the promise closure on another object and return it or return the promise itself. */
 			promise: function(obj) { 
@@ -817,8 +817,11 @@ if (!this.akme) this.akme = {
 	 */
 	function resolve() {
 		var p = PRIVATES(this);
-		p.state = 1;
-		applyToArray(p.doneAry, undefined, arguments, true);
+		switch (p.state) {
+		case 0: p.state = 1; // fallthrough
+		case 1: applyToArray(p.doneAry, undefined, arguments, true); break;
+		case 2: throw new RangeError("cannot resolve after reject");
+		}
 		return this;
 	}
 	
@@ -828,8 +831,11 @@ if (!this.akme) this.akme = {
 	 */
 	function resolveWith(self) {
 		var p = PRIVATES(this);
-		p.state = 1;
-		applyToArray(p.doneAry, self, $.slice.call(arguments,1), true);
+		switch (p.state) {
+		case 0: p.state = 1; // fallthrough
+		case 1: applyToArray(p.doneAry, self, $.slice.call(arguments,1), true); break;
+		case 2: throw new RangeError("cannot resolve after reject");
+		}
 		return this;
 	}
 	
@@ -838,8 +844,11 @@ if (!this.akme) this.akme = {
 	 */
 	function reject() {
 		var p = PRIVATES(this);
-		p.state = 2;
-		applyToArray(p.failAry, undefined, arguments, true);
+		switch (p.state) {
+		case 0: p.state = 2; // fallthrough
+		case 2: applyToArray(p.failAry, undefined, arguments, true); break;
+		case 1: throw new RangeError("cannot reject after resolve");
+		}
 		return this;
 	}
 	
@@ -849,8 +858,11 @@ if (!this.akme) this.akme = {
 	 */
 	function rejectWith(self) {
 		var p = PRIVATES(this);
-		p.state = 2;
-		applyToArray(p.failAry, self, $.slice.call(arguments,1), true);
+		switch (p.state) {
+		case 0: p.state = 2; // fallthrough
+		case 2: applyToArray(p.failAry, self, arguments, true); break;
+		case 1: throw new RangeError("cannot reject after resolve");
+		}
 		return this;
 	}
 	
