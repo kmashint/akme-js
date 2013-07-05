@@ -717,7 +717,7 @@ if (!this.akme) this.akme = {
 										.fail( newPromise.reject )
 										.progress( newPromise.notify );
 								} else {
-									newPromise[act+"With"]( this === self ? newPromise : this, [r]);
+									newPromise[act+"With"](this === self ? newPromise : this, [r]);
 								}
 							} : newPromise[act]
 						);
