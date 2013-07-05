@@ -656,33 +656,90 @@ if (!this.akme) this.akme = {
 		for (var i=0; i<ary.length; i++) ary[i].apply(self, args);
 		if (!!once) ary.length = 0;
 	}
-	var STATE = ["pending","resolved","rejected"];
+	var STATE = ["pending","resolved","rejected"]; // 0,1,2
+	var ACTION = [
+		// action, listener
+		[ "resolve", "done" ],
+		[ "reject", "fail" ],
+		[ "notify", "progress" ]
+	];
 	
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
-	function Promise() {
+	
+	function Promise(fcn) {
 		if (!(this instanceof Promise)) return $.newApplyArgs(Promise, arguments);
 		var p = { state: 0, doneAry: [], failAry: [], partAry: [] }; // private closure
 		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
+		function concatArgsAndReturn(ary, self, args, once, state) {
+			$.concat(ary, args);
+			if (state === p.state) applyToArray(ary, self, args, once);
+			return self;
+		};
+		var self = this;
+		var promise = { // promise as closure-referenced subset of methods
+			/** Register the given function(s) to be called on resolution or rejection, success or failure (i.e. finally). */
+			always: function() {
+				concatArgsAndReturn(p.doneAry, this, arguments, true, 1);
+				return concatArgsAndReturn(p.failAry, this, arguments, true, 2);
+			},
+			/** Register the given function(s) to be called when resolved with success. */
+			done: function() {
+				return concatArgsAndReturn(p.doneAry, this, arguments, true, 1);
+			},
+			/** Register the given function(s) to be called when rejected with failure. */
+			fail: function() {
+				return concatArgsAndReturn(p.failAry, this, arguments, true, 2);
+			},
+			/** Register the given function(s) to be called when partial progress is made. */
+			progress: function() {
+				return concatArgsAndReturn(p.partAry, this, arguments, false, -1);
+			},
+			/** Purvey/inject the promise closure on another object and return it or return the promise itself. */
+			promise: function(obj) { 
+				return obj != null ? $.copyAll(obj, promise) : promise;
+			},
+			/** Return the current state as "pending", "resolved", "rejected". */
+			state: function() {
+				return state.call(self);
+			},
+			/** Register functions to be called when done, failed, or partial progress is made. */
+			then: function(/* doneFn, failFn, partFn */) {
+				var fcns = arguments;
+				return new Promise(function( newPromise ) {
+					Array.forEach(ACTION, function( item, i ) {
+						var act = item[0];
+						newPromise[act](typeof fcns[i] === "function" ?
+							function(){ 
+								var r = fcns[i].apply(this, arguments);
+								if (r && typeof r.promise === "function") {
+									r.promise().done( newPromise.resolve )
+										.fail( newPromise.reject )
+										.progress( newPromise.notify );
+								} else {
+									newPromise[act+"With"]( this === self ? newPromise : this, [r]);
+								}
+							} : newPromise[act]
+						);
+					});
+					fcns = null;
+				}).promise();
+			}
+		};
+		promise.promise(this);
+		if (typeof fcn === "function") fcn.call(this, this);
 	};
 	$.extend($.copyAll( // class constructor
-		Promise, {CLASS: CLASS, make: make, promise: make, when: when} 
+		Promise, {CLASS: CLASS, make: make, when: when} 
 	), { // super-static prototype with public functions
-		always: always,
-		done: done,
-		fail: fail,
 		notify: notify,
 		notifyWith: notifyWith,
-		progress: progress,
-		promise: make, // cross-listed here for jQuery similarity
 		resolve: resolve,
 		resolveWith: resolveWith,
 		reject: reject,
 		rejectWith: rejectWith,
-		state: state,
-		then: then,
-		when: when
+		then: then
 	});
 	$.setProperty($.THIS, CLASS, Promise);
 	
@@ -695,9 +752,7 @@ if (!this.akme) this.akme = {
 	 * This is similar to jQuery.Deferred.promise() and is cross-listed as Promise.promise().
 	 */
 	function make(startFn) {
-		var self = new Promise();
-		if (typeof startFn === "function") startFn.call(self, self);
-		return self;
+		return new Promise();
 	}
 	
 	/**
@@ -725,7 +780,7 @@ if (!this.akme) this.akme = {
 		}
 		function update(i, selfs, values) {
 			return function( value ) {
-				contexts[i] = this;
+				contexts[i] = this; // the jQuery this, so what is our this ?
 				values[i] = arguments.length > 1 ? $.slice.call( arguments ) : value;
 				if( values === progressVals ) {
 					promise.notifyWith( selfs, values );
@@ -744,36 +799,6 @@ if (!this.akme) this.akme = {
 	// Functions
 	//
 	
-	/**
-	 * Register the given function(s) to be called on resolution or rejection, 
-	 * success or failure (i.e. finally).
-	 */
-	function always() {
-		var p = PRIVATES(this);
-		$.concat(p.doneAry, arguments);
-		$.concat(p.failAry, arguments);
-		return this;
-	}
-	
-	/**
-	 * Register the given function(s) to be called when resolved with success.
-	 */
-	function done() {
-		$.concat(PRIVATES(this).doneAry, arguments);
-		return this;
-	}
-	
-	/**
-	 * Register the given function(s) to be called when rejected with failure.
-	 */
-	function fail() {
-		$.concat(PRIVATES(this).failAry, arguments);
-		return this;
-	}
-	
-	/**
-	 * Notify partial progress callbacks.
-	 */
 	function notify() {
 		applyToArray(PRIVATES(this).partAry, undefined, arguments);
 		return this;
@@ -785,14 +810,6 @@ if (!this.akme) this.akme = {
 	 */
 	function notifyWith(self) {
 		applyToArray(PRIVATES(this).partAry, self, $.slice.call(arguments,1));
-		return this;
-	}
-	
-	/**
-	 * Register the given function(s) to be called when partial progress is made.
-	 */
-	function progress() {
-		$.concat(PRIVATES(this).partAry, arguments);
 		return this;
 	}
 	
@@ -845,17 +862,6 @@ if (!this.akme) this.akme = {
 		return STATE[PRIVATES(this).state];
 	}
 	
-	/**
-	 * Register functions to be called when done, failed, or partial progress is made.
-	 */
-	function then(doneFn, failFn, partFn) {
-		var p = PRIVATES(this);
-		if (doneFn) p.doneAry.push(doneFn);
-		if (failFn) p.failAry.push(failFn);
-		if (partFn) p.partAry.push(partFn);
-		return this;
-	}
-
 })(akme,"akme.core.Promise");
 // akme.getContext, akme.App
 // Javascript Types: undefined, null, boolean, number, string, function, or object; Date and Array are typeof object.

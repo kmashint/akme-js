@@ -127,11 +127,16 @@ $(document).ready(function(){
 
 	module(akme.core.Promise.CLASS);
 	test("basics", function() {
+		expect(6);
 		var promise = new akme.core.Promise();
-		promise.done(function(){ ok(true); });
+		ok( typeof promise.resolve === "function", "maker.resolve should be function" );
+		ok( typeof promise.promise().resolve === "undefined", "maker.resolve should be undefined");
+		promise.done(function(){ ok(true, "should be done"); });
 		promise.resolve();
-		promise.fail(function(){ ok(true); });
+		ok( promise.state() == "resolved", "state should be resolved");
 		promise.reject();
+		promise.fail(function(){ ok(true, "should be fail even when fail registered after reject"); });
+		ok( promise.state() == "rejected", "state should be rejected");
 	});
 	
 	module("akme dom");
