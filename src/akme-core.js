@@ -757,7 +757,7 @@ if (!this.akme) this.akme = {
 	 * Return a Promise based on given object(s) which may in turn be Promise(s).
 	 */
 	function when(sub /*, sub2, ... */) {
-		var resolveVals = $.concat(new Array(arguments.length), arguments);
+		var resolveVals = $.concat([], arguments);
 		var todo = args.length !== 1 || (sub && typeof sub.promise === "function") ? args.length : 0;
 		var promise = resolveVals === 1 ? sub : new Promise();
 		var resolveSelfs, progressVals, progressSelfs; 
