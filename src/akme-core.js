@@ -116,7 +116,7 @@ if (!this.akme) this.akme = {
 		return obj;
 	},
 	/**
-	 * Copy key/values from the map to the obj, returning the same obj.
+	 * Copy all key/values from the map to the obj, returning the same obj.
 	 */
 	copyAll : function (obj, map) {
 		if (map === undefined || map === null) return obj;
@@ -124,9 +124,17 @@ if (!this.akme) this.akme = {
 		return obj;
 	},
 	/**
-	 * Copy values from the map to the obj for existing keys in the obj, returning the same obj.
+	 * Copy hasOwnProperty/non-prototype values from the map to the obj for existing keys in the obj, returning the same obj.
 	 */
 	copyExisting : function (obj, map) {
+		if (map === undefined || map === null) return obj;
+		for (var key in map) if (key in obj && map.hasOwnProperty(key)) obj[key] = map[key];
+		return obj;
+	},
+	/**
+	 * Copy all values from the map to the obj for existing keys in the obj, returning the same obj.
+	 */
+	copyAllExisting : function (obj, map) {
 		if (map === undefined || map === null) return obj;
 		for (var key in map) if (key in obj) obj[key] = map[key];
 		return obj;
@@ -136,22 +144,22 @@ if (!this.akme) this.akme = {
 	 * If valName is undefined or null then the entire array values it used.
 	 */
 	copyArrayToObject : function (obj, ary, keyName, valName) {
-		if (valName === undefined) for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i][valName];
+		if (typeof valName != 'undefined') for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i][valName];
 		else for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i];
 		return obj;
 	},
 	/**
-	 * Copy/Append the keys in the map to the given array.
+	 * Append the keys in the map to the given array.
 	 */
-	copyMapKeys : function(ary, map) {
-		for (var k in map) ary[ary.length] = k;
+	concatMapKeys : function(ary, map) {
+		for (var key in map) ary[ary.length] = key;
 		return ary;
 	},
 	/**
 	 * Get all of the keys in the map as an array.
 	 */
 	getMapKeys : function(map) {
-		return this.copyMapKeys([], map);
+		return this.concatMapKeys([], map);
 	},
 	
 	/**
@@ -242,7 +250,7 @@ if (!this.akme) this.akme = {
 		default: 
 			var buf = new Array(args.length);
 			for (var i=0; i<args.length; i++) buf[i] = "a["+ i +"]";
-			return eval("(function(F,a){return new F("+ buf.join(",") +");})(fn,args);");
+			return (new Function("f","a","return new f("+ buf.join(",") +");"))(fn,args);
 		}
 	},
 
@@ -257,13 +265,13 @@ if (!this.akme) this.akme = {
 	},
 	/** 
 	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.
-	 * Ensures internally to be applied only once by setting _ie8fix = true on the object.
+	 * Ensures internally to be applied only once by setting _ie8fix on the object.
 	 */
 	fixHandleEvent : function (self) {
 		if (document.documentMode && document.documentMode < 9 && typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
 			var handleEvent = self.handleEvent;
 			self.handleEvent = function(ev) { handleEvent.call(self, ev); };
-			self.handleEvent._ie8fix = true;
+			self.handleEvent._ie8fix = function(){ return handleEvent; }; // closure the old handleEvent
 		}
 		return self;
 	},
@@ -441,14 +449,14 @@ if (!this.akme) this.akme = {
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES(self) { return self.PRIVATES.call(PRIVATES); };
+	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
 
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
 	function IndexedMap() {
 		var p = { map : {}, ary : [] }; // private closure
-		this.PRIVATES = function() { return this === PRIVATES ? p : undefined; };
+		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
 		this.length = p.ary.length;
 	};
 	$.extend($.copyAll( // class constructor
@@ -570,7 +578,7 @@ if (!this.akme) this.akme = {
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES(self) { return self.PRIVATES.call(PRIVATES); };
+	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
 
 	//
 	// Initialise constructor or singleton instance and public functions
@@ -578,7 +586,7 @@ if (!this.akme) this.akme = {
 	function EventSource() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
 		var p = {eventMap:{}}; // private closure
-		this.PRIVATES = function() { return this === PRIVATES ? p : undefined; };
+		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
 		this.onEvent = onEvent;
 		this.unEvent = unEvent;
 		this.doEvent = doEvent;

@@ -88,8 +88,9 @@ $(document).ready(function(){
 
 	
 	module(akme.core.IndexedMap.CLASS);
-	test("basic set/get/remove/clear", function() {
+	test("basic set/get/remove/clear/copy/link", function() {
 		equal( typeof akme.core.IndexedMap, "function", "exists" );
+
 		var imap = new akme.core.IndexedMap();
 		imap.set("x", 1);
 		equal( imap.get("x"), 1, "get after set" );
@@ -104,11 +105,10 @@ $(document).ready(function(){
 		equal( typeof imap.get("x"), "undefined", "x undefined after clear" );
 		equal( typeof imap.get("y"), "undefined", "y undefined after clear" );
 		equal( typeof imap.get("z"), "undefined", "z undefined after clear" );
-	});
-	test("copy/link", function() {
+
 		var obj = {}, ary = [];
 		ary.push( {cd:"akme", name:"AKME Solutions"} );
-		var imap = new akme.core.IndexedMap();
+		imap = new akme.core.IndexedMap();
 		equal( typeof obj.map, "undefined", "linked map" );
 		imap.linkMapTo(obj,"map");
 		equal( typeof obj.map, "object", "linked map" );
@@ -142,6 +142,21 @@ $(document).ready(function(){
 		promise.reject();
 		promise.fail(function(){ ok(true, "should be fail even when fail registered after reject"); });
 		ok( promise.state() === "rejected", "state should be rejected");
+	});
+	asyncTest("async", function() {
+		expect(2);
+		var promise;
+		
+		promise = akme.xhr.callPromise("GET", location.href);
+		promise.always(function(headers,content){
+			console.info("Promise async GET "+location.href, headers);
+			ok( !(this instanceof XMLHttpRequest), "this is NOT an XMLHttpRequest" );
+			if (headers) {
+				ok( headers.status === 200 && headers.statusText === "OK", "status is 200 OK" );
+			}
+			start();
+		});
+
 	});
 	
 	module("akme dom");

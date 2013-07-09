@@ -144,13 +144,13 @@ akme.copyAll(this.akme, {
 		return t;
 	},
 	/**
-	 * Cross-browser cancel of regular DOM events.
+	 * Cancel DOM Event, fix-ie8.js will add preventDefault(), stopPropagation().
 	 */
-	cancelEvent: function (ev) {
-		if (ev.preventDefault) { ev.preventDefault(); ev.stopPropagation(); }
-		else { ev.returnValue = false; ev.cancelBubble = true; }
+	cancelEvent: function ( ev ) {
+		ev.preventDefault();
+		ev.stopPropagation();
 	},
-	
+	noop: function(){},
 	getBaseHref : function () {
 		var a = document.getElementsByTagName("base");
 		return a.length != 0 ? a[0]["href"] : "";
@@ -164,10 +164,13 @@ akme.copyAll(this.akme, {
 	
 	isHtml5 : function () {
 		if (this._html5 == null) {
-			var video = document.createElement('video');
-			this._html5 = typeof video.canPlayType === "function";
-			// video.canPlayType && video.canPlayType("video/mp4") != "";
-			// ('video/mp4') or ('video/mp4; codecs=avc1.42E01E,mp4a.40.2')
+			try {
+				var video = document.createElement("video");
+				this._html5 = (typeof video.canPlayType !== 'undefined' && video.canPlayType("video/mp4") != "");
+				// video/mp4; codecs=avc1.42E01E,mp4a.40.2
+			} catch ( vidErr ) {
+				this._html5 = false;
+			}
 		}
 		return this._html5;
 	},
@@ -632,34 +635,43 @@ if (!akme.xhr) akme.xhr = {
 	callAsyncXHR : function(/*XMLHttpRequest*/ xhr, method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
 		xhr.open(method, url, true);
 		xhr.setRequestHeader("X-Requested-With","XMLHttpRequest");
-		for (var key in headers) {
-			var name = this.formatHttpHeaderName(key);
-			xhr.setRequestHeader(name, headers[key]);
-			if (name != key) {
-				headers[name] = headers[key];
-				delete headers[key];
+		var type;
+		if (headers) {
+			for (var key in headers) {
+				var name = this.formatHttpHeaderName(key);
+				xhr.setRequestHeader(name, headers[key]);
+				if (name != key) {
+					headers[name] = headers[key];
+					delete headers[key];
+				}
 			}
-		}
-		for (var key in headers) xhr.setRequestHeader(key, headers[key]);
-		if (!(typeof content === 'string' || content instanceof String)) {
-			if (/xml;|xml$/.test(headers["Content-Type"])) {
-				content = akme.formatXML(content);
-			} else if (/json;|json$/.test(headers["Content-Type"])) {
-				content = akme.formatJSON(content);
+			for (var key in headers) xhr.setRequestHeader(key, headers[key]);
+			if (!(typeof content === 'string' || content instanceof String)) {
+				type = headers["Content-Type"];
+				if (/xml;|xml$/.test(type)) {
+					content = akme.formatXML(content);
+				} else if (/json;|json$/.test(type)) {
+					content = akme.formatJSON(content);
+				}
 			}
 		}
 		var self = this; // closure
 		xhr.onreadystatechange = function() {
 			var xhr = this;
-			if (!xhr.readyState !== 4) return;
+			if (xhr.readyState !== 4) return;
 			var headers = self.parseHeaders(xhr.getAllResponseHeaders());
-			var content;
-			if (/xml;|xml$/.test(headers["Content-Type"])) {
-				content = self.getResponseXML(xhr);
-			} else if (/json;|json$/.test(headers["Content-Type"])) {
-				content = self.getResponseJSON(xhr);
-			} else {
-				content = xhr.responseText;
+			headers.status = xhr.status;
+			headers.statusText = xhr.statusText;
+			var content, type = headers["Content-Type"];
+			try {
+				if (/xml;|xml$/.test(type)) content = self.getResponseXML(xhr);
+				else if (/json;|json$/.test(type)) content = self.getResponseJSON(xhr);
+				else content = xhr.responseText;
+			}
+			catch (er) { 
+				content = xhr.responseText; 
+				headers.status = 500; 
+				headers.statusText = String(er); 
 			}
 			akme.handleEvent(callbackFnOrOb, headers, content);
 			self = xhr = callbackFnOrOb = null; // closure cleanup
@@ -667,6 +679,23 @@ if (!akme.xhr) akme.xhr = {
 		if (typeof content !== 'undefined') xhr.send(content);
 		else xhr.send();
 		return;
+	},
+	
+	callPromise : function(method, url, headers, content) {
+		var xhr = new XMLHttpRequest();
+		return this.callPromiseXHR(xhr, method, url, headers, content);
+	},
+	
+	callPromiseXHR : function(/*XMLHttpRequest*/ xhr, method, url, headers, content) {
+		var promise = new akme.core.Promise();
+		this.callAsyncXHR(xhr, method, url, headers, content, function(headers,content){
+			if (headers.status >= 400) {
+				promise.reject(headers,content);
+			} else {
+				promise.resolve(headers,content);
+			}
+		});
+		return promise.promise();
 	}
 	
 };

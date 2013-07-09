@@ -5,72 +5,80 @@
 // http://www.tuttoaster.com/learning-javascript-and-dom-with-console/
 // http://www.thecssninja.com/javascript/console
 if (typeof console === "undefined") console = { 
-	log : function() {}, info : function() {}, warn : function() {}, error : function() {}, assert : function() {} 
+	log : function(){}, info : function(){}, warn : function(){}, error : function(){}, assert : function(){} 
 };
 if (typeof console.logEnabled === "undefined") console.logEnabled = false;
 
-/**
- * Utility method on functions to return a short version of a dot-delimited constructor name.
- * Useful for constructor functions, e.g. with obj.constructor.name as "akme.core.EventSource" 
- * and obj.constructor.getShortName() gives "EventSource".
- * If given a parameter, it will look for a name on that function, or object, instead of this function.
- */
-if (!Function.prototype.getShortName) Function.prototype.getShortName = function (fn) {
-	var name = String(fn ? fn.name : this.name);
-	if (name) return name.substring(name.lastIndexOf('.')+1);
-	else return;
-};
 
-/**
- * Return values related to hasOwnProperty keys.
- */
-if (!Object.values) Object.values = function(obj) {
-	var v = [], k = Object.keys(obj);
-	for (var i=0; i<k.length; i++) v.push(obj[k[i]]);
-	return v;
-};
+// Add safe (from side-effects) compatibility to built-in JS constructor functions like Object, Function, Array.
+(function(){
+	var ARRAY = Array.prototype,
+		SLICE = Array.prototype.slice;
+	
+	/**
+	 * Utility method on functions to return a short version of a dot-delimited constructor name.
+	 * Useful for constructor functions, e.g. with obj.constructor.name as "akme.core.EventSource" 
+	 * and obj.constructor.getShortName() gives "Event".
+	 * If given a parameter, it will look for a name on that function, or object, instead of this function.
+	 */
+	if (!Function.prototype.getShortName) Function.prototype.getShortName = function (fn) {
+		var name = String(fn ? fn.name : this.name);
+		if (name) return name.substring(name.lastIndexOf('.')+1);
+		else return;
+	};
 
-/**
- * Perform a binary search on the given array for the given object assuming a pre-sorted array.
- */
-if (!Array.binarySearch) Array.binarySearch = function (a,o) {
-    var l = 0, u = a.length, m = 0;
-    while ( l <= u ) { 
-        if ( o > a[( m = Math.floor((l+u)/2) )] ) l = m+1;
-        else u = (o == a[m]) ? -2 : m - 1;
-    }
-    return (u == -2) ? m : -1;
-};
+	/**
+	 * Return values related to hasOwnProperty keys.
+	 */
+	if (!Object.values) Object.values = function(obj) {
+		var v = [], k = Object.keys(obj);
+		for (var i=0; i<k.length; i++) v.push(obj[k[i]]);
+		return v;
+	};
 
-//
-// Cross-reference JS 1.5 Array methods against the JS 1.3 Array constructor for backwards compatibility.
-//
-if (!Array.indexOf) Array.indexOf = 
-	function(ary) { return Array.prototype.indexOf.apply(ary, Array.prototype.slice.call(arguments,1)); };
+	//
+	// Cross-reference JS 1.5 Array methods against the JS 1.3 Array constructor for backwards compatibility.
+	//
+	if (!Array.indexOf) Array.indexOf = 
+		function(ary) { return ARRAY.indexOf.apply(ary, SLICE.call(arguments,1)); };
 
-if (!Array.lastIndexOf) Array.lastIndexOf = 
-	function(ary) { return Array.prototype.lastIndexOf.apply(ary, Array.prototype.slice.call(arguments,1)); };
+	if (!Array.lastIndexOf) Array.lastIndexOf = 
+		function(ary) { return ARRAY.lastIndexOf.apply(ary, SLICE.call(arguments,1)); };
 
-if (!Array.every) Array.every = 
-	function(ary) { return Array.prototype.every.apply(ary, Array.prototype.slice.call(arguments,1)); };
+	if (!Array.every) Array.every = 
+		function(ary) { return ARRAY.every.apply(ary, SLICE.call(arguments,1)); };
 
-if (!Array.filter) Array.filter = 
-	function(ary) { return Array.prototype.filter.apply(ary, Array.prototype.slice.call(arguments,1)); };
+	if (!Array.filter) Array.filter = 
+		function(ary) { return ARRAY.filter.apply(ary, SLICE.call(arguments,1)); };
 
-if (!Array.forEach) Array.forEach = 
-	function(ary) { Array.prototype.forEach.apply(ary, Array.prototype.slice.call(arguments,1)); };
+	if (!Array.forEach) Array.forEach = 
+		function(ary) { ARRAY.forEach.apply(ary, SLICE.call(arguments,1)); };
 
-if (!Array.map) Array.map = 
-	function(ary) { return Array.prototype.map.apply(ary, Array.prototype.slice.call(arguments,1)); };
+	if (!Array.map) Array.map = 
+		function(ary) { return ARRAY.map.apply(ary, SLICE.call(arguments,1)); };
 
-if (!Array.some) Array.some =  
-	function(ary) { return Array.prototype.some.apply(ary, Array.prototype.slice.call(arguments,1)); };
+	if (!Array.some) Array.some =  
+		function(ary) { return ARRAY.some.apply(ary, SLICE.call(arguments,1)); };
 
-if (!Array.reduce) Array.reduce = 
-	function(ary) { return Array.prototype.reduce.apply(ary, Array.prototype.slice.call(arguments,1)); };
+	if (!Array.reduce) Array.reduce = 
+		function(ary) { return ARRAY.reduce.apply(ary, SLICE.call(arguments,1)); };
 
-if (!Array.reduceRight) Array.reduceRight = 
-	function(ary) { return Array.prototype.reduceRight.apply(ary, Array.prototype.slice.call(arguments,1)); };
+	if (!Array.reduceRight) Array.reduceRight = 
+		function(ary) { return ARRAY.reduceRight.apply(ary, SLICE.call(arguments,1)); };
+
+	/**
+	 * Perform a binary search of an array for an object assuming the array is already sorted.
+	 */
+	if (!Array.binarySearch) Array.binarySearch = function (a,o) {
+	    var l = 0, u = a.length, m = 0;
+	    while ( l <= u ) { 
+	        if ( o > a[( m = Math.floor((l+u)/2) )] ) l = m+1;
+	        else u = (o == a[m]) ? -2 : m - 1;
+	    }
+	    return (u == -2) ? m : -1;
+	};
+})();
+
 
 //
 // Define various convenience methods directly on the akme root object.
@@ -80,10 +88,6 @@ if (!this.akme) this.akme = {
 	WHITESPACE_TRIM_REGEXP : /^\s*|\s*$/gm,
 	PRINTABLE_EXCLUDE_REGEXP : /[^\x20-\x7e\xc0-\xff]/g,
 
-	/**
-	 * Quick reference to standard slice.
-	 */
-	slice : Array.prototype.slice,
 	/**
 	 * Concat a collection to an array and return it, helpful for HTMLCollection results of getElementsByTagName.
 	 */
@@ -113,7 +117,7 @@ if (!this.akme) this.akme = {
 		return obj;
 	},
 	/**
-	 * Copy key/values from the map to the obj, returning the same obj.
+	 * Copy all key/values from the map to the obj, returning the same obj.
 	 */
 	copyAll : function (obj, map) {
 		if (map === undefined || map === null) return obj;
@@ -121,9 +125,17 @@ if (!this.akme) this.akme = {
 		return obj;
 	},
 	/**
-	 * Copy values from the map to the obj for existing keys in the obj, returning the same obj.
+	 * Copy hasOwnProperty/non-prototype values from the map to the obj for existing keys in the obj, returning the same obj.
 	 */
 	copyExisting : function (obj, map) {
+		if (map === undefined || map === null) return obj;
+		for (var key in map) if (key in obj && map.hasOwnProperty(key)) obj[key] = map[key];
+		return obj;
+	},
+	/**
+	 * Copy all values from the map to the obj for existing keys in the obj, returning the same obj.
+	 */
+	copyAllExisting : function (obj, map) {
 		if (map === undefined || map === null) return obj;
 		for (var key in map) if (key in obj) obj[key] = map[key];
 		return obj;
@@ -133,22 +145,22 @@ if (!this.akme) this.akme = {
 	 * If valName is undefined or null then the entire array values it used.
 	 */
 	copyArrayToObject : function (obj, ary, keyName, valName) {
-		if (valName === undefined) for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i][valName];
+		if (typeof valName != 'undefined') for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i][valName];
 		else for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i];
 		return obj;
 	},
 	/**
-	 * Copy/Append the keys in the map to the given array.
+	 * Append the keys in the map to the given array.
 	 */
-	copyMapKeys : function(ary, map) {
-		for (var k in map) ary[ary.length] = k;
+	concatMapKeys : function(ary, map) {
+		for (var key in map) ary[ary.length] = key;
 		return ary;
 	},
 	/**
 	 * Get all of the keys in the map as an array.
 	 */
 	getMapKeys : function(map) {
-		return this.copyMapKeys([], map);
+		return this.concatMapKeys([], map);
 	},
 	
 	/**
@@ -239,7 +251,7 @@ if (!this.akme) this.akme = {
 		default: 
 			var buf = new Array(args.length);
 			for (var i=0; i<args.length; i++) buf[i] = "a["+ i +"]";
-			return eval("(function(F,a){return new F("+ buf.join(",") +");})(fn,args);");
+			return (new Function("f","a","return new f("+ buf.join(",") +");"))(fn,args);
 		}
 	},
 
@@ -254,13 +266,13 @@ if (!this.akme) this.akme = {
 	},
 	/** 
 	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.
-	 * Ensures internally to be applied only once by setting _ie8fix = true on the object.
+	 * Ensures internally to be applied only once by setting _ie8fix on the object.
 	 */
 	fixHandleEvent : function (self) {
 		if (document.documentMode && document.documentMode < 9 && typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
 			var handleEvent = self.handleEvent;
 			self.handleEvent = function(ev) { handleEvent.call(self, ev); };
-			self.handleEvent._ie8fix = true;
+			self.handleEvent._ie8fix = function(){ return handleEvent; }; // closure the old handleEvent
 		}
 		return self;
 	},
@@ -438,14 +450,14 @@ if (!this.akme) this.akme = {
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES(self) { return self.PRIVATES.call(PRIVATES); };
+	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
 
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
 	function IndexedMap() {
 		var p = { map : {}, ary : [] }; // private closure
-		this.PRIVATES = function() { return this === PRIVATES ? p : undefined; };
+		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
 		this.length = p.ary.length;
 	};
 	$.extend($.copyAll( // class constructor
@@ -567,7 +579,7 @@ if (!this.akme) this.akme = {
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES(self) { return self.PRIVATES.call(PRIVATES); };
+	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
 
 	//
 	// Initialise constructor or singleton instance and public functions
@@ -575,7 +587,7 @@ if (!this.akme) this.akme = {
 	function EventSource() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
 		var p = {eventMap:{}}; // private closure
-		this.PRIVATES = function() { return this === PRIVATES ? p : undefined; };
+		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
 		this.onEvent = onEvent;
 		this.unEvent = unEvent;
 		this.doEvent = doEvent;
@@ -652,17 +664,24 @@ if (!this.akme) this.akme = {
 	// Private static declarations / closure
 	//
 	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
+	var SLICE = Array.prototype.slice,
+		STATE = ["pending","resolved","rejected"], // 0,1,2
+		STATE_ARY = ["partAry","doneAry","failAry"], // 0,1,2
+		ACTION = [
+			// action, listener
+			[ "resolve", "done" ],
+			[ "reject", "fail" ],
+			[ "notify", "progress" ]
+		];
 	function applyToArray(ary, self, args, once) { 
 		for (var i=0; i<ary.length; i++) ary[i].apply(self, args);
 		if (!!once) ary.length = 0;
-	}
-	var STATE = ["pending","resolved","rejected"]; // 0,1,2
-	var ACTION = [
-		// action, listener
-		[ "resolve", "done" ],
-		[ "reject", "fail" ],
-		[ "notify", "progress" ]
-	];
+	};
+	function concatFunctionsAndReturn(p, state, self, fcns) {
+		if (p.state === 0) $.concat(p[STATE_ARY[state]], fcns);
+		else if (p.state === state) applyToArray(fcns, self, undefined);
+		return self;
+	};
 	
 	//
 	// Initialise constructor or singleton instance and public functions
@@ -670,31 +689,26 @@ if (!this.akme) this.akme = {
 	
 	function Promise(fcn) {
 		if (!(this instanceof Promise)) return $.newApplyArgs(Promise, arguments);
-		var p = { state: 0, doneAry: [], failAry: [], partAry: [] }; // private closure
+		var p = { state: 0, self: null, args: null, partAry: [], doneAry: [], failAry: [] }; // private closure
 		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
-		function concatFunctionsAndReturn(ary, self, fcns, once, state) {
-			if (p.state === 0) $.concat(ary, fcns);
-			else if (state === p.state) applyToArray(fcns, self, undefined);
-			return self;
-		};
 		var self = this;
-		var promise = { // promise as closure-referenced subset of methods around p and self
+		var promise = { // promise as closure-linked subset of methods around p and self
 			/** Register the given function(s) to be called on resolution or rejection, success or failure (i.e. finally). */
 			always: function() {
-				concatFunctionsAndReturn(p.doneAry, this, arguments, true, 1);
-				return concatFunctionsAndReturn(p.failAry, this, arguments, true, 2);
+				concatFunctionsAndReturn(p, 1, this, arguments);
+				return concatFunctionsAndReturn(p, 2, this, arguments);
 			},
 			/** Register the given function(s) to be called when resolved with success. */
 			done: function() {
-				return concatFunctionsAndReturn(p.doneAry, this, arguments, true, 1);
+				return concatFunctionsAndReturn(p, 1, this, arguments);
 			},
 			/** Register the given function(s) to be called when rejected with failure. */
 			fail: function() {
-				return concatFunctionsAndReturn(p.failAry, this, arguments, true, 2);
+				return concatFunctionsAndReturn(p, 2, this, arguments);
 			},
 			/** Register the given function(s) to be called when partial progress is made. */
 			progress: function() {
-				return concatFunctionsAndReturn(p.partAry, this, arguments, false, -1);
+				return concatFunctionsAndReturn(p, 0, this, arguments);
 			},
 			/** Purvey/inject the promise closure on another object and return it or return the promise itself. */
 			promise: function(obj) { 
@@ -705,6 +719,7 @@ if (!this.akme) this.akme = {
 				return STATE[p.state];
 			},
 			/** Register functions to be called when done, failed, or partial progress is made. */
+			// TODO: testing ...
 			then: function(/* doneFn, failFn, partFn */) {
 				var fcns = arguments;
 				return new Promise(function( newPromise ) {
@@ -718,6 +733,7 @@ if (!this.akme) this.akme = {
 										.fail( newPromise.reject )
 										.progress( newPromise.notify );
 								} else {
+									// TODO: check if this needs to use newPromise[...].call() since jQuery may auto-unwrap arrays in args
 									newPromise[act+"With"](this === self ? newPromise : this, [r]);
 								}
 							} : newPromise[act]
@@ -757,6 +773,7 @@ if (!this.akme) this.akme = {
 	/**
 	 * Return a Promise based on given object(s) which may in turn be Promise(s).
 	 */
+	// TODO: testing ...
 	function when(sub /*, sub2, ... */) {
 		var resolveVals = $.concat([], arguments);
 		var todo = args.length !== 1 || (sub && typeof sub.promise === "function") ? args.length : 0;
@@ -780,7 +797,7 @@ if (!this.akme) this.akme = {
 		function update(i, selfs, values) {
 			return function( value ) {
 				contexts[i] = this; // the jQuery this, so what is our this ?
-				values[i] = arguments.length > 1 ? $.slice.call( arguments ) : value;
+				values[i] = arguments.length > 1 ? SLICE.call( arguments ) : value;
 				if( values === progressVals ) {
 					promise.notifyWith( selfs, values );
 				} else if (!( --todo )) {
@@ -808,7 +825,7 @@ if (!this.akme) this.akme = {
 	 * applying the first argument as "this" for the callbacks.
 	 */
 	function notifyWith(self) {
-		applyToArray(PRIVATES(this).partAry, self, $.slice.call(arguments,1));
+		applyToArray(PRIVATES(this).partAry, self, SLICE.call(arguments,1));
 		return this;
 	}
 	
@@ -818,9 +835,9 @@ if (!this.akme) this.akme = {
 	function resolve() {
 		var p = PRIVATES(this);
 		switch (p.state) {
-		case 0: p.state = 1; // fallthrough
-		case 1: applyToArray(p.doneAry, undefined, arguments, true); break;
-		case 2: throw new RangeError("cannot resolve after reject");
+		case 0: p.state = 1; p.self = undefined; p.args = arguments; // fallthrough
+		case 1: applyToArray(p.doneAry, p.self, p.args, true); break;
+		case 2: console.warn(String( new RangeError("cannot resolve after reject") ));
 		}
 		return this;
 	}
@@ -832,9 +849,9 @@ if (!this.akme) this.akme = {
 	function resolveWith(self) {
 		var p = PRIVATES(this);
 		switch (p.state) {
-		case 0: p.state = 1; // fallthrough
-		case 1: applyToArray(p.doneAry, self, $.slice.call(arguments,1), true); break;
-		case 2: throw new RangeError("cannot resolve after reject");
+		case 0: p.state = 1; p.self = self; p.args = SLICE.call(arguments,1); // fallthrough
+		case 1: applyToArray(p.doneAry, p.self, p.args, true); break;
+		case 2: console.warn(String( new RangeError("cannot resolve after reject") ));
 		}
 		return this;
 	}
@@ -845,9 +862,9 @@ if (!this.akme) this.akme = {
 	function reject() {
 		var p = PRIVATES(this);
 		switch (p.state) {
-		case 0: p.state = 2; // fallthrough
-		case 2: applyToArray(p.failAry, undefined, arguments, true); break;
-		case 1: throw new RangeError("cannot reject after resolve");
+		case 0: p.state = 2; p.self = undefined; p.args = arguments; // fallthrough
+		case 2: applyToArray(p.failAry, p.self, p.args, true); break;
+		case 1: console.warn(String( new RangeError("cannot reject after resolve") ));
 		}
 		return this;
 	}
@@ -859,9 +876,9 @@ if (!this.akme) this.akme = {
 	function rejectWith(self) {
 		var p = PRIVATES(this);
 		switch (p.state) {
-		case 0: p.state = 2; // fallthrough
-		case 2: applyToArray(p.failAry, self, arguments, true); break;
-		case 1: throw new RangeError("cannot reject after resolve");
+		case 0: p.state = 2; p.self = self; p.args = SLICE.call(arguments,1); // fallthrough
+		case 2: applyToArray(p.failAry, p.self, p.args, true); break;
+		case 1: console.warn(String( new RangeError("cannot reject after resolve") ));
 		}
 		return this;
 	}
@@ -1137,13 +1154,13 @@ akme.copyAll(this.akme, {
 		return t;
 	},
 	/**
-	 * Cross-browser cancel of regular DOM events.
+	 * Cancel DOM Event, fix-ie8.js will add preventDefault(), stopPropagation().
 	 */
-	cancelEvent: function (ev) {
-		if (ev.preventDefault) { ev.preventDefault(); ev.stopPropagation(); }
-		else { ev.returnValue = false; ev.cancelBubble = true; }
+	cancelEvent: function ( ev ) {
+		ev.preventDefault();
+		ev.stopPropagation();
 	},
-	
+	noop: function(){},
 	getBaseHref : function () {
 		var a = document.getElementsByTagName("base");
 		return a.length != 0 ? a[0]["href"] : "";
@@ -1157,10 +1174,13 @@ akme.copyAll(this.akme, {
 	
 	isHtml5 : function () {
 		if (this._html5 == null) {
-			var video = document.createElement('video');
-			this._html5 = typeof video.canPlayType === "function";
-			// video.canPlayType && video.canPlayType("video/mp4") != "";
-			// ('video/mp4') or ('video/mp4; codecs=avc1.42E01E,mp4a.40.2')
+			try {
+				var video = document.createElement("video");
+				this._html5 = (typeof video.canPlayType !== 'undefined' && video.canPlayType("video/mp4") != "");
+				// video/mp4; codecs=avc1.42E01E,mp4a.40.2
+			} catch ( vidErr ) {
+				this._html5 = false;
+			}
 		}
 		return this._html5;
 	},
@@ -1625,34 +1645,43 @@ if (!akme.xhr) akme.xhr = {
 	callAsyncXHR : function(/*XMLHttpRequest*/ xhr, method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
 		xhr.open(method, url, true);
 		xhr.setRequestHeader("X-Requested-With","XMLHttpRequest");
-		for (var key in headers) {
-			var name = this.formatHttpHeaderName(key);
-			xhr.setRequestHeader(name, headers[key]);
-			if (name != key) {
-				headers[name] = headers[key];
-				delete headers[key];
+		var type;
+		if (headers) {
+			for (var key in headers) {
+				var name = this.formatHttpHeaderName(key);
+				xhr.setRequestHeader(name, headers[key]);
+				if (name != key) {
+					headers[name] = headers[key];
+					delete headers[key];
+				}
 			}
-		}
-		for (var key in headers) xhr.setRequestHeader(key, headers[key]);
-		if (!(typeof content === 'string' || content instanceof String)) {
-			if (/xml;|xml$/.test(headers["Content-Type"])) {
-				content = akme.formatXML(content);
-			} else if (/json;|json$/.test(headers["Content-Type"])) {
-				content = akme.formatJSON(content);
+			for (var key in headers) xhr.setRequestHeader(key, headers[key]);
+			if (!(typeof content === 'string' || content instanceof String)) {
+				type = headers["Content-Type"];
+				if (/xml;|xml$/.test(type)) {
+					content = akme.formatXML(content);
+				} else if (/json;|json$/.test(type)) {
+					content = akme.formatJSON(content);
+				}
 			}
 		}
 		var self = this; // closure
 		xhr.onreadystatechange = function() {
 			var xhr = this;
-			if (!xhr.readyState !== 4) return;
+			if (xhr.readyState !== 4) return;
 			var headers = self.parseHeaders(xhr.getAllResponseHeaders());
-			var content;
-			if (/xml;|xml$/.test(headers["Content-Type"])) {
-				content = self.getResponseXML(xhr);
-			} else if (/json;|json$/.test(headers["Content-Type"])) {
-				content = self.getResponseJSON(xhr);
-			} else {
-				content = xhr.responseText;
+			headers.status = xhr.status;
+			headers.statusText = xhr.statusText;
+			var content, type = headers["Content-Type"];
+			try {
+				if (/xml;|xml$/.test(type)) content = self.getResponseXML(xhr);
+				else if (/json;|json$/.test(type)) content = self.getResponseJSON(xhr);
+				else content = xhr.responseText;
+			}
+			catch (er) { 
+				content = xhr.responseText; 
+				headers.status = 500; 
+				headers.statusText = String(er); 
 			}
 			akme.handleEvent(callbackFnOrOb, headers, content);
 			self = xhr = callbackFnOrOb = null; // closure cleanup
@@ -1660,6 +1689,23 @@ if (!akme.xhr) akme.xhr = {
 		if (typeof content !== 'undefined') xhr.send(content);
 		else xhr.send();
 		return;
+	},
+	
+	callPromise : function(method, url, headers, content) {
+		var xhr = new XMLHttpRequest();
+		return this.callPromiseXHR(xhr, method, url, headers, content);
+	},
+	
+	callPromiseXHR : function(/*XMLHttpRequest*/ xhr, method, url, headers, content) {
+		var promise = new akme.core.Promise();
+		this.callAsyncXHR(xhr, method, url, headers, content, function(headers,content){
+			if (headers.status >= 400) {
+				promise.reject(headers,content);
+			} else {
+				promise.resolve(headers,content);
+			}
+		});
+		return promise.promise();
 	}
 	
 };
