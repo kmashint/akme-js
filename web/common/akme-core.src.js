@@ -1633,7 +1633,7 @@ if (!akme.xhr) akme.xhr = {
 	 * Will use the callback when readyState==4 (DONE).
 	 */
 	callAsync : function(method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
-		var xhr = this.open(method, url, true);
+		var xhr = new XMLHttpRequest();
 		this.callAsyncXHR(xhr, headers, content, callbackFnOrOb);
 		return xhr;
 	},
@@ -1658,11 +1658,8 @@ if (!akme.xhr) akme.xhr = {
 			for (var key in headers) xhr.setRequestHeader(key, headers[key]);
 			if (!(typeof content === 'string' || content instanceof String)) {
 				type = headers["Content-Type"];
-				if (/xml;|xml$/.test(type)) {
-					content = akme.formatXML(content);
-				} else if (/json;|json$/.test(type)) {
-					content = akme.formatJSON(content);
-				}
+				if (/json;|json$/.test(type)) content = akme.formatXML(content);
+				else if (/xml;|xml$/.test(type)) content = akme.formatJSON(content);
 			}
 		}
 		var self = this; // closure
@@ -1674,8 +1671,8 @@ if (!akme.xhr) akme.xhr = {
 			headers.statusText = xhr.statusText;
 			var content, type = headers["Content-Type"];
 			try {
-				if (/xml;|xml$/.test(type)) content = self.getResponseXML(xhr);
-				else if (/json;|json$/.test(type)) content = self.getResponseJSON(xhr);
+				if (/json;|json$/.test(type)) content = self.getResponseJSON(xhr);
+				else if (/xml;|xml$/.test(type)) content = self.getResponseXML(xhr);
 				else content = xhr.responseText;
 			}
 			catch (er) { 
