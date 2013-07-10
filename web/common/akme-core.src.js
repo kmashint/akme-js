@@ -579,7 +579,7 @@ if (!this.akme) this.akme = {
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
+	var PRIVATES = {}; // Closure guard for privates.
 
 	//
 	// Initialise constructor or singleton instance and public functions
@@ -587,7 +587,8 @@ if (!this.akme) this.akme = {
 	function EventSource() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
 		var p = {eventMap:{}}; // private closure
-		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
+		// Use a different aspect name to avoid conflict with this.PRIVATES.
+		this.EVENTS = function(self) { return self === PRIVATES ? p : undefined; };
 		this.onEvent = onEvent;
 		this.unEvent = unEvent;
 		this.doEvent = doEvent;
@@ -604,7 +605,7 @@ if (!this.akme) this.akme = {
 
 	function destroy() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+".destroy()");
-		var p = PRIVATES(this);
+		var p = this.EVENTS(PRIVATES);
 		for (var key in p.eventMap) delete p.eventMap[key];
 	}
 	
@@ -616,7 +617,7 @@ if (!this.akme) this.akme = {
 		if (!(typeof fnOrHandleEventOb === "function" || typeof fnOrHandleEventOb.handleEvent === "function")) {
 			throw new TypeError(this.constructor.CLASS+".onEvent given neither function(ev){...} nor { handleEvent:function(ev){...} }");
 		}
-		var p = PRIVATES(this), a = p.eventMap[type];
+		var p = this.EVENTS(PRIVATES), a = p.eventMap[type];
 		if (!a) { a = []; p.eventMap[type] = a; }
 		var handler = $.fixHandleEvent(fnOrHandleEventOb);
 		a.push({handler:handler, once:!!once});
@@ -627,7 +628,7 @@ if (!this.akme) this.akme = {
 	 * The fnOrHandleEventObject can be a function(ev){...} or { handleEvent:function(ev){...} }.
 	 */
 	function unEvent(type, fnOrHandleEventOb) {
-		var p = PRIVATES(this);
+		var p = this.EVENTS(PRIVATES);
 		var a = p.eventMap[type];
 		if (!a) return;
 		for (var i=0; i<a.length; i++) if (a[i].handler === fnOrHandleEventOb) { a.splice(i,1); }
@@ -637,7 +638,7 @@ if (!this.akme) this.akme = {
 	 * Fire the actual event, looping through and calling handlers/listeners registered with onEvent.
 	 */
 	function doEvent(ev) {
-		var p = PRIVATES(this);
+		var p = this.EVENTS(PRIVATES);
 		var a = p.eventMap[ev.type];
 		if (a) for (var i=0; i<a.length; i++) {
 			var eh = a[i];
@@ -898,36 +899,43 @@ if (!this.akme) this.akme = {
 	//
 	// Private static declarations / closure
 	//
-	var CONTEXT,
+	var PRIVATES = {}, // Closure scope guard for this.PRIVATES.
 		//LOCK = [true], // var lock = LOCK.pop(); if (lock) try { ... } finally { if (lock) LOCK.push(lock); }
-		INSTANCE_COUNT = 0,
-		INSTANCE_MAP = {},
-		REFRESH_DATE = null;
+		CONTEXT; // ROOT
+		
 
 	//
 	// Initialise instance and public functions
 	//
-	var self = {
+	function Context(parent) {
+		var p = { parent: parent || null, map: {}, count: 0, refreshDate: null };
+		this.PRIVATES = function(self){ return self === PRIVATES ? p : undefined; };
+		$.core.EventSource.apply(this); // Apply/inject/mixin event handling.
+		this.onEvent("refresh", function(ev) {
+			p.refreshDate = new Date();
+		});
+		this.refresh();
+	}
+	$.extend($.copyAll( // class constructor
+		Context, {CLASS: CLASS}
+	),{ // static prototype
 		has: has,
 		get: get,
 		set: set,
 		remove: remove,
 		getIdCount: getIdCount,
 		getIdArray: getIdArray,
+		getParent: getParent,
 		getRefreshDate: getRefreshDate,
 		isFunction: isFunction,
 		refresh: refresh
-	};
-	$.core.EventSource.apply(self); // Apply event handling.
-	self.onEvent("refresh", function(ev) {
-		REFRESH_DATE = new Date();
 	});
-	self.refresh();
-	CONTEXT = self;
-
-	$.setProperty($.THIS, CLASS, $.copyAll(function() {
+	$.setProperty($.THIS, CLASS, Context);
+	
+	CONTEXT = new Context();
+	$.setProperty($.THIS, "akme.getContext", function() {
 		return CONTEXT;
-	}, {CLASS: CLASS}));
+	});
 
 	//
 	// Functions
@@ -937,15 +945,21 @@ if (!this.akme) this.akme = {
 	 * Refresh the context, also called during initialisation.
 	 */
 	function refresh() {
-		$.CONTEXT = INSTANCE_MAP;
-		this.doEvent({ type:"refresh", context:CONTEXT });
+		this.doEvent({ type:"refresh", context:this });
 	}
 	
 	/**
 	 * Get the refresh date (Date).
 	 */
 	function getRefreshDate() {
-		return REFRESH_DATE;
+		return this.PRIVATES(PRIVATES).refreshDate;
+	}
+	
+	/**
+	 * Get the parent Context or null.
+	 */
+	function getParent() {
+		return this.PRIVATES(PRIVATES).parent;
 	}
 	
 	/**
@@ -953,7 +967,7 @@ if (!this.akme) this.akme = {
 	 * This does not fire any "has" event.
 	 */
 	function has(id) {
-		return (id in INSTANCE_MAP);
+		return (id in this.PRIVATES(PRIVATES).map);
 	}
 	
 	/**
@@ -961,10 +975,10 @@ if (!this.akme) this.akme = {
 	 * Will NOT return undefined.
 	 */
 	function get(id) {
-		var o = INSTANCE_MAP[id];
+		var o = this.PRIVATES(PRIVATES).map[id]; 
 		if (typeof o === "function") o = $.newApplyArgs(o, Array.prototype.slice.call(arguments, 1));
 		if (o === undefined) o = null;
-		this.doEvent({ type:"get", context:CONTEXT, id:id, instance:o });
+		this.doEvent({ type:"get", context:this, id:id, instance:o });
 		return o;
 	}
 	
@@ -972,10 +986,11 @@ if (!this.akme) this.akme = {
 	 * Set the given object/instance to the given key/id, returning any existing one or null.
 	 */
 	function set(id, instance) {
-		if (!(id in INSTANCE_MAP)) INSTANCE_COUNT++;
-		var old = INSTANCE_MAP[id];
-		INSTANCE_MAP[id] = instance;
-		this.doEvent({ type:"set", context:CONTEXT, id:id, instance:instance, oldInstance:old });
+		var p = this.PRIVATES(PRIVATES), map = p.map;
+		if (!(id in map)) p.count++;
+		var old = map[id];
+		map[id] = instance;
+		this.doEvent({ type:"set", context:this, id:id, instance:instance, oldInstance:old });
 		return old;
 	}
 
@@ -983,20 +998,21 @@ if (!this.akme) this.akme = {
 	 * Removes the instance at the given id, returning the existing one.
 	 */
 	function remove(id) {
-		if (id in INSTANCE_MAP) INSTANCE_COUNT--;
-		var old = INSTANCE_MAP[id];
-		delete INSTANCE_MAP[id];
-		this.doEvent({ type:"remove", context:CONTEXT, id:id, instance:old });
+		var p = this.PRIVATES(PRIVATES), map = p.map;
+		if (id in map) p.count--;
+		var old = map[id];
+		delete map[id];
+		this.doEvent({ type:"remove", context:this, id:id, instance:old });
 		return old;
 	}
 
 	function getIdCount() {
-		return INSTANCE_COUNT;
+		return this.PRIVATES(PRIVATES).count;
 	}
 
 	function getIdArray() {
 		var a=[], i=0;
-		for (key in INSTANCE_MAP) a[i++] = key;
+		for (key in this.PRIVATES(PRIVATES).map) a[i++] = key;
 		return a;
 	}
 
@@ -1004,10 +1020,10 @@ if (!this.akme) this.akme = {
 	 * Check if the item at the given id is a function/constructor as opposed to an object/instance.
 	 */
 	function isFunction(id) {
-		return typeof INSTANCE_MAP[id] === "function";
+		return typeof this.PRIVATES(PRIVATES).map[id] === "function";
 	}
 
-})(akme, "akme.getContext");
+})(akme, "akme.core.Context");
 // akme-dom.js
 
 (function(self){
@@ -1104,13 +1120,13 @@ akme.copyAll(this.akme, {
 	},
 	/** 
 	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.
-	 * Ensures internally to be applied only once by setting _ie8fix = true on the object.
+	 * Ensures internally to be applied only once by setting _ie8fix on the object.
 	 */
 	fixHandleEvent : function (self) {
 		if (document.documentMode && document.documentMode < 9 && typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
 			var handleEvent = self.handleEvent;
 			self.handleEvent = function(ev) { handleEvent.call(self, ev); };
-			self.handleEvent._ie8fix = true;
+			self.handleEvent._ie8fix = function() { return handleEvent; };
 		}
 		return self;
 	},
@@ -1281,7 +1297,8 @@ akme.copyAll(this.akme, {
 			pos2 = text.indexOf('}', pos1);
 			if (pos2 != -1) {
 				var name = text.substring(pos1, pos2);
-				if (dataMap[name]) a.push(dataMap[name]);
+				var value = this.getProperty(dataMap, name);
+				if (value != null) a.push(value);
 				else a.push(text.substring(pos1-1, pos2+1));
 				pos1 = pos2+1;
 			} else {
@@ -1543,7 +1560,18 @@ if (!akme.xhr) akme.xhr = {
 	  }
 	  return r.join("&");
 	},
-	 
+	
+	decodeUrlEncoded : function(data) {
+		var map = {};
+		if (typeof data === "undefined" || data === null) return map;
+		var ary = String(data).split("&");
+		for (var i=0; i<ary.length; i++) {
+			var val = ary[i].split("=");
+			map[decodeURIComponent(val[0])] = val.length > 1 ? decodeURIComponent(val[1]) : "";
+		}
+		return map;
+	},
+	
 	open : function(method, url, async) {
 		var xhr = new XMLHttpRequest();
 		xhr.open(method, url, async!=false);
@@ -1566,6 +1594,10 @@ if (!akme.xhr) akme.xhr = {
 	getResponseContentType : function(/*XMLHttpRequest*/ xhr) {
 		// Handle IE XDomainRequest in addition to W3C standard.
 		return xhr.contentType || xhr.getResponseHeader("Content-Type");
+	},
+	getStatus : function(/*XMLHttpRequest*/ xhr) { 
+		// IE8 returns internal 1223 for HTTP 204 NO CONTENT and strips headers.  Can't recover headers.
+		return (xhr.status && xhr.status == 1223) ? 204 : xhr.status;
 	},
 		 
 	getResponseXML : function(/*XMLHttpRequest*/ xhr) {
@@ -1643,31 +1675,27 @@ if (!akme.xhr) akme.xhr = {
 	 * Will use the callback when readyState==4 (DONE).
 	 */
 	callAsyncXHR : function(/*XMLHttpRequest*/ xhr, method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
+		var self = this; // closure
 		xhr.open(method, url, true);
 		xhr.setRequestHeader("X-Requested-With","XMLHttpRequest");
-		var type;
-		if (headers) {
-			for (var key in headers) {
-				var name = this.formatHttpHeaderName(key);
-				xhr.setRequestHeader(name, headers[key]);
-				if (name != key) {
-					headers[name] = headers[key];
-					delete headers[key];
-				}
-			}
-			for (var key in headers) xhr.setRequestHeader(key, headers[key]);
-			if (!(typeof content === 'string' || content instanceof String)) {
-				type = headers["Content-Type"];
-				if (/json;|json$/.test(type)) content = akme.formatXML(content);
-				else if (/xml;|xml$/.test(type)) content = akme.formatJSON(content);
+		for (var key in headers) {
+			var name = this.formatHttpHeaderName(key);
+			xhr.setRequestHeader(name, headers[key]);
+			if (name != key) {
+				headers[name] = headers[key];
+				delete headers[key];
 			}
 		}
-		var self = this; // closure
+		if (headers && !(typeof content === 'string' || content instanceof String)) {
+			var type = headers["Content-Type"];
+			if (/json;|json$/.test(type)) content = akme.formatJSON(content);
+			else if (/xml;|xml$/.test(type)) content = akme.formatXML(content);
+		}
 		xhr.onreadystatechange = function() {
 			var xhr = this;
 			if (xhr.readyState !== 4) return;
 			var headers = self.parseHeaders(xhr.getAllResponseHeaders());
-			headers.status = xhr.status;
+			headers.status = self.getStatus(xhr);
 			headers.statusText = xhr.statusText;
 			var content, type = headers["Content-Type"];
 			try {
@@ -1676,9 +1704,9 @@ if (!akme.xhr) akme.xhr = {
 				else content = xhr.responseText;
 			}
 			catch (er) { 
-				content = xhr.responseText; 
 				headers.status = 500; 
 				headers.statusText = String(er); 
+				content = xhr.responseText; 
 			}
 			akme.handleEvent(callbackFnOrOb, headers, content);
 			self = xhr = callbackFnOrOb = null; // closure cleanup

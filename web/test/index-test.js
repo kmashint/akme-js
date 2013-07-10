@@ -125,6 +125,17 @@ $(document).ready(function(){
 		equal( typeof akme.core.EventSource, "function", "exists" );
 	});
 
+	module(akme.core.Context.CLASS);
+	test("basics", function(){
+		var cx = akme.getContext();
+		equal( typeof akme.getContext, "function", "exists" );
+		ok( cx instanceof akme.core.Context, "instanceof akme.core.Context" );
+		cx.set("x", 1);
+		equal( cx.get("x"), 1, "set/get x=1" );
+		equal( cx.remove("x"), 1, "remove x=1" );
+		equal( cx.get("x"), null, "get x should be null");
+	});
+
 	module(akme.core.Promise.CLASS);
 	test("basics", function() {
 		expect(6);
@@ -144,15 +155,15 @@ $(document).ready(function(){
 		ok( promise.state() === "rejected", "state should be rejected");
 	});
 	asyncTest("async", function() {
-		expect(2);
+		expect(3);
 		var promise;
 		
 		promise = akme.xhr.callPromise("GET", location.href);
 		promise.always(function(headers,content){
-			console.info("Promise async GET "+location.href, headers);
 			ok( !(this instanceof XMLHttpRequest), "this is NOT an XMLHttpRequest" );
 			if (headers) {
 				ok( headers.status === 200 && headers.statusText === "OK", "status is 200 OK" );
+				ok( headers["Content-Type"] == "text/html", "Content-Type: text/html" );
 			}
 			start();
 		});
@@ -176,10 +187,9 @@ $(document).ready(function(){
 	test("XML", function(){
 		equal( akme.parseXML('<o a="1" b="2" c="3"/>').firstChild.getAttribute("c"), 3, "parseXML should give c=3" );
 		throws( function(){ 
-			try { return akme.parseXML('<o a="1" b="2" c="3"'); } catch (er) { console.log(er); throw er; }
-			}, 
-			SyntaxError, 
-			"parseXML should fail to parse with a SyntaxError" );
+			try { return akme.parseXML('<o a="1" b="2" c="3"'); } 
+			catch (er) { console.log(String(er)); throw er; }
+			}, SyntaxError, "parseXML should fail to parse with a SyntaxError" );
 		
 	});
 	
@@ -195,8 +205,8 @@ $(document).ready(function(){
 			equal( akme.sessionStorage.getItem("test","x"), "1", "get test.x === String(1)" );
 			ok( !akme.sessionStorage.removeItem("test","x"), "remove test.x" );
 			equal( typeof akme.sessionStorage.destroy, "function", "has destroy function" );
-			equal( typeof akme.sessionStorage.PRIVATES, "function", "private privates()" );
-			equal( typeof akme.sessionStorage.PRIVATES(), "undefined", "private privates() returns undefined" );
+			equal( typeof akme.sessionStorage.EVENTS, "function", "private EVENTS()" );
+			equal( typeof akme.sessionStorage.EVENTS(), "undefined", "private EVENTS() returns undefined" );
 			
 			var evtFcn = function(ev){ 
 				ok(true, "Storage "+ ev.type +" "+ ev.value +" should fire events"); 

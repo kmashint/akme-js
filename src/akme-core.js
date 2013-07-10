@@ -578,7 +578,7 @@ if (!this.akme) this.akme = {
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
+	var PRIVATES = {}; // Closure guard for privates.
 
 	//
 	// Initialise constructor or singleton instance and public functions
@@ -586,7 +586,8 @@ if (!this.akme) this.akme = {
 	function EventSource() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
 		var p = {eventMap:{}}; // private closure
-		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
+		// Use a different aspect name to avoid conflict with this.PRIVATES.
+		this.EVENTS = function(self) { return self === PRIVATES ? p : undefined; };
 		this.onEvent = onEvent;
 		this.unEvent = unEvent;
 		this.doEvent = doEvent;
@@ -603,7 +604,7 @@ if (!this.akme) this.akme = {
 
 	function destroy() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+".destroy()");
-		var p = PRIVATES(this);
+		var p = this.EVENTS(PRIVATES);
 		for (var key in p.eventMap) delete p.eventMap[key];
 	}
 	
@@ -615,7 +616,7 @@ if (!this.akme) this.akme = {
 		if (!(typeof fnOrHandleEventOb === "function" || typeof fnOrHandleEventOb.handleEvent === "function")) {
 			throw new TypeError(this.constructor.CLASS+".onEvent given neither function(ev){...} nor { handleEvent:function(ev){...} }");
 		}
-		var p = PRIVATES(this), a = p.eventMap[type];
+		var p = this.EVENTS(PRIVATES), a = p.eventMap[type];
 		if (!a) { a = []; p.eventMap[type] = a; }
 		var handler = $.fixHandleEvent(fnOrHandleEventOb);
 		a.push({handler:handler, once:!!once});
@@ -626,7 +627,7 @@ if (!this.akme) this.akme = {
 	 * The fnOrHandleEventObject can be a function(ev){...} or { handleEvent:function(ev){...} }.
 	 */
 	function unEvent(type, fnOrHandleEventOb) {
-		var p = PRIVATES(this);
+		var p = this.EVENTS(PRIVATES);
 		var a = p.eventMap[type];
 		if (!a) return;
 		for (var i=0; i<a.length; i++) if (a[i].handler === fnOrHandleEventOb) { a.splice(i,1); }
@@ -636,7 +637,7 @@ if (!this.akme) this.akme = {
 	 * Fire the actual event, looping through and calling handlers/listeners registered with onEvent.
 	 */
 	function doEvent(ev) {
-		var p = PRIVATES(this);
+		var p = this.EVENTS(PRIVATES);
 		var a = p.eventMap[ev.type];
 		if (a) for (var i=0; i<a.length; i++) {
 			var eh = a[i];

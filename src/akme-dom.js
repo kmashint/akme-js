@@ -94,13 +94,13 @@ akme.copyAll(this.akme, {
 	},
 	/** 
 	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.
-	 * Ensures internally to be applied only once by setting _ie8fix = true on the object.
+	 * Ensures internally to be applied only once by setting _ie8fix on the object.
 	 */
 	fixHandleEvent : function (self) {
 		if (document.documentMode && document.documentMode < 9 && typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
 			var handleEvent = self.handleEvent;
 			self.handleEvent = function(ev) { handleEvent.call(self, ev); };
-			self.handleEvent._ie8fix = true;
+			self.handleEvent._ie8fix = function() { return handleEvent; };
 		}
 		return self;
 	},
@@ -271,7 +271,8 @@ akme.copyAll(this.akme, {
 			pos2 = text.indexOf('}', pos1);
 			if (pos2 != -1) {
 				var name = text.substring(pos1, pos2);
-				if (dataMap[name]) a.push(dataMap[name]);
+				var value = this.getProperty(dataMap, name);
+				if (value != null) a.push(value);
 				else a.push(text.substring(pos1-1, pos2+1));
 				pos1 = pos2+1;
 			} else {
@@ -533,7 +534,18 @@ if (!akme.xhr) akme.xhr = {
 	  }
 	  return r.join("&");
 	},
-	 
+	
+	decodeUrlEncoded : function(data) {
+		var map = {};
+		if (typeof data === "undefined" || data === null) return map;
+		var ary = String(data).split("&");
+		for (var i=0; i<ary.length; i++) {
+			var val = ary[i].split("=");
+			map[decodeURIComponent(val[0])] = val.length > 1 ? decodeURIComponent(val[1]) : "";
+		}
+		return map;
+	},
+	
 	open : function(method, url, async) {
 		var xhr = new XMLHttpRequest();
 		xhr.open(method, url, async!=false);
@@ -556,6 +568,10 @@ if (!akme.xhr) akme.xhr = {
 	getResponseContentType : function(/*XMLHttpRequest*/ xhr) {
 		// Handle IE XDomainRequest in addition to W3C standard.
 		return xhr.contentType || xhr.getResponseHeader("Content-Type");
+	},
+	getStatus : function(/*XMLHttpRequest*/ xhr) { 
+		// IE8 returns internal 1223 for HTTP 204 NO CONTENT and strips headers.  Can't recover headers.
+		return (xhr.status && xhr.status == 1223) ? 204 : xhr.status;
 	},
 		 
 	getResponseXML : function(/*XMLHttpRequest*/ xhr) {
@@ -633,31 +649,27 @@ if (!akme.xhr) akme.xhr = {
 	 * Will use the callback when readyState==4 (DONE).
 	 */
 	callAsyncXHR : function(/*XMLHttpRequest*/ xhr, method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
+		var self = this; // closure
 		xhr.open(method, url, true);
 		xhr.setRequestHeader("X-Requested-With","XMLHttpRequest");
-		var type;
-		if (headers) {
-			for (var key in headers) {
-				var name = this.formatHttpHeaderName(key);
-				xhr.setRequestHeader(name, headers[key]);
-				if (name != key) {
-					headers[name] = headers[key];
-					delete headers[key];
-				}
-			}
-			for (var key in headers) xhr.setRequestHeader(key, headers[key]);
-			if (!(typeof content === 'string' || content instanceof String)) {
-				type = headers["Content-Type"];
-				if (/json;|json$/.test(type)) content = akme.formatXML(content);
-				else if (/xml;|xml$/.test(type)) content = akme.formatJSON(content);
+		for (var key in headers) {
+			var name = this.formatHttpHeaderName(key);
+			xhr.setRequestHeader(name, headers[key]);
+			if (name != key) {
+				headers[name] = headers[key];
+				delete headers[key];
 			}
 		}
-		var self = this; // closure
+		if (headers && !(typeof content === 'string' || content instanceof String)) {
+			var type = headers["Content-Type"];
+			if (/json;|json$/.test(type)) content = akme.formatJSON(content);
+			else if (/xml;|xml$/.test(type)) content = akme.formatXML(content);
+		}
 		xhr.onreadystatechange = function() {
 			var xhr = this;
 			if (xhr.readyState !== 4) return;
 			var headers = self.parseHeaders(xhr.getAllResponseHeaders());
-			headers.status = xhr.status;
+			headers.status = self.getStatus(xhr);
 			headers.statusText = xhr.statusText;
 			var content, type = headers["Content-Type"];
 			try {
@@ -666,9 +678,9 @@ if (!akme.xhr) akme.xhr = {
 				else content = xhr.responseText;
 			}
 			catch (er) { 
-				content = xhr.responseText; 
 				headers.status = 500; 
 				headers.statusText = String(er); 
+				content = xhr.responseText; 
 			}
 			akme.handleEvent(callbackFnOrOb, headers, content);
 			self = xhr = callbackFnOrOb = null; // closure cleanup

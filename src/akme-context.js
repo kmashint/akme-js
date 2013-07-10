@@ -12,36 +12,43 @@
 	//
 	// Private static declarations / closure
 	//
-	var CONTEXT,
+	var PRIVATES = {}, // Closure scope guard for this.PRIVATES.
 		//LOCK = [true], // var lock = LOCK.pop(); if (lock) try { ... } finally { if (lock) LOCK.push(lock); }
-		INSTANCE_COUNT = 0,
-		INSTANCE_MAP = {},
-		REFRESH_DATE = null;
+		CONTEXT; // ROOT
+		
 
 	//
 	// Initialise instance and public functions
 	//
-	var self = {
+	function Context(parent) {
+		var p = { parent: parent || null, map: {}, count: 0, refreshDate: null };
+		this.PRIVATES = function(self){ return self === PRIVATES ? p : undefined; };
+		$.core.EventSource.apply(this); // Apply/inject/mixin event handling.
+		this.onEvent("refresh", function(ev) {
+			p.refreshDate = new Date();
+		});
+		this.refresh();
+	}
+	$.extend($.copyAll( // class constructor
+		Context, {CLASS: CLASS}
+	),{ // static prototype
 		has: has,
 		get: get,
 		set: set,
 		remove: remove,
 		getIdCount: getIdCount,
 		getIdArray: getIdArray,
+		getParent: getParent,
 		getRefreshDate: getRefreshDate,
 		isFunction: isFunction,
 		refresh: refresh
-	};
-	$.core.EventSource.apply(self); // Apply event handling.
-	self.onEvent("refresh", function(ev) {
-		REFRESH_DATE = new Date();
 	});
-	self.refresh();
-	CONTEXT = self;
-
-	$.setProperty($.THIS, CLASS, $.copyAll(function() {
+	$.setProperty($.THIS, CLASS, Context);
+	
+	CONTEXT = new Context();
+	$.setProperty($.THIS, "akme.getContext", function() {
 		return CONTEXT;
-	}, {CLASS: CLASS}));
+	});
 
 	//
 	// Functions
@@ -51,15 +58,21 @@
 	 * Refresh the context, also called during initialisation.
 	 */
 	function refresh() {
-		$.CONTEXT = INSTANCE_MAP;
-		this.doEvent({ type:"refresh", context:CONTEXT });
+		this.doEvent({ type:"refresh", context:this });
 	}
 	
 	/**
 	 * Get the refresh date (Date).
 	 */
 	function getRefreshDate() {
-		return REFRESH_DATE;
+		return this.PRIVATES(PRIVATES).refreshDate;
+	}
+	
+	/**
+	 * Get the parent Context or null.
+	 */
+	function getParent() {
+		return this.PRIVATES(PRIVATES).parent;
 	}
 	
 	/**
@@ -67,7 +80,7 @@
 	 * This does not fire any "has" event.
 	 */
 	function has(id) {
-		return (id in INSTANCE_MAP);
+		return (id in this.PRIVATES(PRIVATES).map);
 	}
 	
 	/**
@@ -75,10 +88,10 @@
 	 * Will NOT return undefined.
 	 */
 	function get(id) {
-		var o = INSTANCE_MAP[id];
+		var o = this.PRIVATES(PRIVATES).map[id]; 
 		if (typeof o === "function") o = $.newApplyArgs(o, Array.prototype.slice.call(arguments, 1));
 		if (o === undefined) o = null;
-		this.doEvent({ type:"get", context:CONTEXT, id:id, instance:o });
+		this.doEvent({ type:"get", context:this, id:id, instance:o });
 		return o;
 	}
 	
@@ -86,10 +99,11 @@
 	 * Set the given object/instance to the given key/id, returning any existing one or null.
 	 */
 	function set(id, instance) {
-		if (!(id in INSTANCE_MAP)) INSTANCE_COUNT++;
-		var old = INSTANCE_MAP[id];
-		INSTANCE_MAP[id] = instance;
-		this.doEvent({ type:"set", context:CONTEXT, id:id, instance:instance, oldInstance:old });
+		var p = this.PRIVATES(PRIVATES), map = p.map;
+		if (!(id in map)) p.count++;
+		var old = map[id];
+		map[id] = instance;
+		this.doEvent({ type:"set", context:this, id:id, instance:instance, oldInstance:old });
 		return old;
 	}
 
@@ -97,20 +111,21 @@
 	 * Removes the instance at the given id, returning the existing one.
 	 */
 	function remove(id) {
-		if (id in INSTANCE_MAP) INSTANCE_COUNT--;
-		var old = INSTANCE_MAP[id];
-		delete INSTANCE_MAP[id];
-		this.doEvent({ type:"remove", context:CONTEXT, id:id, instance:old });
+		var p = this.PRIVATES(PRIVATES), map = p.map;
+		if (id in map) p.count--;
+		var old = map[id];
+		delete map[id];
+		this.doEvent({ type:"remove", context:this, id:id, instance:old });
 		return old;
 	}
 
 	function getIdCount() {
-		return INSTANCE_COUNT;
+		return this.PRIVATES(PRIVATES).count;
 	}
 
 	function getIdArray() {
 		var a=[], i=0;
-		for (key in INSTANCE_MAP) a[i++] = key;
+		for (key in this.PRIVATES(PRIVATES).map) a[i++] = key;
 		return a;
 	}
 
@@ -118,7 +133,7 @@
 	 * Check if the item at the given id is a function/constructor as opposed to an object/instance.
 	 */
 	function isFunction(id) {
-		return typeof INSTANCE_MAP[id] === "function";
+		return typeof this.PRIVATES(PRIVATES).map[id] === "function";
 	}
 
-})(akme, "akme.getContext");
+})(akme, "akme.core.Context");
