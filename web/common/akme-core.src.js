@@ -127,7 +127,7 @@ if (!this.akme) this.akme = {
 	/**
 	 * Copy hasOwnProperty/non-prototype values from the map to the obj for existing keys in the obj, returning the same obj.
 	 */
-	copyExisting : function (obj, map, /*boolean*/ all, /*boolean*/negate) {
+	copyExisting : function (obj, map, /*boolean*/ all, /*boolean*/ negate) {
 		if (map === undefined || map === null) return obj;
 		all = !!all; negate = !!negate;
 		for (var key in map) if (((key in obj) !== negate) && (all || map.hasOwnProperty(key))) obj[key] = map[key];
@@ -399,12 +399,12 @@ if (!this.akme) this.akme = {
 	function readMany(keys) {
 		var a = [];
 		if (typeof keys === "undefined" || keys === null) return a;
-		if (keys instanceof Array) for (var i=0; i<keys.length; i++) {
+		if (typeof keys === "function") {
+			a[a.length] = this.read(keys());
+		} else if (keys instanceof Array) for (var i=0; i<keys.length; i++) {
 			a[a.length] = this.read(keys[i]);
 		} else if (keys instanceof Object) for (var key in keys) {
 			a[a.length] = this.read(key);
-		} else if (typeof keys === "function") {
-			a[a.length] = this.read(keys());
 		} else {
 			a[a.length] = this.read(keys);
 		}
@@ -455,7 +455,7 @@ if (!this.akme) this.akme = {
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
+	var PRIVATES = {};
 
 	//
 	// Initialise constructor or singleton instance and public functions
@@ -490,37 +490,37 @@ if (!this.akme) this.akme = {
 	//
 
 	// Public functions that use PRIVATES and in turn the privileged this.privates().
-	function linkMapTo (obj,key) { obj[key] = PRIVATES(this).map; return this; };
-	function size () { return PRIVATES(this).ary.length; };
-	function keys () { return PRIVATES(this).ary.slice(0); };
-	function key (idx) { return PRIVATES(this).ary[idx]; };
+	function linkMapTo (obj,key) { obj[key] = this.PRIVATES(PRIVATES).map; return this; };
+	function size () { return this.PRIVATES(PRIVATES).ary.length; };
+	function keys () { return this.PRIVATES(PRIVATES).ary.slice(0); };
+	function key (idx) { return this.PRIVATES(PRIVATES).ary[idx]; };
 	function keySlice (start, end) { 
-		return end ? PRIVATES(this).ary.slice(start, end) : PRIVATES(this).ary.slice(start);
+		return end ? this.PRIVATES(PRIVATES).ary.slice(start, end) : this.PRIVATES(PRIVATES).ary.slice(start);
 	};
-	function value (idx) { var p = PRIVATES(this); return p.map[p.ary[idx]]; };
+	function value (idx) { var p = this.PRIVATES(PRIVATES); return p.map[p.ary[idx]]; };
 	function values () {
-		var p = PRIVATES(this); 
+		var p = this.PRIVATES(PRIVATES); 
 		var r = new Array(p.ary.length);
 		for (var i = 0; i < p.ary.length; i++) r[i] = p.map[p.ary[i]];
 		return r;
 	};
 	function valueSlice (start, end) {
-		var p = PRIVATES(this);
+		var p = this.PRIVATES(PRIVATES);
 		if (!(end >= 0)) end = p.ary.length;
 		var r = new Array(end-start);
 		for (var i = start; i < end; i++) r[i-start] = p.map[p.ary[i]];
 		return r;
 	};
-	function get (key) { return PRIVATES(this).map[key]; };
+	function get (key) { return this.PRIVATES(PRIVATES).map[key]; };
 	function set (key, val) {
-		var p = PRIVATES(this); 
+		var p = this.PRIVATES(PRIVATES); 
 		if (!(key in p.map)) {
 			p.ary[p.ary.length] = key; this.length = p.ary.length; 
 		}
 		p.map[key] = val;
 	};
 	function remove (key) {
-		var p = PRIVATES(this); 
+		var p = this.PRIVATES(PRIVATES); 
 		if (!(key in p.map)) return;
 		for (var i=0; i<p.ary.length; i++) if (p.ary[i]===key) {
 			p.ary.splice(i, 1); this.length = p.ary.length; break;
@@ -528,7 +528,7 @@ if (!this.akme) this.akme = {
 		delete p.map[key];
 	};
 	function clear () {
-		var p = PRIVATES(this); 
+		var p = this.PRIVATES(PRIVATES); 
 		p.ary.splice(0, p.ary.length);
 		this.length = 0;
 		for (var key in p.map) delete p.map[key];
@@ -669,8 +669,8 @@ if (!this.akme) this.akme = {
 	//
 	// Private static declarations / closure
 	//
-	function PRIVATES(self) { return self.PRIVATES(PRIVATES); };
-	var SLICE = Array.prototype.slice,
+	var PRIVATES = {},
+		SLICE = Array.prototype.slice,
 		STATE = ["pending","resolved","rejected"], // 0,1,2
 		STATE_ARY = ["partAry","doneAry","failAry"], // 0,1,2
 		ACTION = [
@@ -822,7 +822,7 @@ if (!this.akme) this.akme = {
 	//
 	
 	function notify() {
-		applyToArray(PRIVATES(this).partAry, undefined, arguments);
+		applyToArray(this.PRIVATES(PRIVATES).partAry, undefined, arguments);
 		return this;
 	}
 	
@@ -831,7 +831,7 @@ if (!this.akme) this.akme = {
 	 * applying the first argument as "this" for the callbacks.
 	 */
 	function notifyWith(self) {
-		applyToArray(PRIVATES(this).partAry, self, SLICE.call(arguments,1));
+		applyToArray(this.PRIVATES(PRIVATES).partAry, self, SLICE.call(arguments,1));
 		return this;
 	}
 	
@@ -839,7 +839,7 @@ if (!this.akme) this.akme = {
 	 * Resolve with success and invoke done callbacks.
 	 */
 	function resolve() {
-		var p = PRIVATES(this);
+		var p = this.PRIVATES(PRIVATES);
 		switch (p.state) {
 		case 0: p.state = 1; p.self = undefined; p.args = arguments; // fallthrough
 		case 1: applyToArray(p.doneAry, p.self, p.args, true); break;
@@ -853,7 +853,7 @@ if (!this.akme) this.akme = {
 	 * applying the first argument as "this" for the callbacks.
 	 */
 	function resolveWith(self) {
-		var p = PRIVATES(this);
+		var p = this.PRIVATES(PRIVATES);
 		switch (p.state) {
 		case 0: p.state = 1; p.self = self; p.args = SLICE.call(arguments,1); // fallthrough
 		case 1: applyToArray(p.doneAry, p.self, p.args, true); break;
@@ -866,7 +866,7 @@ if (!this.akme) this.akme = {
 	 * Reject with failure and invoke fail callbacks.
 	 */
 	function reject() {
-		var p = PRIVATES(this);
+		var p = this.PRIVATES(PRIVATES);
 		switch (p.state) {
 		case 0: p.state = 2; p.self = undefined; p.args = arguments; // fallthrough
 		case 2: applyToArray(p.failAry, p.self, p.args, true); break;
@@ -880,7 +880,7 @@ if (!this.akme) this.akme = {
 	 * applying the first argument as "this" for the callbacks.
 	 */
 	function rejectWith(self) {
-		var p = PRIVATES(this);
+		var p = this.PRIVATES(PRIVATES);
 		switch (p.state) {
 		case 0: p.state = 2; p.self = self; p.args = SLICE.call(arguments,1); // fallthrough
 		case 2: applyToArray(p.failAry, p.self, p.args, true); break;
