@@ -4,7 +4,19 @@
 $(document).ready(function(){
 
 	console.logEnabled = true;
-	
+
+	module("akme utility functions");
+	test("akme.copy and friends", function(){
+		var x = {a:1}, y = {a:2, b:2};
+		akme.copyExisting(x, y);
+		ok( x.a, 2 );
+		ok( typeof x.b, undefined );
+		x = {a:1};
+		akme.copyMissing(x, y);
+		ok( x.a, 1 );
+		ok( x.b, 2 );
+	});
+
 	module("akme.extend");
 	test("JS inheritance directly", function() {
 		if (!window.my) window.my = {};
@@ -67,13 +79,13 @@ $(document).ready(function(){
 
 			function X(){
 				var p = {x:1};
-				this.PRIVATES = function() { return (this === PRIVATES) ? p : undefined; };
+				this.PRIVATES = function(self) { return (self === PRIVATES) ? p : undefined; };
 			};
 			X.prototype = {get:get};
 			$.setProperty($.THIS, CLASS, X);
 			
 			function get(key) {
-				return this.PRIVATES.call(PRIVATES)[key];
+				return this.PRIVATES(PRIVATES)[key];
 			}
 
 		})(akme,"my.X");
@@ -227,7 +239,7 @@ $(document).ready(function(){
 		});
 	}
 	
-	if (false && confirm("Test CouchDB?")) {
+	if (false) {
 		var xhr = akme.xhr.open("HEAD", "http://localhost/shiftdb", false);
 		xhr.send();
 		if (xhr.status < 400) {
