@@ -127,29 +127,24 @@ if (!this.akme) this.akme = {
 	/**
 	 * Copy hasOwnProperty/non-prototype values from the map to the obj for existing keys in the obj, returning the same obj.
 	 */
-	copyExisting : function (obj, map, negate) {
+	copyExisting : function (obj, map, /*boolean*/ all, /*boolean*/negate) {
 		if (map === undefined || map === null) return obj;
-		negate = !!negate;
-		for (var key in map) if (((key in obj) !== negate) && map.hasOwnProperty(key)) obj[key] = map[key];
+		all = !!all; negate = !!negate;
+		for (var key in map) if (((key in obj) !== negate) && (all || map.hasOwnProperty(key))) obj[key] = map[key];
 		return obj;
 	},
 	/**
 	 * Copy all values from the map to the obj for existing keys in the obj, returning the same obj.
 	 */
-	copyAllExisting : function (obj, map, negate) {
-		if (map === undefined || map === null) return obj;
-		negate = !!negate;
-		for (var key in map) if ((key in obj) !== negate) obj[key] = map[key];
-		return obj;
-	},
+	copyAllExisting : function (obj, map) { return this.copyExisting(obj, map, true); },
 	/**
 	 * Copy hasOwnProperty/non-prototype values where the map keys are missing from the obj, returning the same obj.
 	 */
-	copyMissing : function (obj, map) { return this.copyExisting(obj, map, true); },
+	copyMissing : function (obj, map) { return this.copyExisting(obj, map, false, true); },
 	/**
 	 * Copy all values from the map to the obj where the map keys are missing from the obj, returning the same obj.
 	 */
-	copyAllMissing : function (obj, map) { return this.copyAllExisting(obj, map, true); },
+	copyAllMissing : function (obj, map) { return this.copyExisting(obj, map, true, true); },
 	/**
 	 * Copy the array values to the given obj as map keys all with the given value (obj[ary[i][keyName]] = ary[i][valName]).
 	 * If valName is undefined or null then the entire array values it used.
