@@ -8,13 +8,20 @@ $(document).ready(function(){
 	module("akme utility functions");
 	test("akme.copy and friends", function(){
 		var x = {a:1}, y = {a:2, b:2};
+		
+		akme.copy(x, y);
+		equal( x.a, 2, "copy should set a=2" );
+		equal( x.b, 2, "copy should set b=2" );
+		
+		x = {a:1};
 		akme.copyExisting(x, y);
-		ok( x.a, 2 );
-		ok( typeof x.b, undefined );
+		equal( x.a, 2, "copyExisting should set a=2" );
+		equal( typeof x.b, "undefined", "copyExisting should leave b undefined" );
+		
 		x = {a:1};
 		akme.copyMissing(x, y);
-		ok( x.a, 1 );
-		ok( x.b, 2 );
+		equal( x.a, 1, "copyMissing should leave a=1" );
+		equal( x.b, 2, "copyMissing should set a=2" );
 	});
 
 	module("akme.extend");

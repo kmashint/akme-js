@@ -110,19 +110,16 @@ if (!this.akme) this.akme = {
 	/**
 	 * Copy hasOwnProperty/non-prototype key/values from the map to the obj, returning the same obj.
 	 */
-	copy : function (obj, map) {
+	copy : function (obj, map, /*boolean*/ all) {
 		if (map === undefined || map === null) return obj;
-		for (var key in map) if (map.hasOwnProperty(key)) obj[key] = map[key];
+		all = !!all;
+		for (var key in map) if (all || map.hasOwnProperty(key)) obj[key] = map[key];
 		return obj;
 	},
 	/**
 	 * Copy all key/values from the map to the obj, returning the same obj.
 	 */
-	copyAll : function (obj, map) {
-		if (map === undefined || map === null) return obj;
-		for (var key in map) obj[key] = map[key];
-		return obj;
-	},
+	copyAll : function (obj, map) { return this.copy(obj, map, true); },
 	/**
 	 * Copy hasOwnProperty/non-prototype values from the map to the obj for existing keys in the obj, returning the same obj.
 	 */
