@@ -775,7 +775,6 @@ if (!this.akme) this.akme = {
 	 * If only one sub is given and it's not a promise it will resolve/done with (undefined, sub).
 	 * If only sub sub is given and it is a promise then it will progress/fail/done as a normal.
 	 */
-	// TODO: testing ...
 	function when(sub /*, sub2, ... */) {
 		var args = $.concat([], arguments);
 		var item, i, len = args.length;
