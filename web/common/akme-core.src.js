@@ -715,7 +715,7 @@ if (!this.akme) this.akme = {
 			},
 			/** Purvey/inject the promise closure on another object and return it or return the promise itself. */
 			promise: function(obj) { 
-				if (console.logEnabled) console.log("Injecting promise to "+ (obj != null ? "other" : "self"));
+				//if (console.logEnabled) console.log("Injecting promise to "+ (obj != null ? "other" : "self"));
 				return obj != null ? $.copyAll(obj, promise) : promise;
 			},
 			/** Return the current state as "pending", "resolved", "rejected". */
