@@ -715,6 +715,7 @@ if (!this.akme) this.akme = {
 			},
 			/** Purvey/inject the promise closure on another object and return it or return the promise itself. */
 			promise: function(obj) { 
+				if (console.logEnabled) console.log("Injecting promise to "+ (obj != null ? "other" : "self"));
 				return obj != null ? $.copyAll(obj, promise) : promise;
 			},
 			/** Return the current state as "pending", "resolved", "rejected". */
@@ -770,18 +771,18 @@ if (!this.akme) this.akme = {
 	
 	/**
 	 * Return a Promise based on given object(s) which may in turn be Promise(s).
-	 * This will chain them all and fail on first reject, notify about all of them each change,
+	 * This will wait on them all and fail on first reject, notify about all of them,
 	 * and only resolve when all are resolved/done with all of the ([object,...], [arguments,...]) resolved.
 	 * If only one sub is given and it's not a promise it will resolve/done with (undefined, sub).
-	 * If only sub sub is given and it is a promise then it will progress/fail/done as a normal.
+	 * If only sub sub is given and it is a promise then it will progress/fail/done as normal.
 	 */
 	function when(sub /*, sub2, ... */) {
 		var args = $.concat([], arguments);
 		var item, i, len = args.length;
 		var todo = len !== 1 || (sub && typeof sub.promise === "function") ? len : 0;
-		var promise = todo === 1 && sub instanceof Promise ? sub : new Promise();
+		var promise = todo === 1 ? sub : new Promise();
 		var selfs, progressArgs, progressSelfs; 
-		if (len > 1 || !(sub instanceof Promise)) {
+		if (len > 1) {
 			selfs = new Array( len );
 			progressArgs = new Array( len );
 			progressSelfs = new Array( len );
