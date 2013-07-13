@@ -734,7 +734,7 @@ if (!this.akme) this.akme = {
 										.fail( newPromise.reject )
 										.progress( newPromise.notify );
 								} else {
-									newPromise[act+"With"](this === self ? newPromise : this, r);
+									newPromise[act+"With"](this === self ? newPromise : this, [r]);
 								}
 							} : newPromise[act]
 						);
@@ -767,7 +767,7 @@ if (!this.akme) this.akme = {
 	 * This is similar to jQuery.Deferred.promise() and is cross-listed as Promise.promise().
 	 */
 	function make(startFn) {
-		return new Promise();
+		return new Promise(startFn);
 	}
 	
 	/**
@@ -824,8 +824,8 @@ if (!this.akme) this.akme = {
 	 * Notify partial progress callbacks,
 	 * applying the first argument as "this" for the callbacks.
 	 */
-	function notifyWith(self) {
-		applyToArray(this.PRIVATES(PRIVATES).partAry, self, SLICE.call(arguments,1));
+	function notifyWith(self,args) {
+		applyToArray(this.PRIVATES(PRIVATES).partAry, self, args);
 		return this;
 	}
 	
@@ -846,10 +846,10 @@ if (!this.akme) this.akme = {
 	 * Resolve with success and invoke done callbacks,
 	 * applying the first argument as "this" for the callbacks.
 	 */
-	function resolveWith(self) {
+	function resolveWith(self,args) {
 		var p = this.PRIVATES(PRIVATES);
 		switch (p.state) {
-		case 0: p.state = 1; p.self = self; p.args = SLICE.call(arguments,1); // fallthrough
+		case 0: p.state = 1; p.self = self; p.args = args; // fallthrough
 		case 1: applyToArray(p.doneAry, p.self, p.args, true); break;
 		case 2: console.warn(String( new RangeError("cannot resolve after reject") ));
 		}
@@ -873,10 +873,10 @@ if (!this.akme) this.akme = {
 	 * Reject with failure and invoke fail callbacks,
 	 * applying the first argument as "this" for the callbacks.
 	 */
-	function rejectWith(self) {
+	function rejectWith(self,args) {
 		var p = this.PRIVATES(PRIVATES);
 		switch (p.state) {
-		case 0: p.state = 2; p.self = self; p.args = SLICE.call(arguments,1); // fallthrough
+		case 0: p.state = 2; p.self = self; p.args = args; // fallthrough
 		case 2: applyToArray(p.failAry, p.self, p.args, true); break;
 		case 1: console.warn(String( new RangeError("cannot reject after resolve") ));
 		}
