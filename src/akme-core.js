@@ -772,15 +772,15 @@ if (!this.akme) this.akme = {
 	 * This will chain them all and fail on first reject, notify about all of them each change,
 	 * and only resolve when all are resolved/done with all of the ([object,...], [arguments,...]) resolved.
 	 * If only one sub is given and it's not a promise it will resolve/done with (undefined, sub).
-	 * If only sub sub is given and it is a promise then it will progress/fail/done as a normal.
+	 * If only sub sub is given and it is a promise then it will progress/fail/done as normal.
 	 */
 	function when(sub /*, sub2, ... */) {
 		var args = $.concat([], arguments);
 		var item, i, len = args.length;
 		var todo = len !== 1 || (sub && typeof sub.promise === "function") ? len : 0;
-		var promise = todo === 1 && sub instanceof Promise ? sub : new Promise();
+		var promise = todo === 1 ? sub : new Promise();
 		var selfs, progressArgs, progressSelfs; 
-		if (len > 1 || !(sub instanceof Promise)) {
+		if (len > 1) {
 			selfs = new Array( len );
 			progressArgs = new Array( len );
 			progressSelfs = new Array( len );
