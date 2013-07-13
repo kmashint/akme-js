@@ -764,7 +764,6 @@ if (!this.akme) this.akme = {
 	
 	/**
 	 * Make a promise calling the given function before progress starts.
-	 * This is similar to jQuery.Deferred.promise() and is cross-listed as Promise.promise().
 	 */
 	function make(startFn) {
 		return new Promise(startFn);
