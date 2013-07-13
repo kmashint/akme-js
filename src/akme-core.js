@@ -776,7 +776,7 @@ if (!this.akme) this.akme = {
 	function when(sub /*, sub2, ... */) {
 		var resolveVals = $.concat([], arguments);
 		var todo = args.length !== 1 || (sub && typeof sub.promise === "function") ? args.length : 0;
-		var promise = resolveVals === 1 ? sub : new Promise();
+		var promise = todo === 1 ? sub : new Promise();
 		var resolveSelfs, progressVals, progressSelfs; 
 		if (todo > 1) {
 			resolveSelfs = new Array( todo );
@@ -805,9 +805,9 @@ if (!this.akme) this.akme = {
 			};
 		}
 		if ( !todo ) {
-			promise.resolveWith( promise, resolveVals );
+			promise.resolveWith( undefined, resolveVals );
 		}
-		return promise;
+		return promise.promise();
 	}
 	
 	//
@@ -815,8 +815,7 @@ if (!this.akme) this.akme = {
 	//
 	
 	function notify() {
-		applyToArray(this.PRIVATES(PRIVATES).partAry, undefined, arguments);
-		return this;
+		return this.notifyWith(undefined,arguments);
 	}
 	
 	/**
@@ -832,13 +831,7 @@ if (!this.akme) this.akme = {
 	 * Resolve with success and invoke done callbacks.
 	 */
 	function resolve() {
-		var p = this.PRIVATES(PRIVATES);
-		switch (p.state) {
-		case 0: p.state = 1; p.self = undefined; p.args = arguments; // fallthrough
-		case 1: applyToArray(p.doneAry, p.self, p.args, true); break;
-		case 2: console.warn(String( new RangeError("cannot resolve after reject") ));
-		}
-		return this;
+		return this.resolveWith(undefined,arguments);
 	}
 	
 	/**
@@ -859,13 +852,7 @@ if (!this.akme) this.akme = {
 	 * Reject with failure and invoke fail callbacks.
 	 */
 	function reject() {
-		var p = this.PRIVATES(PRIVATES);
-		switch (p.state) {
-		case 0: p.state = 2; p.self = undefined; p.args = arguments; // fallthrough
-		case 2: applyToArray(p.failAry, p.self, p.args, true); break;
-		case 1: console.warn(String( new RangeError("cannot reject after resolve") ));
-		}
-		return this;
+		return this.rejectWith(undefined,arguments);
 	}
 	
 	/**
