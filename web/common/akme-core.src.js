@@ -779,9 +779,9 @@ if (!this.akme) this.akme = {
 		var args = $.concat([], arguments);
 		var item, i, len = args.length;
 		var todo = len !== 1 || (sub && typeof sub.promise === "function") ? len : 0;
-		var promise = todo === 1 ? sub : new Promise();
+		var promise = todo === 1 && sub instanceof Promise ? sub : new Promise();
 		var selfs, progressArgs, progressSelfs; 
-		if (len > 1) {
+		if (len > 1 || !(sub instanceof Promise)) {
 			selfs = new Array( len );
 			progressArgs = new Array( len );
 			progressSelfs = new Array( len );
