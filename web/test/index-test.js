@@ -157,10 +157,11 @@ $(document).ready(function(){
 
 	module(akme.core.Promise.CLASS);
 	test("basics", function() {
-		expect(7);
-		var promise;
+		expect(9);
+		var Promise = akme.core.Promise,
+			promise, promise2, promise3;
 		
-		promise = new akme.core.Promise();
+		promise = new Promise();
 		ok( typeof promise.resolve === "function", "maker.resolve should be function" );
 		ok( typeof promise.promise().resolve === "undefined", "maker.resolve should be undefined");
 
@@ -168,18 +169,38 @@ $(document).ready(function(){
 		promise.resolve();
 		ok( promise.state() === "resolved", "state should be resolved");
 		
-		promise = new akme.core.Promise();
+		promise = new Promise();
 		promise.reject();
 		promise.fail(function(){ ok(true, "should be fail even when fail registered after reject"); });
 		ok( promise.state() === "rejected", "state should be rejected");
 		
-		promise = new akme.core.Promise();
+		promise = new Promise();
 		promise.then(function(){
-			ok(true, "when should be resolved");
+			ok(true, "then should be resolved");
 		}, function(){
-			ok(false, "when should be resolved");
+			ok(false, "then should be resolved");
 		});
 		promise.resolve();
+
+		promise = new Promise();
+		promise2 = new Promise(); // Promise.when, jQuery.when
+		promise3 = Promise.when(promise, promise2).done(function(){
+			ok( true, "when should be resolved" );
+		}).fail(function(){
+			ok( false, "when should be resolved" );
+		});
+		promise.resolve();
+		promise2.resolve();
+		
+		promise = new Promise();
+		promise2 = new Promise(); // Promise.when, jQuery.when
+		promise3 = Promise.when(promise, promise2).done(function(){
+			ok( false, "when should be rejected" );
+		}).fail(function(){
+			ok( true, "when should be rejected" );
+		});
+		promise.reject();
+		
 	});
 	asyncTest("async", function() {
 		expect(3);

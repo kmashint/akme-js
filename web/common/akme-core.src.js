@@ -727,18 +727,16 @@ if (!this.akme) this.akme = {
 				return new Promise(function( newPromise ) {
 					Array.forEach(ACTION, function( item, i ) {
 						var act = item[0], f = fcns[i];
-						self[item[1]](typeof f === "function" ?
-							function(){ 
-								var r = f.apply(this, arguments);
-								if (r && typeof r.promise === "function") {
-									r.promise().done( newPromise.resolve )
-										.fail( newPromise.reject )
-										.progress( newPromise.notify );
-								} else {
-									newPromise[act+"With"](this === self ? newPromise : this, r);
-								}
-							} : newPromise[act]
-						);
+						self[item[1]](typeof f === "function" ? function(){ 
+							var r = f.apply(this, arguments);
+							if (r && typeof r.promise === "function") {
+								r.promise().done( function(){ return newPromise.resolve.apply(newPromise,arguments); } )
+									.fail( function(){ return newPromise.reject.apply(newPromise,arguments); } )
+									.progress( function(){ return newPromise.notify.apply(newPromise,arguments); } );
+							} else {
+								newPromise[act+"With"](this === self ? newPromise : this, [r]);
+							}
+						} : newPromise[act]	);
 					});
 					fcns = null; // closure cleanup
 				}).promise();
@@ -765,51 +763,55 @@ if (!this.akme) this.akme = {
 	
 	/**
 	 * Make a promise calling the given function before progress starts.
-	 * This is similar to jQuery.Deferred.promise() and is cross-listed as Promise.promise().
 	 */
 	function make(startFn) {
-		return new Promise();
+		return new Promise(startFn);
 	}
 	
 	/**
 	 * Return a Promise based on given object(s) which may in turn be Promise(s).
+	 * This will chain them all and fail on first reject, notify about all of them each change,
+	 * and only resolve when all are resolved/done with all of the ([object,...], [arguments,...]) resolved.
+	 * If only one sub is given and it's not a promise it will resolve/done with (undefined, sub).
+	 * If only sub sub is given and it is a promise then it will progress/fail/done as a normal.
 	 */
 	// TODO: testing ...
 	function when(sub /*, sub2, ... */) {
-		var resolveVals = $.concat([], arguments);
-		var todo = args.length !== 1 || (sub && typeof sub.promise === "function") ? args.length : 0;
-		var promise = resolveVals === 1 ? sub : new Promise();
-		var resolveSelfs, progressVals, progressSelfs; 
-		if (todo > 1) {
-			resolveSelfs = new Array( todo );
-			progressVals = new Array( todo );
-			progressSelfs = new Array( todo );
-			for (var i=0; i<args.length; i++) {
-				var item = args[i];
+		var args = $.concat([], arguments);
+		var item, i, len = args.length;
+		var todo = len !== 1 || (sub && typeof sub.promise === "function") ? len : 0;
+		var promise = todo === 1 ? sub : new Promise();
+		var selfs, progressArgs, progressSelfs; 
+		if (len > 1) {
+			selfs = new Array( len );
+			progressArgs = new Array( len );
+			progressSelfs = new Array( len );
+			for (i=0; i<len; i++) {
+				item = args[i];
 				if (item && typeof item.promise === "function") {
-					item.done( update(i, resolveSelfs, resolveVals) )
-						.fail( promise.fail )
-						.progress( update(i, progressSelfs, progressVals) );
+					item.promise().done( update(i, selfs, args) )
+						.fail( function(){ return promise.reject.apply(promise,arguments); } )
+						.progress( update(i, progressSelfs, progressArgs) );
 				} else {
 					--todo;
 				}
 			}
 		}
-		function update(i, selfs, values) {
+		function update(i, selfs, args) {
 			return function( value ) {
-				contexts[i] = this; // the jQuery this, so what is our this ?
-				values[i] = arguments.length > 1 ? SLICE.call( arguments ) : value;
-				if( values === progressVals ) {
-					promise.notifyWith( selfs[i], values[i] );
+				selfs[i] = this;
+				args[i] = arguments.length > 1 ? SLICE.call( arguments ) : value;
+				if( args === progressArgs ) {
+					promise.notifyWith( selfs, args );
 				} else if (!( --todo )) {
-					promise.resolveWith( selfs[i], values[i] );
+					promise.resolveWith( selfs, args );
 				}
 			};
 		}
 		if ( !todo ) {
-			promise.resolveWith( promise, resolveVals );
+			promise.resolveWith( selfs, args );
 		}
-		return promise;
+		return promise.promise();
 	}
 	
 	//
@@ -817,16 +819,15 @@ if (!this.akme) this.akme = {
 	//
 	
 	function notify() {
-		applyToArray(this.PRIVATES(PRIVATES).partAry, undefined, arguments);
-		return this;
+		return this.notifyWith(undefined,arguments);
 	}
 	
 	/**
 	 * Notify partial progress callbacks,
 	 * applying the first argument as "this" for the callbacks.
 	 */
-	function notifyWith(self) {
-		applyToArray(this.PRIVATES(PRIVATES).partAry, self, SLICE.call(arguments,1));
+	function notifyWith(self,args) {
+		applyToArray(this.PRIVATES(PRIVATES).partAry, self, args);
 		return this;
 	}
 	
@@ -834,23 +835,17 @@ if (!this.akme) this.akme = {
 	 * Resolve with success and invoke done callbacks.
 	 */
 	function resolve() {
-		var p = this.PRIVATES(PRIVATES);
-		switch (p.state) {
-		case 0: p.state = 1; p.self = undefined; p.args = arguments; // fallthrough
-		case 1: applyToArray(p.doneAry, p.self, p.args, true); break;
-		case 2: console.warn(String( new RangeError("cannot resolve after reject") ));
-		}
-		return this;
+		return this.resolveWith(undefined,arguments);
 	}
 	
 	/**
 	 * Resolve with success and invoke done callbacks,
 	 * applying the first argument as "this" for the callbacks.
 	 */
-	function resolveWith(self) {
+	function resolveWith(self,args) {
 		var p = this.PRIVATES(PRIVATES);
 		switch (p.state) {
-		case 0: p.state = 1; p.self = self; p.args = SLICE.call(arguments,1); // fallthrough
+		case 0: p.state = 1; p.self = self; p.args = args; // fallthrough
 		case 1: applyToArray(p.doneAry, p.self, p.args, true); break;
 		case 2: console.warn(String( new RangeError("cannot resolve after reject") ));
 		}
@@ -861,23 +856,17 @@ if (!this.akme) this.akme = {
 	 * Reject with failure and invoke fail callbacks.
 	 */
 	function reject() {
-		var p = this.PRIVATES(PRIVATES);
-		switch (p.state) {
-		case 0: p.state = 2; p.self = undefined; p.args = arguments; // fallthrough
-		case 2: applyToArray(p.failAry, p.self, p.args, true); break;
-		case 1: console.warn(String( new RangeError("cannot reject after resolve") ));
-		}
-		return this;
+		return this.rejectWith(undefined,arguments);
 	}
 	
 	/**
 	 * Reject with failure and invoke fail callbacks,
 	 * applying the first argument as "this" for the callbacks.
 	 */
-	function rejectWith(self) {
+	function rejectWith(self,args) {
 		var p = this.PRIVATES(PRIVATES);
 		switch (p.state) {
-		case 0: p.state = 2; p.self = self; p.args = SLICE.call(arguments,1); // fallthrough
+		case 0: p.state = 2; p.self = self; p.args = args; // fallthrough
 		case 2: applyToArray(p.failAry, p.self, p.args, true); break;
 		case 1: console.warn(String( new RangeError("cannot reject after resolve") ));
 		}
