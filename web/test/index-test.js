@@ -157,7 +157,7 @@ $(document).ready(function(){
 
 	module(akme.core.Promise.CLASS);
 	test("basics", function() {
-		expect(6);
+		expect(7);
 		var promise;
 		
 		promise = new akme.core.Promise();
@@ -172,6 +172,14 @@ $(document).ready(function(){
 		promise.reject();
 		promise.fail(function(){ ok(true, "should be fail even when fail registered after reject"); });
 		ok( promise.state() === "rejected", "state should be rejected");
+		
+		promise = new akme.core.Promise();
+		promise.then(function(){
+			ok(true, "when should be resolved");
+		}, function(){
+			ok(false, "when should be resolved");
+		});
+		promise.resolve();
 	});
 	asyncTest("async", function() {
 		expect(3);

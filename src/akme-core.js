@@ -721,22 +721,20 @@ if (!this.akme) this.akme = {
 				return STATE[p.state];
 			},
 			/** Register functions to be called when done, failed, or partial progress is made. */
-			// TODO: testing ...
 			then: function(/* doneFn, failFn, partFn */) {
 				var fcns = arguments;
 				return new Promise(function( newPromise ) {
 					Array.forEach(ACTION, function( item, i ) {
-						var act = item[0];
-						newPromise[act](typeof fcns[i] === "function" ?
+						var act = item[0], f = fcns[i];
+						self[item[1]](typeof f === "function" ?
 							function(){ 
-								var r = fcns[i].apply(this, arguments);
+								var r = f.apply(this, arguments);
 								if (r && typeof r.promise === "function") {
 									r.promise().done( newPromise.resolve )
 										.fail( newPromise.reject )
 										.progress( newPromise.notify );
 								} else {
-									// TODO: check if this needs to use newPromise[...].call() since jQuery may auto-unwrap arrays in args
-									newPromise[act+"With"](this === self ? newPromise : this, [r]);
+									newPromise[act+"With"](this === self ? newPromise : this, r);
 								}
 							} : newPromise[act]
 						);
@@ -801,14 +799,14 @@ if (!this.akme) this.akme = {
 				contexts[i] = this; // the jQuery this, so what is our this ?
 				values[i] = arguments.length > 1 ? SLICE.call( arguments ) : value;
 				if( values === progressVals ) {
-					promise.notifyWith( selfs, values );
+					promise.notifyWith( selfs[i], values[i] );
 				} else if (!( --todo )) {
-					promise.resolveWith( selfs, values );
+					promise.resolveWith( selfs[i], values[i] );
 				}
 			};
 		}
 		if ( !todo ) {
-			promise.resolveWith( resolveSelfs, resolveVals );
+			promise.resolveWith( promise, resolveVals );
 		}
 		return promise;
 	}
