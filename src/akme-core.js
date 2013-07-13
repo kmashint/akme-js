@@ -729,9 +729,9 @@ if (!this.akme) this.akme = {
 						self[item[1]](typeof f === "function" ? function(){ 
 							var r = f.apply(this, arguments);
 							if (r && typeof r.promise === "function") {
-								r.promise().done( function(){ return newPromise.resolve.apply(newPromise,arguments); } )
-									.fail( function(){ return newPromise.reject.apply(newPromise,arguments); } )
-									.progress( function(){ return newPromise.notify.apply(newPromise,arguments); } );
+								r.promise().done( newPromise.resolve.bind(newPromise) )
+									.fail( newPromise.reject.bind(newPromise) )
+									.progress( newPromise.notify.bind(newPromise) );
 							} else {
 								newPromise[act+"With"](this === self ? newPromise : this, [r]);
 							}
@@ -788,7 +788,7 @@ if (!this.akme) this.akme = {
 				item = args[i];
 				if (item && typeof item.promise === "function") {
 					item.promise().done( update(i, selfs, args) )
-						.fail( function(){ return promise.reject.apply(promise,arguments); } )
+						.fail( promise.reject.bind(promise) )
 						.progress( update(i, progressSelfs, progressArgs) );
 				} else {
 					--todo;
