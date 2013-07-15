@@ -87,15 +87,15 @@ $(document).ready(function(){
 		ok(car instanceof my.Vehicle, "car should be instanceof my.Vehicle");
 		
 		(function($,CLASS){
-			var proto = new my.Car({y:2}),
-				PRIVATES = proto.PRIVATES;
+			var PROTOTYPE = new my.Car({PRIVATES:null, y:2}),
+				PRIVATES = PROTOTYPE.PRIVATES;
 			function Mini() { 
 			    // nested function scope for constructor
 			    console.log(this.constructor.CLASS +".constructor() with wheels="+this.wheels);
 			};
 			$.extend(
 				$.copyAll(Mini, {CLASS : CLASS}), // constructor function
-				$.copyAll(proto, { // super-static prototype
+				$.copyAll(PROTOTYPE, { // super-static prototype
 					getY: function(){ return this.privates(PRIVATES).y; }
 				}) 
 			);
