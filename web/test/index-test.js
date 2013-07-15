@@ -63,14 +63,12 @@ $(document).ready(function(){
 			function Car(privates) { 
 			    // nested function scope for constructor
 			    console.log(this.constructor.CLASS +".constructor() with wheels="+this.wheels);
-			    var p = {x:1};
-			    if (privates && "PRIVATES" in privates) {
-			    	this.PRIVATES = PRIVATES; p = $.copyMissing(privates, p);
-			    }
+			    var p = $.copyMissing(privates || {}, {x:1});
+			    console.log("p.y ", p.y)
 			    this.privates = function(self){ return self === PRIVATES ? p : undefined; };
 			};
 			$.extend(
-				$.copyAll(Car, {CLASS : CLASS}), // constructor function
+				$.copyAll(Car, {CLASS : CLASS, PRIVATES: PRIVATES}), // constructor function
 				$.copyAll(new my.Vehicle, { // super-static prototype
 					wheels: DEFAULT_WHEELS,
 					getX: function(){ return this.privates(PRIVATES).x; }
@@ -87,16 +85,16 @@ $(document).ready(function(){
 		ok(car instanceof my.Vehicle, "car should be instanceof my.Vehicle");
 		
 		(function($,CLASS){
-			var PROTOTYPE = new my.Car({PRIVATES:null, y:2}),
-				PRIVATES = PROTOTYPE.PRIVATES;
+			var PRIVATES = my.Car.PRIVATES;
 			function Mini() { 
 			    // nested function scope for constructor
 			    console.log(this.constructor.CLASS +".constructor() with wheels="+this.wheels);
+			    this.constructor.constructor({y:2});
 			};
 			$.extend(
 				$.copyAll(Mini, {CLASS : CLASS}), // constructor function
-				$.copyAll(PROTOTYPE, { // super-static prototype
-					getY: function(){ return this.privates(PRIVATES).y; }
+				$.copyAll(new my.Car, { // super-static prototype
+					getY: function(){ console.log("privates ", this.privates(PRIVATES)); return this.privates(PRIVATES).y; }
 				}) 
 			);
 			$.setProperty($.THIS, CLASS, Mini);
