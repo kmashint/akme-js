@@ -39,32 +39,11 @@ if (typeof console.logEnabled === "undefined") console.logEnabled = false;
 	//
 	// Cross-reference JS 1.5 Array methods against the JS 1.3 Array constructor for backwards compatibility.
 	//
-	if (!Array.indexOf) Array.indexOf = 
-		function(ary) { return ARRAY.indexOf.apply(ary, SLICE.call(arguments,1)); };
-
-	if (!Array.lastIndexOf) Array.lastIndexOf = 
-		function(ary) { return ARRAY.lastIndexOf.apply(ary, SLICE.call(arguments,1)); };
-
-	if (!Array.every) Array.every = 
-		function(ary) { return ARRAY.every.apply(ary, SLICE.call(arguments,1)); };
-
-	if (!Array.filter) Array.filter = 
-		function(ary) { return ARRAY.filter.apply(ary, SLICE.call(arguments,1)); };
-
-	if (!Array.forEach) Array.forEach = 
-		function(ary) { ARRAY.forEach.apply(ary, SLICE.call(arguments,1)); };
-
-	if (!Array.map) Array.map = 
-		function(ary) { return ARRAY.map.apply(ary, SLICE.call(arguments,1)); };
-
-	if (!Array.some) Array.some =  
-		function(ary) { return ARRAY.some.apply(ary, SLICE.call(arguments,1)); };
-
-	if (!Array.reduce) Array.reduce = 
-		function(ary) { return ARRAY.reduce.apply(ary, SLICE.call(arguments,1)); };
-
-	if (!Array.reduceRight) Array.reduceRight = 
-		function(ary) { return ARRAY.reduceRight.apply(ary, SLICE.call(arguments,1)); };
+	for (var key in {"indexOf":1,"lastIndexOf":1,"every":1,"filter":1,"forEach":1,"map":1,"some":1,"reduce":1,"reduceRight":1}){
+		(function(key) {
+			if (!Array[key]) Array[key] = function(ary) { return ARRAY[key].apply(ary, SLICE.call(arguments,1)); }; 
+		})(key);
+	}
 
 	/**
 	 * Perform a binary search of an array for an object assuming the array is already sorted.
@@ -659,14 +638,14 @@ if (!this.akme) this.akme = {
 (function($,CLASS){
 	if ($.getProperty($.THIS,CLASS)) return; // One-time.
 	
-	// jQuery Deferred is meant to be the private/producer scope.
-	// jQuery Promise meant to be the public/consumer scope.
-	// e.g. jQuery.ready.promise creates on first use a private readyList Deferred and returns readyList.promise(arg).
+	// jQuery.Deferred() is the private/producer scope.
+	// jQuery.Deferred().promise() is the public/consumer scope.
+	// e.g. jQuery.ready.promise creates on first use a private readyList Deferred and returns readyList.promise(startFn).
 
 	//
 	// Private static declarations / closure
 	//
-	var PRIVATES = {},
+	var PRIVATES = {}, // Closure guard for privates.
 		SLICE = Array.prototype.slice,
 		STATE = ["pending","resolved","rejected"], // 0,1,2
 		STATE_ARY = ["partAry","doneAry","failAry"], // 0,1,2
