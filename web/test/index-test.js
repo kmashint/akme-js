@@ -63,8 +63,8 @@ $(document).ready(function(){
 			function Car(privates) { 
 			    // nested function scope for constructor
 			    console.log(this.constructor.CLASS +".constructor() with wheels="+this.wheels);
-			    var p = $.copyMissing(privates || {}, {x:1});
-			    console.log("p.y ", p.y)
+			    var p = {x:1};
+			    if (privates && this instanceof Car && this.constructor !== Car) p = $.copyMissing(privates, p);
 			    this.privates = function(self){ return self === PRIVATES ? p : undefined; };
 			};
 			$.extend(
@@ -89,12 +89,12 @@ $(document).ready(function(){
 			function Mini() { 
 			    // nested function scope for constructor
 			    console.log(this.constructor.CLASS +".constructor() with wheels="+this.wheels);
-			    this.constructor.constructor({y:2});
+			    this.constructor.constructor.call(this,{y: 2});
 			};
 			$.extend(
 				$.copyAll(Mini, {CLASS : CLASS}), // constructor function
 				$.copyAll(new my.Car, { // super-static prototype
-					getY: function(){ console.log("privates ", this.privates(PRIVATES)); return this.privates(PRIVATES).y; }
+					getY: function(){ return this.privates(PRIVATES).y; }
 				}) 
 			);
 			$.setProperty($.THIS, CLASS, Mini);
