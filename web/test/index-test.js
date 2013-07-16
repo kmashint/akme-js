@@ -24,6 +24,35 @@ $(document).ready(function(){
 		equal( x.b, 2, "copyMissing should set a=2" );
 	});
 
+	
+	module("akme PRIVATES");
+	test("private-scoped variables bound to each/this instance", function(){
+		(function($,CLASS){
+
+			var PRIVATES = {};
+
+			function X(){
+				var p = {x:1};
+				this.PRIVATES = function(self) { return (self === PRIVATES) ? p : undefined; };
+			};
+			X.prototype = {get:get};
+			$.setProperty($.THIS, CLASS, X);
+			
+			function get(key) {
+				return this.PRIVATES(PRIVATES)[key];
+			}
+
+		})(akme,"my.X");
+		
+		var x = new my.X();
+		equal(x.get("x"), 1, "x should be 1");
+		equal(typeof x.PRIVATES, "function", "x.PRIVATES should be function");
+		equal(typeof x.PRIVATES(), "undefined", "x.PRIVATES() should be undefined");
+		equal(typeof x.PRIVATES.call({}), "undefined", "x.PRIVATES(function(){}) should be undefined");
+		
+	});
+
+	
 	module("akme.extend");
 	test("JS inheritance directly", function() {
 		if (!window.my) window.my = {};
@@ -64,16 +93,20 @@ $(document).ready(function(){
 			    // nested function scope for constructor
 			    console.log(this.constructor.CLASS +".constructor() with wheels="+this.wheels);
 			    var p = {x:1};
-			    if (privates && this instanceof Car && this.constructor !== Car) p = $.copyMissing(privates, p);
-			    this.privates = function(self){ return self === PRIVATES ? p : undefined; };
+			    if (this.constructor !== Car && this instanceof Car) { // called by subclass
+			    	if (privates) p = $.copyMissing(privates, p);
+			    }
+			    this.PRIVATES = function(self){ return self === PRIVATES ? p : undefined; };
 			};
 			$.extend(
-				$.copyAll(Car, {CLASS : CLASS, PRIVATES: PRIVATES}), // constructor function
+				$.copyAll(Car, { // constructor function
+					CLASS : CLASS, PRIVATES: PRIVATES // expose PRIVATES to allow subclass access
+				}), 
 				$.copyAll(new my.Vehicle, { // super-static prototype
 					wheels: DEFAULT_WHEELS,
-					getX: function(){ return this.privates(PRIVATES).x; }
-					}) 
-				);
+					getX: function(){ return this.PRIVATES(PRIVATES).x; }
+				}) 
+			);
 			$.setProperty($.THIS, CLASS, Car);
 		})(akme,"my.Car");
 		
@@ -89,12 +122,13 @@ $(document).ready(function(){
 			function Mini() { 
 			    // nested function scope for constructor
 			    console.log(this.constructor.CLASS +".constructor() with wheels="+this.wheels);
-			    this.constructor.constructor.call(this,{y: 2});
+			    var p = {y: 2};
+			    this.constructor.constructor.call(this, p);
 			};
 			$.extend(
 				$.copyAll(Mini, {CLASS : CLASS}), // constructor function
 				$.copyAll(new my.Car, { // super-static prototype
-					getY: function(){ return this.privates(PRIVATES).y; }
+					getY: function(){ return this.PRIVATES(PRIVATES).y; }
 				}) 
 			);
 			$.setProperty($.THIS, CLASS, Mini);
@@ -104,34 +138,7 @@ $(document).ready(function(){
 		equal( mini.getY(), 2, "y should be 2" );
 	});
 	
-	module("akme private objects");
-	test("", function(){
-		(function($,CLASS){
 
-			var PRIVATES = {};
-
-			function X(){
-				var p = {x:1};
-				this.PRIVATES = function(self) { return (self === PRIVATES) ? p : undefined; };
-			};
-			X.prototype = {get:get};
-			$.setProperty($.THIS, CLASS, X);
-			
-			function get(key) {
-				return this.PRIVATES(PRIVATES)[key];
-			}
-
-		})(akme,"my.X");
-		
-		var x = new my.X();
-		equal(x.get("x"), 1, "x should be 1");
-		equal(typeof x.PRIVATES, "function", "x.privates should be function");
-		equal(typeof x.PRIVATES(), "undefined", "x.privates() should be undefined");
-		equal(typeof x.PRIVATES.call({}), "undefined", "x.privates(function(){}) should be undefined");
-		
-	});
-
-	
 	module(akme.core.IndexedMap.CLASS);
 	test("basic set/get/remove/clear/copy/link", function() {
 		equal( typeof akme.core.IndexedMap, "function", "exists" );
