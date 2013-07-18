@@ -5,55 +5,7 @@ $(document).ready(function(){
 
 	console.logEnabled = true;
 
-	module("akme utility functions");
-	test("akme.copy and friends", function(){
-		var x = {a:1}, y = {a:2, b:2};
-		
-		akme.copy(x, y);
-		equal( x.a, 2, "copy should set a=2" );
-		equal( x.b, 2, "copy should set b=2" );
-		
-		x = {a:1};
-		akme.copyExisting(x, y);
-		equal( x.a, 2, "copyExisting should set a=2" );
-		equal( typeof x.b, "undefined", "copyExisting should leave b undefined" );
-		
-		x = {a:1};
-		akme.copyMissing(x, y);
-		equal( x.a, 1, "copyMissing should leave a=1" );
-		equal( x.b, 2, "copyMissing should set a=2" );
-	});
-
-	
-	module("akme PRIVATES");
-	test("private-scoped variables bound to each/this instance", function(){
-		(function($,CLASS){
-
-			var PRIVATES = {};
-
-			function X(){
-				var p = {x:1};
-				this.PRIVATES = function(self) { return (self === PRIVATES) ? p : undefined; };
-			};
-			X.prototype = {get:get};
-			$.setProperty($.THIS, CLASS, X);
-			
-			function get(key) {
-				return this.PRIVATES(PRIVATES)[key];
-			}
-
-		})(akme,"my.X");
-		
-		var x = new my.X();
-		equal(x.get("x"), 1, "x should be 1");
-		equal(typeof x.PRIVATES, "function", "x.PRIVATES should be function");
-		equal(typeof x.PRIVATES(), "undefined", "x.PRIVATES() should be undefined");
-		equal(typeof x.PRIVATES.call({}), "undefined", "x.PRIVATES(function(){}) should be undefined");
-		
-	});
-
-	
-	module("akme.extend");
+	module("JS standards");
 	test("JS inheritance directly", function() {
 		if (!window.my) window.my = {};
 		
@@ -82,7 +34,52 @@ $(document).ready(function(){
 		ok(car instanceof my.Car, "car should be instanceof my.Car");
 		ok(car instanceof my.Vehicle, "car should be instanceof my.Vehicle");
 	});
-	test("JS inheritance with akme.extend", function() {
+
+	
+	module("akme utility functions");
+	test("akme.copy and friends", function(){
+		var x = {a:1}, y = {a:2, b:2};
+		
+		akme.copy(x, y);
+		equal( x.a, 2, "copy should set a=2" );
+		equal( x.b, 2, "copy should set b=2" );
+		
+		x = {a:1};
+		akme.copyExisting(x, y);
+		equal( x.a, 2, "copyExisting should set a=2" );
+		equal( typeof x.b, "undefined", "copyExisting should leave b undefined" );
+		
+		x = {a:1};
+		akme.copyMissing(x, y);
+		equal( x.a, 1, "copyMissing should leave a=1" );
+		equal( x.b, 2, "copyMissing should set a=2" );
+	});
+
+	
+	module("akme extend and PRIVATES");
+	test("private-scoped variables bound to each/this instance", function(){
+		(function($,CLASS){
+
+			var PRIVATES = {}; // closure guard
+
+			function X(){
+				var p = {x:1};
+				this.PRIVATES = function(self) { return (self === PRIVATES) ? p : undefined; };
+			};
+			X.prototype = {get:get};
+			$.setProperty($.THIS, CLASS, X);
+			
+			function get(key) {
+				return this.PRIVATES(PRIVATES)[key];
+			}
+
+		})(akme,"my.X");
+		
+		var x = new my.X();
+		equal(x.get("x"), 1, "x should be 1");
+		
+	});
+	test("JS inheritance with akme.extend and PRIVATES", function() {
 		(function($,CLASS){
 			$.setProperty($.THIS, "my.Vehicle", function Vehicle(){});
 			// function scope for a module
@@ -136,6 +133,10 @@ $(document).ready(function(){
 		var mini = new my.Mini();  
 		equal( mini.getX(), 1, "x should be 1" );
 		equal( mini.getY(), 2, "y should be 2" );
+		equal(typeof mini.PRIVATES, "function", "x.PRIVATES should be function");
+		equal(typeof mini.PRIVATES(), "undefined", "x.PRIVATES() should be undefined");
+		equal(typeof mini.PRIVATES.call({}), "undefined", "x.PRIVATES({}) should be undefined");
+
 	});
 	
 
@@ -371,24 +372,7 @@ $(document).ready(function(){
 	});
 	
 	
-	module("Raphael SVG/VML");
-	
-	var div = document.createElement("div");
-	akme.copyAll(div, {id: 'raphael'});
-	akme.copyAll(div.style, {width: '615px', height: '175px'});
-	document.body.appendChild(div);	
-	var paper = new Raphael("raphael");
-	div.insertBefore(document.createTextNode(div.id), div.firstChild);
-	console.log(" width ", paper.width, " height ", paper.height);
-	var rect = paper.rect(1, 1, paper.width-15, paper.height-15, 15);
-	rect.attr("fill", "transparent");
-	var img = paper.image("../akme-logo.gif", 15, 15, 42, 42);
-	function goRaphael() {
-		var attr = img.attrs.x == 15 ? {y: 100, x: 500} : {y: 15, x: 15};
-		img.animate(attr, 700, "bounce"); // easeOut, backOut, bounce, elastic
-	};
-	img.click(goRaphael);
-	setTimeout(function() { goRaphael(); }, 700);
+	module("jQuery DIV vs. Raphael SVG/VML");
 	
 	var $div2 = $(document.createElement("div"))
 		.attr({id:"jquery"})
@@ -408,5 +392,22 @@ $(document).ready(function(){
 	};
 	$img2.click(goJQuery);
 	setTimeout(function() { goJQuery(); }, 700);
+	
+	var div = document.createElement("div");
+	akme.copyAll(div, {id: 'raphael'});
+	akme.copyAll(div.style, {width: '615px', height: '175px'});
+	document.body.appendChild(div);	
+	var paper = new Raphael("raphael");
+	div.insertBefore(document.createTextNode(div.id), div.firstChild);
+	console.log(" width ", paper.width, " height ", paper.height);
+	var rect = paper.rect(1, 1, paper.width-15, paper.height-15, 15);
+	rect.attr("fill", "transparent");
+	var img = paper.image("../akme-logo.gif", 15, 15, 42, 42);
+	function goRaphael() {
+		var attr = img.attrs.x == 15 ? {y: 100, x: 500} : {y: 15, x: 15};
+		img.animate(attr, 700, "bounce"); // easeOut, backOut, bounce, elastic
+	};
+	img.click(goRaphael);
+	setTimeout(function() { goRaphael(); }, 700);
 	
 });
