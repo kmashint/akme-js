@@ -886,13 +886,13 @@ if (!this.akme) this.akme = {
 			if (typeof refreshFnOrHandleEventOb === "function") {
 				$.handleEvent(refreshFnOrHandleEventOb, ev);
 			}
+			if (parent) $.setProperty($.THIS, "akme.getContext", function() {
+				return self;
+			});
 		});
 		this.refresh();
-		if (parent) $.setProperty($.THIS, "akme.getContext", function() {
-			return self;
-		});
 	}
-	$.extend($.copyAll( // class constructor
+	$.extend($.copyAll( // class constructors
 		Context, {CLASS: CLASS, getRoot: getRoot}
 	),{ // static prototype
 		has: has,
