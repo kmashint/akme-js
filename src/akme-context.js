@@ -28,9 +28,7 @@
 		var self = this;
 		this.onEvent("refresh", function(ev) {
 			p.refreshDate = new Date();
-			if (typeof refreshFnOrHandleEventOb === "function") {
-				$.handleEvent(refreshFnOrHandleEventOb, ev);
-			}
+			if (refreshFnOrHandleEventOb) $.handleEvent(refreshFnOrHandleEventOb, ev);
 			if (parent) $.setProperty($.THIS, "akme.getContext", function() {
 				return self;
 			});
