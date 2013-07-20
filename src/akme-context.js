@@ -15,7 +15,6 @@
 	var PRIVATES = {}, // Closure scope guard for this.PRIVATES.
 		//LOCK = [true], // var lock = LOCK.pop(); if (lock) try { ... } finally { if (lock) LOCK.push(lock); }
 		CONTEXT; // ROOT
-		
 
 	//
 	// Initialise instance and public functions
@@ -39,10 +38,11 @@
 		});
 	}
 	$.extend($.copyAll( // class constructor
-		Context, {CLASS: CLASS, getRootContext: getRootContext}
+		Context, {CLASS: CLASS, getRoot: getRoot}
 	),{ // static prototype
-		isFunction: isFunction,
 		has: has,
+		isFunction: isFunction,
+		getQuiet: getQuiet,
 		get: get,
 		set: set,
 		remove: remove,
@@ -56,9 +56,7 @@
 	$.setProperty($.THIS, CLASS, Context);
 	
 	CONTEXT = new Context();
-	$.setProperty($.THIS, "akme.getContext", function() {
-		return CONTEXT;
-	});
+	$.setProperty($.THIS, "akme.getContext", getRoot);
 
 	//
 	// Functions
@@ -67,7 +65,7 @@
 	/**
 	 * Get the ROOT Context.
 	 */
-	function getRootContext() {
+	function getRoot() {
 		return CONTEXT;
 	}
 	
@@ -78,6 +76,9 @@
 		this.doEvent({ type:"refresh", context:this });
 	}
 	
+	/**
+	 * Remove all items from the Context and revert to any parent Context.
+	 */
 	function destroy() {
 		var p = this.PRIVATES(PRIVATES), parent = p.parent;
 		this.doEvent({ type:"destroy", context:this });
@@ -103,10 +104,10 @@
 	
 	/**
 	 * Check if the item at the given id is a function/constructor as opposed to an object/instance.
-	 * This also checks the parent.
+	 * This does not fire any "has","get","isFunction" event, and will check the parent.
 	 */
 	function isFunction(id) {
-		return typeof this.get(id) === "function";
+		return typeof this.getQuiet(id) === "function";
 	}
 
 	/**
@@ -118,14 +119,23 @@
 		return (id in p.map || (p.parent && p.parent.has(id)));
 	}
 	
+	/** 
+	 * Similar to .get(id) but does not fire any event and does not invoke a mapped function/constructor.
+	 * This also checks the parent.
+	 */
+	function getQuiet(id) {
+		var p = this.PRIVATES(PRIVATES);
+		var o = p.map[id];
+		if (o === undefined && p.parent) o = p.parent.get(id);
+		return o;
+	}
+	
 	/**
 	 * Get the object/instance at the given key/id or null.
 	 * Will NOT return undefined, and will check the parent.
 	 */
 	function get(id) {
-		var p = this.PRIVATES(PRIVATES);
-		var o = p.map[id];
-		if (o === undefined && p.parent) o = p.parent.get(id);  
+		var o = this.getQuiet(id);
 		if (typeof o === "function") o = $.newApplyArgs(o, Array.prototype.slice.call(arguments, 1));
 		if (o === undefined) o = null;
 		this.doEvent({ type:"get", context:this, id:id, instance:o });
