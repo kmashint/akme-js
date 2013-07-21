@@ -1,5 +1,9 @@
 // ..\web\common\akme-core
 // fw-core.js
+// Javascript Types: undefined, null, boolean, number, string, function, or object; Date and Array are typeof object.
+// Javascript typeof works for a function or object but cannot always be trusted, e.g. typeof String(1) is string but typeof new String(1) is object.
+// instanceof is better, but will not work between frames/windows/js-security-contexts due to different underlying prototypes.
+// This limitation of instanceof is another reason to use postMessage between frames.
 
 // Simple ability to ensure console.log and allow for use of if (console.logEnabled).
 // http://www.tuttoaster.com/learning-javascript-and-dom-with-console/
@@ -854,10 +858,6 @@ if (!this.akme) this.akme = {
 	
 })(akme,"akme.core.Promise");
 // akme.getContext
-// Javascript Types: undefined, null, boolean, number, string, function, or object; Date and Array are typeof object.
-// Javascript typeof works for a function or object but cannot always be trusted, e.g. typeof String(1) is string but typeof new String(1) is object.
-// instanceof is better, but will not work between frames/windows/js-security-contexts due to different underlying prototypes.
-// This limitation of instanceof is another reason to use postMessage between frames.
 // See Spring AbstractApplicationContext for related basics.
 // See refreshSpring.jsp for refreshing a single bean.
 //
@@ -869,7 +869,8 @@ if (!this.akme) this.akme = {
 	//
 	var PRIVATES = {}, // Closure scope guard for this.PRIVATES.
 		//LOCK = [true], // var lock = LOCK.pop(); if (lock) try { ... } finally { if (lock) LOCK.push(lock); }
-		CONTEXT; // ROOT
+		CONTEXT, // ROOT
+		PUBLIC_GETTER = "fw.getContext"; 
 
 	//
 	// Initialise instance and public functions
@@ -884,7 +885,7 @@ if (!this.akme) this.akme = {
 		this.onEvent("refresh", function(ev) {
 			p.refreshDate = new Date();
 			if (refreshFnOrHandleEventOb) $.handleEvent(refreshFnOrHandleEventOb, ev);
-			if (parent) $.setProperty($.THIS, "akme.getContext", function() {
+			$.setProperty($.THIS, PUBLIC_GETTER, function() {
 				return self;
 			});
 		});
@@ -909,7 +910,6 @@ if (!this.akme) this.akme = {
 	$.setProperty($.THIS, CLASS, Context);
 	
 	CONTEXT = new Context();
-	$.setProperty($.THIS, "akme.getContext", getRoot);
 
 	//
 	// Functions
@@ -936,7 +936,7 @@ if (!this.akme) this.akme = {
 		var p = this.PRIVATES(PRIVATES), parent = p.parent;
 		this.doEvent({ type:"destroy", context:this });
 		for (var id in p.map) this.remove(id); 
-		if (parent) $.setProperty($.THIS, "akme.getContext", function() {
+		if (parent) $.setProperty($.THIS, PUBLIC_GETTER, function() {
 			return parent;
 		});
 	}

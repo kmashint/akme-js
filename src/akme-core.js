@@ -1,4 +1,8 @@
 // fw-core.js
+// Javascript Types: undefined, null, boolean, number, string, function, or object; Date and Array are typeof object.
+// Javascript typeof works for a function or object but cannot always be trusted, e.g. typeof String(1) is string but typeof new String(1) is object.
+// instanceof is better, but will not work between frames/windows/js-security-contexts due to different underlying prototypes.
+// This limitation of instanceof is another reason to use postMessage between frames.
 
 // Simple ability to ensure console.log and allow for use of if (console.logEnabled).
 // http://www.tuttoaster.com/learning-javascript-and-dom-with-console/
