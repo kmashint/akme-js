@@ -870,7 +870,7 @@ if (!this.akme) this.akme = {
 	var PRIVATES = {}, // Closure scope guard for this.PRIVATES.
 		//LOCK = [true], // var lock = LOCK.pop(); if (lock) try { ... } finally { if (lock) LOCK.push(lock); }
 		CONTEXT, // ROOT
-		PUBLIC_GETTER = "fw.getContext"; 
+		PUBLIC_GETTER = "akme.getContext"; 
 
 	//
 	// Initialise instance and public functions
