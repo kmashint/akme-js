@@ -53,6 +53,7 @@ $(document).ready(function(){
 		akme.copyMissing(x, y);
 		equal( x.a, 1, "copyMissing should leave a=1" );
 		equal( x.b, 2, "copyMissing should set a=2" );
+
 	});
 
 	
@@ -200,7 +201,7 @@ $(document).ready(function(){
 		ok( typeof promise.promise().resolve === "undefined", "maker.resolve should be undefined");
 
 		promise.done(function(){ ok(true, "should be done"); });
-		promise.resolve();
+		promise.resolve(); 
 		ok( promise.state() === "resolved", "state should be resolved");
 		
 		promise = new Promise();

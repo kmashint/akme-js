@@ -658,13 +658,13 @@ if (!this.akme) this.akme = {
 			[ "reject", "fail" ],
 			[ "notify", "progress" ]
 		];
-	function applyToArray(ary, self, args, once) { 
-		for (var i=0; i<ary.length; i++) ary[i].apply(self, args);
+	function applyToArray(ary, self, args, once) { // IE8 cannot apply null or undefined args.
+		for (var i=0; i<ary.length; i++) args ? ary[i].apply(self, args) : ary[i].call(self);
 		if (!!once) ary.length = 0;
 	};
 	function concatFunctionsAndReturn(p, state, self, fcns) {
 		if (p.state === 0) $.concat(p[STATE_ARY[state]], fcns);
-		else if (p.state === state) applyToArray(fcns, self, undefined);
+		else if (p.state === state) applyToArray(fcns, self);
 		return self;
 	};
 	

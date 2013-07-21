@@ -16,12 +16,12 @@ if ((document.documentMode && document.documentMode < 8) || !document.documentMo
 if ( document.documentMode && document.documentMode == 8 ) (function(){
 	
 	// reroute properties to W3C standards
-	attachProperty ( Element, "innerText", "textContent", true, true );
-	attachProperty ( Event, "srcElement", "target", true, false );
+	defineProperty( Element, "innerText", "textContent", true, true );
+	defineProperty( Event, "srcElement", "target", true, false );
 
 	// attach functions to W3C standards
-	attachFunction ( Event, "preventDefault", function () { this.returnValue = false; } );
-	attachFunction ( Event, "stopPropagation", function () { this.cancelBubble = true; } );
+	defineFunction( Event, "preventDefault", function () { this.returnValue = false; } );
+	defineFunction( Event, "stopPropagation", function () { this.cancelBubble = true; } );
 	
 	/**
 	 * Helper for :target in IE8, will not work in IE7 or below.
@@ -43,17 +43,17 @@ if ( document.documentMode && document.documentMode == 8 ) (function(){
 		//alert("#"+ el.id +".("+ el.className +")")
 	});
 	
-	function attachProperty ( domConstructor, originalName, attachName, useGetter, useSetter ) {
+	function defineProperty( domConstructor, originalName, attachName, useGetter, useSetter ) {
 	    useGetter = !!useGetter;
 	    useSetter = !!useSetter;
-		var prpd = Object.getOwnPropertyDescriptor ( domConstructor.prototype, originalName );
+		var prpd = Object.getOwnPropertyDescriptor( domConstructor.prototype, originalName );
 		var prpSetGet = {};
 		if ( useGetter ) prpSetGet.get = function () { return prpd.get.call ( this ); };
 		if ( useSetter ) prpSetGet.set = function ( x ) { return prpd.set.call ( this, x ); };
-		Object.defineProperty ( domConstructor.prototype, attachName, prpSetGet );
+		Object.defineProperty( domConstructor.prototype, attachName, prpSetGet );
 	}
 	
-	function attachFunction ( domConstructor, name, delegate ) {
+	function defineFunction( domConstructor, name, delegate ) {
 		domConstructor.prototype[name] = delegate;
 	}
 
