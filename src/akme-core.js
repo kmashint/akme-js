@@ -680,20 +680,7 @@ if (!this.akme) this.akme = {
 		var promise = { // promise as closure-linked subset of methods around p and self
 			/** Register the given function(s) to be called on resolution or rejection, success or failure (i.e. finally). */
 			always: function() {
-				concatFunctionsAndReturn(p, 1, this, arguments);
-				return concatFunctionsAndReturn(p, 2, this, arguments);
-			},
-			/** Register the given function(s) to be called when resolved with success. */
-			done: function() {
-				return concatFunctionsAndReturn(p, 1, this, arguments);
-			},
-			/** Register the given function(s) to be called when rejected with failure. */
-			fail: function() {
-				return concatFunctionsAndReturn(p, 2, this, arguments);
-			},
-			/** Register the given function(s) to be called when partial progress is made. */
-			progress: function() {
-				return concatFunctionsAndReturn(p, 0, this, arguments);
+				return promise.done.apply(this,arguments).fail.apply(this,arguments);
 			},
 			/** Purvey/inject the promise closure on another object and return it or return the promise itself. */
 			promise: function(obj) { 
@@ -717,7 +704,7 @@ if (!this.akme) this.akme = {
 									.fail( newPromise.reject.bind(newPromise) )
 									.progress( newPromise.notify.bind(newPromise) );
 							} else {
-								newPromise[act+"With"](this === self ? newPromise : this, [r]);
+								newPromise[act+"With"](this === promise ? newPromise.promise() : this, f ? [r] : arguments);
 							}
 						} : newPromise[act]	);
 					});
@@ -725,6 +712,14 @@ if (!this.akme) this.akme = {
 				}).promise();
 			}
 		};
+		Array.forEach(ACTION, function( item, i ){
+			/** done: Register the given function(s) to be called when resolved with success. */
+			/** fail: Register the given function(s) to be called when rejected with failure. */
+			/** progress: Register the given function(s) to be called when partial progress is made. */
+			promise[item[1]] = function(){
+				return concatFunctionsAndReturn(p, item[2], this === self ? promise : this, arguments);
+			};
+		});
 		promise.promise(this);
 		if (typeof fcn === "function") fcn.call(this, this);
 	};
