@@ -653,10 +653,10 @@ if (!this.akme) this.akme = {
 		STATE = ["pending","resolved","rejected"], // 0,1,2
 		STATE_ARY = ["partAry","doneAry","failAry"], // 0,1,2
 		ACTION = [
-			// action, listener
-			[ "resolve", "done" ],
-			[ "reject", "fail" ],
-			[ "notify", "progress" ]
+			// action, listener, state
+			[ "resolve", "done", 1 ],
+			[ "reject", "fail", 2 ],
+			[ "notify", "progress", 0 ]
 		];
 	function applyToArray(ary, self, args, once) { // IE8 cannot apply null or undefined args.
 		for (var i=0; i<ary.length; i++) args ? ary[i].apply(self, args) : ary[i].call(self);
