@@ -193,7 +193,7 @@ if (!this.akme) this.akme = {
 			var x = superNew; superNew = constructFn; constructFn = x;
 		}
 		else if (!constructFn) constructFn = function(){};
-		constructFn.prototype = typeof superNew === "function" ? new superNew : superNew;
+		constructFn.prototype = typeof superNew === "function" ? Object.create(superNew.prototype) : superNew;
 		constructFn.constructor = constructFn.prototype.constructor;
 		constructFn.prototype.constructor = constructFn;
 		return constructFn;
