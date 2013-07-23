@@ -86,7 +86,7 @@ if (!this.akme) this.akme = {
 	clone : function (obj) {
 		if (obj === undefined || obj === null) return obj;
 		if (typeof obj.clone === "function") return obj.clone();
-		var clone = new obj.constructor();
+		var clone = Object.create(Object.getPrototypeOf(obj));
 		for (var key in obj) if (obj.hasOwnProperty(key)) clone[key] = obj[key];
 		return clone;
 	},
