@@ -90,6 +90,21 @@ if (!Function.prototype.bind) Function.prototype.bind = function (oThis) {
 
 
 /**
+ * Add Object.create(prototype) if not available that creates an Object with the given prototype 
+ * without calling the typical constructor function for that prototype.
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
+ */
+if (!Object.create) Object.create = (function(){
+    function F(){};
+    return function(o){
+        if (arguments.length != 1) {
+            throw new Error('Object.create implementation only accepts one parameter.');
+        }
+        F.prototype = o;
+        return new F();
+    };
+})();
+/**
  * Add Object.getPrototypeOf() if not available that returns the prototype of an object.
  * This will only work in IE8 if the object.constructor and constructor.prototype have not been changed.
  * https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/getPrototypeOf
@@ -100,8 +115,6 @@ if (!Function.prototype.bind) Function.prototype.bind = function (oThis) {
 	if ({}.hasOwnProperty("__proto__")) Object.getPrototypeOf = function(obj){ return obj.__proto__; };
 	else Object.getPrototypeOf = function(obj){ return obj.constructor.prototype; };
 }
-
-
 /**
  * Add Object.keys() if not available that returns an Array of the hasOwnProperty keys of the given object.
  * https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind

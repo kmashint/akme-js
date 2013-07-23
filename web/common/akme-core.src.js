@@ -571,6 +571,7 @@ if (!this.akme) this.akme = {
 	//
 	function EventSource() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
+		if (this.EVENTS) return; // only apply once
 		var p = {eventMap:{}}; // private closure
 		// Use a different aspect name to avoid conflict with this.PRIVATES.
 		this.EVENTS = function(self) { return self === PRIVATES ? p : undefined; };
@@ -589,7 +590,7 @@ if (!this.akme) this.akme = {
 	//
 
 	function destroy() {
-		if (console.logEnabled) console.log(this.constructor.CLASS+".destroy()");
+		if (console.logEnabled) console.log(this.constructor.CLASS+".destroy() "+CLASS);
 		var p = this.EVENTS(PRIVATES);
 		for (var key in p.eventMap) delete p.eventMap[key];
 	}
@@ -870,9 +871,8 @@ if (!this.akme) this.akme = {
 	//
 	// Initialise instance and public functions
 	//
-	function Context(parent, refreshFnOrHandleEventOb) {
-		if (!(parent instanceof Context)) parent = null;
-		var p = { parent: parent, map: {}, count: 0, refreshDate: null };
+	function Context(refreshFnOrHandleEventOb) {
+		var p = { parent: $.getContext ? $.getContext() : null, map: {}, count: 0, refreshDate: null };
 		this.PRIVATES = function(self){ return self === PRIVATES ? p : undefined; };
 		
 		$.core.EventSource.apply(this); // Apply/inject/mixin event handling.
@@ -886,9 +886,9 @@ if (!this.akme) this.akme = {
 		});
 		this.refresh();
 	}
-	$.extend($.copyAll( // class constructors
+	$.extend($.copyAll( // class-constructor function
 		Context, {CLASS: CLASS, getRoot: getRoot}
-	),{ // static prototype
+	),{ // super-static prototype object
 		has: has,
 		isFunction: isFunction,
 		getQuiet: getQuiet,
@@ -900,7 +900,7 @@ if (!this.akme) this.akme = {
 		getIdCount: getIdCount,
 		getIdArray: getIdArray,
 		getParent: getParent,
-		getRefreshDate: getRefreshDate,
+		getRefreshDate: getRefreshDate
 	});
 	$.setProperty($.THIS, CLASS, Context);
 	
@@ -928,7 +928,7 @@ if (!this.akme) this.akme = {
 	 * Remove all items from the Context and revert to any parent Context.
 	 */
 	function destroy() {
-		var p = this.PRIVATES(PRIVATES), parent = p.parent;
+		var p = this.PRIVATES(PRIVATES), parent = p.parent || CONTEXT;
 		this.doEvent({ type:"destroy", context:this });
 		for (var id in p.map) this.remove(id); 
 		if (parent) $.setProperty($.THIS, PUBLIC_GETTER, function() {
@@ -1033,6 +1033,47 @@ if (!this.akme) this.akme = {
 	}
 
 })(akme, "akme.core.Context");
+
+
+/**
+ * akme.core.AppContext
+ */
+(function($,CLASS) {
+	if ($.getProperty($.THIS,CLASS)) return; // One-time.
+	
+	//
+	// Private static declarations / closure
+	//
+	var PRIVATES = {}, // Closure scope guard for this.PRIVATES.
+		Super = akme.core.Context; 
+
+	//
+	// Initialise instance and public functions
+	//
+	function AppContext(refreshFnOrHandleEventOb) {
+		Super.call(this,function(ev){
+			if (console.logEnabled) console.log(CLASS+"()");
+			ev.callback = refreshFnOrHandleEventOb;
+			refresh(ev);
+		});
+	}
+	$.extend($.copyAll( // class-constructor function
+		AppContext, {CLASS: CLASS, getRoot: Super.getRoot}
+	), $.copyAll(Object.create(Super.prototype), { // super-static prototype object
+		
+	}));
+	$.setProperty($.THIS, CLASS, AppContext);
+
+	//
+	// Functions
+	//
+	
+	function refresh(ev) {
+		if (ev.callback) $.handleEvent(ev.callback, ev);
+	}
+	
+})(akme, "akme.core.AppContext");
+
 // akme-dom.js
 
 (function(self){

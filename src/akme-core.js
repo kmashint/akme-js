@@ -570,6 +570,7 @@ if (!this.akme) this.akme = {
 	//
 	function EventSource() {
 		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
+		if (this.EVENTS) return; // only apply once
 		var p = {eventMap:{}}; // private closure
 		// Use a different aspect name to avoid conflict with this.PRIVATES.
 		this.EVENTS = function(self) { return self === PRIVATES ? p : undefined; };
@@ -588,7 +589,7 @@ if (!this.akme) this.akme = {
 	//
 
 	function destroy() {
-		if (console.logEnabled) console.log(this.constructor.CLASS+".destroy()");
+		if (console.logEnabled) console.log(this.constructor.CLASS+".destroy() "+CLASS);
 		var p = this.EVENTS(PRIVATES);
 		for (var key in p.eventMap) delete p.eventMap[key];
 	}

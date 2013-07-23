@@ -189,6 +189,14 @@ $(document).ready(function(){
 		equal( cx.remove("x"), 1, "remove x=1" );
 		equal( cx.get("x"), null, "get x should be null");
 	});
+	test("AppContext", function(){
+		var cx = new akme.core.AppContext(function(ev) {
+			console.info("created ", ev.context);
+		});
+		ok( cx instanceof akme.core.AppContext, "instanceof akme.core.AppContext" );
+		ok( cx instanceof akme.core.Context, "instanceof akme.core.Context" );
+		cx.destroy();
+	});
 
 	module(akme.core.Promise.CLASS);
 	test("basics", function() {
