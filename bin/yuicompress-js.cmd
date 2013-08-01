@@ -13,7 +13,8 @@ pushd ..\src
 set file=..\web\common\akme-core
 @echo off
 echo>"%file%.src.js" // %file%
-for %%a in (akme-core.js akme-context.js akme-dom.js akme-more.js akme-storage.js akme-couch.js) ^
+rem for %%a in (akme-core.js akme-context.js akme-dom.js akme-more.js akme-storage.js akme-couch.js) ^
+for %%a in (..\web\common\angular.src.js)
 do type>>"%file%.src.js" "%%a"
 %yuic% 2>"%yuid%\%~n0_.log" 1>"%file%.min.js" "%file%.src.js"
 cscript.exe //nologo "%yuid%\%~n0.js" <"%yuid%\%~n0_.log" >"%yuid%\%~n0.log" && del /f /q "%yuid%\%~n0_.log"

@@ -569,8 +569,8 @@ if (!this.akme) this.akme = {
 	// Initialise constructor or singleton instance and public functions
 	//
 	function EventSource() {
-		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
 		if (this.EVENTS) return; // only apply once
+		if (console.logEnabled) console.log(this.constructor.CLASS+" injecting "+CLASS+" arguments.length "+ arguments.length);
 		var p = {eventMap:{}}; // private closure
 		// Use a different aspect name to avoid conflict with this.PRIVATES.
 		this.EVENTS = function(self) { return self === PRIVATES ? p : undefined; };
