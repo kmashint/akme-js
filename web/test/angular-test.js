@@ -6,7 +6,7 @@
 
 /**
  * Angular begins with defining application modules and their components.
- * 	angular.module().constant().controller().directive().factory().filter().provider().service().value()
+ * 	angular.module().constant().controller().directive().factory().filter().provider().run().service().value()
  * 
  * For UI, it's best to disable Angular's wasteful auto-boostrap and just do it in one line.
  * The example below assumes one "main" module. 
