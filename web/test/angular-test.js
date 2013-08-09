@@ -46,8 +46,8 @@ angular.module("sync", []).run(["$rootScope", function($scope){
 angular.element(document).ready(function(){
 	console.logEnabled = true;
 
-	angular.bootstrap(document.body);
-	console.log( angular.module("x") );
+	angular.bootstrap(document.body, ["main"]);
+	//console.log( angular.module("main") );
 
 	test("angular basics", function(){
 		ok( typeof angular === "object", "angular exists" );
