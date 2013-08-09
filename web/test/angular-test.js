@@ -6,11 +6,19 @@
 
 /**
  * Angular begins with defining application modules and their components.
- * 	angular.module().constant().controller().directive().factory().filter().provider().run().service().value()
+ * 	angular.module().config().constant().controller().directive().factory().filter().provider().run().service().value()
  * 
- * For UI, it's best to disable Angular's wasteful auto-boostrap and just do it in one line.
- * The example below assumes one "main" module. 
+ * .module("main") will return that module instance if it already exists, otherwise throws Error.
+ * .module().config(fn) will register to be called on module loading/registering (early).
+ * .module().run(fn) will register to be called when the injector is done loading all modules/dependencies (late).
+ * 
+ * For UI, it's best to disable Angular's wasteful auto-bootstrap and just do it in one line.
+ * The example below assumes one "main" module.
  * 	angular.element(document).ready(function(){ angular.bootstrap(document.body,["main"]); });
+ * 
+ * Angular JS has $q similar to but not exactly like a jQuery $.Deferred/promise.
+ * qFactory, which provides $q, has defer(), reject(reasonArg), when(value,done,fail), all(promises) 
+ * where all() is really like jQuery when().
  * 
  */
 
@@ -38,8 +46,8 @@ angular.module("sync", []).run(["$rootScope", function($scope){
 angular.element(document).ready(function(){
 	console.logEnabled = true;
 
-	angular.bootstrap(document.body, ["main","sync"]);
-	//angular.module("main")
+	angular.bootstrap(document.body);
+	console.log( angular.module("x") );
 
 	test("angular basics", function(){
 		ok( typeof angular === "object", "angular exists" );

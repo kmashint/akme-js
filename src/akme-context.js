@@ -204,7 +204,7 @@
 	}
 	$.extend($.copyAll( // class-constructor function
 		AppContext, {CLASS: CLASS, getRoot: Super.getRoot}
-	), $.copyAll(Object.create(Super.prototype), { // super-static prototype object
+	), $.copyAll(Object.create( Super.prototype ), { // super-static prototype object
 		
 	}));
 	$.setProperty($.THIS, CLASS, AppContext);
