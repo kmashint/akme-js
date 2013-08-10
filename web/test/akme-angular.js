@@ -7,9 +7,6 @@ angular.module("akme",[]).config(['$provide',function($provide){
 	
 	function $HttpBackendBrokerDecorator($delegate) {
 		
-		// Need to clone? 
-		// Or replace/decorate $httpBackend: $HttpBackendProvider using a Broker if a different origin.
-		// Can the $HttpBackendProvider be replaced just for the $httpBroker: $HttpBrokerProvider ?
 		// How to obtain the relevant MessageBroker?
 		// Allow a MessageBroker to use a default frameName for it to find the frames[frameName] itself?
 		// The MessageBroker should be a config of the HttpBackendProvider?

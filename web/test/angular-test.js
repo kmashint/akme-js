@@ -3,6 +3,7 @@
 
 // http://glennstovall.com/blog/2013/06/27/angularjs-an-overview/
 // http://thoughts.mindofmoses.com/read/angularjs-example-learn-to-think-model-first-dom-second
+// http://www.cheatography.com/proloser/cheat-sheets/angularjs/
 
 /**
  * It's best to disable Angular's wasteful auto-bootstrap on (document).ready and just do it in one line.
