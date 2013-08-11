@@ -26,7 +26,7 @@
  * 
  */
 
-angular.module("main", [])
+angular.module("main", ["akme"])
 .constant("FRAME_ORIGIN_MAP", {
 	"testFrame": /^https?:\/\/localhost$/
 	})
@@ -52,14 +52,14 @@ angular.module("main", [])
 	
 }]);
 
-angular.module("sync", []).run(["$rootScope", function($scope){
+angular.module("sync", ["akme"]).run(["$rootScope", function($scope){
 	console.log("sync $rootScope ", $scope)
 }]);
 
 angular.element(document).ready(function(){
 	console.logEnabled = true;
 	
-	angular.bootstrap(document.body, ["akme","main"]);
+	angular.bootstrap(document.body, ["main","sync"]);
 	//console.log( angular.module("main") );
 
 	test("angular basics", function(){
