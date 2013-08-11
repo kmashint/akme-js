@@ -1,22 +1,23 @@
 // akme-angular.js
-angular.module("akme",[]).config(['$provide',function($provide){
+angular.module("akme", [])
+.constant("frameOriginMap", {})
+.config(['$provide',function($provide){
 
-	var URL_MATCH = /^([^:]+):\/\/(\w+:{0,1}\w*@)?(\{?[\w\.-]*\}?)(:([0-9]+))?(\/[^\?#]*)?(\?([^#]*))?(#(.*))?$/;
-
-	$provide.decorator('$httpBackend', $HttpBackendBrokerDecorator);
-	
-	function $HttpBackendBrokerDecorator($delegate) {
-		
-		// How to obtain the relevant MessageBroker?
-		// Allow a MessageBroker to use a default frameName for it to find the frames[frameName] itself?
-		// The MessageBroker should be a config of the HttpBackendProvider?
-		// Shuffle callAsync arguments to (headers, content, callback) if first arg not Element.
-		//
+	$provide.decorator('$httpBackend', ['$delegate','$browser','frameOriginMap',$HttpBackendBrokerDecorator]);
+	function $HttpBackendBrokerDecorator($delegate,$browser,$scope,frameOriginMap) {
 		return $httpBackendBroker;
+		
 		function $httpBackendBroker(method, url, post, callback, headers, timeout, withCredentials) {
 		    url = url || $browser.url();
+		    var urlOrigin = url.substring(0, url.indexOf('/',8));
+		    // TODO: Now lookup the urlOrigin using a list of RegExp to a frame name ?
+		    // That would be part of the constant configuration? or $rootScope?
+		    var originMap = frameOriginMap;
+		    var frameName;
+		    for (var key in originMap) if (originMap[key].test(urlOrigin)) { frameName = key; break; }; 
 			if (method=="jsonp" || 
-					(url.substring(0, url.indexOf('/',8)) == location.href.substring(0, location.href.indexOf('/',8)))) {
+					(urlOrigin == location.href.substring(0, location.href.indexOf('/',8))) ||
+					!frameName) {
 				// Defer to the original $httpBackend if calling the same origin or jsonp.
 				$delegate(method, url, post, callback, headers, timeout, withCredentials);
 				return;
@@ -40,11 +41,11 @@ angular.module("akme",[]).config(['$provide',function($provide){
 	  		});
 
 		    function completeRequest(callback, status, response, headersString) {
-		      // URL_MATCH is defined in src/service/location.js
-		      var protocol = (url.match(URL_MATCH) || ['', locationProtocol])[1];
+		      // find the protocol of the given url or, if relative, the current location
+		      var protocol = url.substring(0, url.lastIndexOf(':',8)+1) || location.protocol;
 
 		      // fix status code for file protocol (it's always 0)
-		      status = (protocol == 'file') ? (response ? 200 : 404) : status;
+		      status = (protocol == 'file:') ? (response ? 200 : 404) : status;
 
 		      // normalize IE bug (http://bugs.jquery.com/ticket/1450)
 		      status = status == 1223 ? 204 : status;

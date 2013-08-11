@@ -60,7 +60,7 @@ angular.element(document).ready(function(){
 
 	test("angular basics", function(){
 		ok( typeof angular === "object", "angular exists" );
-		for (var key in angular) console.log("angular."+key);
+		//for (var key in angular) console.log("angular."+key);
 	});
 
 });
