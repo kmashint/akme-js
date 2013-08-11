@@ -759,13 +759,16 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 		var key = this.callbackKey = (this.callbackKey+1)%0xffff;
 		return key;
 	},
+	deleteCallbackKey : function(key) {
+		delete this.callbackMap[key];
+		delete this.callbackTime[key];
+	},
 	callAsync : function(frame, headers, content, callbackFnOrOb) {
 		var key = this.newCallbackKey();
 		headers["callback"] = this.id+".callbackMap."+key;
 		var self = this; // closure
 		self.callbackMap[key] = function(headers, content) {
-			delete self.callbackMap[key];
-			delete self.callbackTime[key];
+			self.deleteCallbackKey(key);
 			akme.handleEvent(callbackFnOrOb, headers, content);
 			self = key = callbackFnOrOb = null; // closure cleanup
 		};
@@ -788,8 +791,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 		headers["callback"] = this.id+".callbackMap."+key;
 		var self = this; // closure
 		self.callbackMap[key] = function(headers, content) {
-			delete self.callbackMap[key];
-			delete self.callbackTime[key];
+			self.deleteCallbackKey(key);
 			akme.handleEvent(callbackFnOrOb, headers, content);
 			self = key = callbackFnOrOb = null; // closure cleanup
 		};

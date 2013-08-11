@@ -29,6 +29,34 @@ if (typeof console.logEnabled === "undefined") console.logEnabled = false;
 		if (name) return name.substring(name.lastIndexOf('.')+1);
 		else return;
 	};
+	
+	/**
+	 * Add Function.prototype.bind() if not available.
+	 * Extension to provide a function whose context is bound to a specific object, part of ECMAScript 5.
+	 * https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
+	 */
+	if (!Function.prototype.bind) Function.prototype.bind = function (oThis) {  
+	      if (typeof this !== "function") {  
+	        // closest thing possible to the ECMAScript 5 internal IsCallable function  
+	        throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");  
+	      }  
+	    
+	      var fSlice = Array.prototype.slice,  
+	          aArgs = fSlice.call(arguments, 1),   
+	          fToBind = this,   
+	          fNOP = function () {},  
+	          fBound = function () {  
+	            return fToBind.apply(this instanceof fNOP  
+	                                   ? this  
+	                                   : oThis || window,  
+	                                 aArgs.concat(fSlice.call(arguments)));  
+	          };  
+	    
+	      fNOP.prototype = this.prototype;  
+	      fBound.prototype = new fNOP();  
+	    
+	      return fBound;  
+	};
 
 	/**
 	 * Return values related to hasOwnProperty keys.

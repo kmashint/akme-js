@@ -1,10 +1,10 @@
 // akme-angular.js
 angular.module("akme", [])
-.constant("frameOriginMap", {})
+.constant("FRAME_ORIGIN_MAP", {})
 .config(['$provide',function($provide){
 
-	$provide.decorator('$httpBackend', ['$delegate','$browser','frameOriginMap',$HttpBackendBrokerDecorator]);
-	function $HttpBackendBrokerDecorator($delegate,$browser,$scope,frameOriginMap) {
+	$provide.decorator('$httpBackend', ['$delegate','$browser','FRAME_ORIGIN_MAP',$HttpBackendBrokerDecorator]);
+	function $HttpBackendBrokerDecorator($delegate,$browser,FRAME_ORIGIN_MAP) {
 		return $httpBackendBroker;
 		
 		function $httpBackendBroker(method, url, post, callback, headers, timeout, withCredentials) {
@@ -12,12 +12,12 @@ angular.module("akme", [])
 		    var urlOrigin = url.substring(0, url.indexOf('/',8));
 		    // TODO: Now lookup the urlOrigin using a list of RegExp to a frame name ?
 		    // That would be part of the constant configuration? or $rootScope?
-		    var originMap = frameOriginMap;
+		    var originMap = FRAME_ORIGIN_MAP;
 		    var frameName;
-		    for (var key in originMap) if (originMap[key].test(urlOrigin)) { frameName = key; break; }; 
-			if (method=="jsonp" || 
-					(urlOrigin == location.href.substring(0, location.href.indexOf('/',8))) ||
-					!frameName) {
+		    if (method!="jsonp" && urlOrigin == location.href.substring(0, location.href.indexOf('/',8))) {
+			    for (var key in originMap) if (originMap[key].test(urlOrigin)) { frameName = key; break; }; 
+		    }
+			if (!frameName) {
 				// Defer to the original $httpBackend if calling the same origin or jsonp.
 				$delegate(method, url, post, callback, headers, timeout, withCredentials);
 				return;
@@ -27,11 +27,7 @@ angular.module("akme", [])
 	  		var brokerHeaders = akme.copyAll({method: method, url: url}, headers);
 		    var status;
 
-	  		// How to obtain the relevant MessageBroker ?
-	  		// Assume window.messageBroker?
-	  		// How to define frame?
-	  		// MessageBroker.callAsync : function(frame, headers, content, callbackFnOrOb) 
-	  		window.messageBroker.callAsync(document.frames[0],
+	  		var callbackKey = window.messageBroker.callAsync(document.getElementsByName(frameName)[0],
 	  				brokerHeaders,
 	  				post || '',
 	  				function(headers, content) {
@@ -39,10 +35,18 @@ angular.module("akme", [])
 	  			for (var key in headers) headersAry[headersAry.length] = key +": "+ headers[key];
 	  			completeRequest(callback, status || headers.status, content, headersAry.join('\n'));
 	  		});
+	  		
+	        if (timeout > 0) {
+	        	$browser.defer(function() {
+	            	status = -1;
+	            	window.messageBroker.deleteCallbackKey(callbackKey); //xhr.abort();
+	            	completeRequest(callback, status);
+	            }, timeout);
+	        }
 
 		    function completeRequest(callback, status, response, headersString) {
 		      // find the protocol of the given url or, if relative, the current location
-		      var protocol = url.substring(0, url.lastIndexOf(':',8)+1) || location.protocol;
+		      var protocol = url.substring(0, url.lastIndexOf(':',6)+1) || location.protocol;
 
 		      // fix status code for file protocol (it's always 0)
 		      status = (protocol == 'file:') ? (response ? 200 : 404) : status;

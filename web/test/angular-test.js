@@ -26,7 +26,11 @@
  * 
  */
 
-angular.module("main", []).config(["$locationProvider", "$rootScopeProvider", function($locationP,$rootP){
+angular.module("main", [])
+.constant("FRAME_ORIGIN_MAP", {
+	"testFrame": /^https?:\/\/localhost$/
+	})
+.config(["$locationProvider", "$rootScopeProvider", function($locationP,$rootP){
 	// .module(name, depends, configFn) configures or gets a module by name.
 	
 	$locationP.html5Mode(true);
@@ -54,7 +58,7 @@ angular.module("sync", []).run(["$rootScope", function($scope){
 
 angular.element(document).ready(function(){
 	console.logEnabled = true;
-
+	
 	angular.bootstrap(document.body, ["akme","main"]);
 	//console.log( angular.module("main") );
 
