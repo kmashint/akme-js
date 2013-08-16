@@ -200,7 +200,7 @@ $(document).ready(function(){
 
 	module(akme.core.Promise.CLASS);
 	test("basics", function() {
-		expect(9);
+		expect(10);
 		var Promise = akme.core.Promise,
 			promise, promise2, promise3;
 		
@@ -243,6 +243,10 @@ $(document).ready(function(){
 			ok( true, "when should be rejected" );
 		});
 		promise.reject();
+		
+		promise = new Promise();
+		promise.resolve(1);
+		promise.done(function(){ ok( arguments[0] == 1, "should receive arg 1" ); });
 		
 	});
 	asyncTest("async", function() {

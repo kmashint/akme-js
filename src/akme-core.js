@@ -693,7 +693,7 @@ if (!this.akme) this.akme = {
 	};
 	function concatFunctionsAndReturn(p, state, self, fcns) {
 		if (p.state === 0) $.concat(p[STATE_ARY[state]], fcns);
-		else if (p.state === state) applyToArray(fcns, self);
+		else if (p.state === state) applyToArray(fcns, p.self, p.args);
 		return self;
 	};
 	
