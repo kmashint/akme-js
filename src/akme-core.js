@@ -99,6 +99,12 @@ if (!this.akme) this.akme = {
 	PRINTABLE_EXCLUDE_REGEXP : /[^\x20-\x7e\xc0-\xff]/g,
 
 	/**
+	 * Check if the given is not undefined (primitive) and not null (object).
+	 */
+	isDefinedNotNull : function (obj) {
+		return typeof obj !== "undefined" && obj !== null;
+	},
+	/**
 	 * Concat a collection to an array and return it, helpful for HTMLCollection results of getElementsByTagName.
 	 */
 	concat : function (ary /*, coll, ... */) {
