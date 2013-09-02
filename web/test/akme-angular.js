@@ -10,8 +10,6 @@ angular.module("akme", [])
 		function $httpBackendBroker(method, url, post, callback, headers, timeout, withCredentials) {
 		    url = url || $browser.url();
 		    var urlOrigin = url.substring(0, url.indexOf('/',8));
-		    // TODO: Now lookup the urlOrigin using a list of RegExp to a frame name ?
-		    // That would be part of the constant configuration? or $rootScope?
 		    var originMap = FRAME_ORIGIN_MAP;
 		    var frameName;
 		    if (method!="jsonp" && urlOrigin == location.href.substring(0, location.href.indexOf('/',8))) {
