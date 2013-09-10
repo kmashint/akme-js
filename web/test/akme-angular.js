@@ -22,10 +22,11 @@ angular.module("akme", [])
 			}
 		    $browser.$$incOutstandingRequestCount();
 		    
-	  		var brokerHeaders = akme.copyAll({method: method, url: url}, headers);
+	  		var brokerHeaders = akme.copyAll({call: "XMLHttpRequest", method: method, url: url}, headers);
 		    var status;
 
-	  		var callbackKey = window.messageBroker.callAsync(document.getElementsByName(frameName)[0],
+		    var frame = document.getElementsByName(frameName)[0]; // getElementById(frameName); 
+	  		var callbackKey = window.messageBroker.callAsync(frame,
 	  				brokerHeaders,
 	  				post || '',
 	  				function(headers, content) {
@@ -44,7 +45,7 @@ angular.module("akme", [])
 
 		    function completeRequest(callback, status, response, headersString) {
 		      // find the protocol of the given url or, if relative, the current location
-		      var protocol = url.substring(0, url.lastIndexOf(':',6)+1) || location.protocol;
+		      var protocol = url.substring(0, url.lastIndexOf(':',5)+1) || location.protocol;
 
 		      // fix status code for file protocol (it's always 0)
 		      status = (protocol == 'file:') ? (response ? 200 : 404) : status;
