@@ -24,6 +24,7 @@
 	function CouchAccess(name, url) {
 		this.name = name;
 		this.url = url;
+		this.cacheMap = {};
 		var dataConstructor = $.getProperty($.THIS, name);
 		if (typeof dataConstructor === "function") this.dataConstructor = dataConstructor;
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
@@ -74,10 +75,11 @@
 	}
 	
 	/**
-	 * Clear the sessionStorage cache of any of these objects.
+	 * Clear the cacheMap or sessionStorage cache of any of these objects.
 	 */
 	function clear() {
-		$.sessionStorage.removeAll(this.name);
+		if (this.cacheMap) this.cacheMap = {};
+		else $.sessionStorage.removeAll(this.name);
 	}
 
 	function findOne(map) {
@@ -126,7 +128,7 @@
 	}
 	
 	/**
-	 * This maintains a copy of the key/value in sessionStorage.
+	 * This maintains a copy of the key/value in cacheMap or sessionStorage.
 	 */
 	function read(key) { //if (console.logEnabled) console.log(this.name +".read("+ key +")");
 		var self = this;
@@ -134,12 +136,14 @@
 		var xhr = callWithRetry("GET", url, {"Accept": CONTENT_TYPE_JSON}, null);
 		var type = $.xhr.getResponseContentType(xhr);
 		if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
-		var value = (xhr.status < 400 && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
+		var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
 		if (value) {
-			$.sessionStorage.setItem(self.name, key, value);
+			if (this.cacheMap) this.cacheMap[key] = value;
+			else $.sessionStorage.setItem(self.name, key, value);
 			value = $.parseJSON(value, reviver);
 		} else {
-			$.sessionStorage.removeItem(self.name, key);
+			if (this.cacheMap) delete this.cacheMap[key];
+			else $.sessionStorage.removeItem(self.name, key);
 		}
 		if (this.dataConstructor && value) value = new this.dataConstructor(value);
 		this.doEvent({ type:"read", keyType:this.name, key:key, value:value });
@@ -147,12 +151,12 @@
 	}
 
 	/**
-	 * This maintains a copy of the key/value in sessionStorage.
+	 * This maintains a copy of the key/value in cacheMap or sessionStorage.
 	 * This is so the caller doesn't have to manage the _id and _rev directly that are required to PUT in CouchDB.
 	 */
 	function write(key, value) { //if (console.logEnabled) console.log(this.name +".write("+ key +",...)");
 		var self = this;
-		var valueMap = $.sessionStorage.getItemJSON(self.name, key);
+		var valueMap = this.cacheMap ? this.cacheMap[key] : $.sessionStorage.getItemJSON(self.name, key);
 		if (valueMap && valueMap._id) {
 			value._id = valueMap._id;
 			value._rev = valueMap._rev;
@@ -163,11 +167,12 @@
 				typeof value == "string" ? value : $.formatJSON(value, replacer));
 		var type = $.xhr.getResponseContentType(xhr);
 		if (console.logEnabled) console.log("PUT "+ url, xhr.status, xhr.statusText, type);
-		var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
+		var result = (type && type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
 		if (result.ok && result.rev) {
 			value._id = result.id;
 			value._rev = result.rev;
-			$.sessionStorage.setItem(self.name, key, $.formatJSON(value, replacer));
+			if (this.cacheMap) this.cacheMap[key] = value;
+			else $.sessionStorage.setItem(self.name, key, $.formatJSON(value, replacer));
 		}
 		this.doEvent({ type:"write", keyType:this.name, key:key, value:value });
 		return result;
@@ -190,9 +195,10 @@
 		xhr = callWithRetry("DELETE", url, {"Accept": CONTENT_TYPE_JSON});
 		var type = $.xhr.getResponseContentType(xhr);
 		if (console.logEnabled) console.log("DELETE "+ url, xhr.status, xhr.statusText, type);
-		var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
+		var result = (type && type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
 		if (result.ok && result.rev) {
-			$.sessionStorage.removeItem(self.name, key);
+			if (this.cacheMap) delete this.cacheMap[key];
+			else $.sessionStorage.removeItem(self.name, key);
 		}
 		this.doEvent({ type:"remove", keyType:this.name, key:key });
 		return result;
@@ -219,6 +225,7 @@
 	function CouchAsyncAccess(name, url) {
 		this.name = name;
 		this.url = url;
+		this.cacheMap = {};
 		var dataConstructor = $.getProperty($.THIS, name);
 		if (typeof dataConstructor === "function") this.dataConstructor = dataConstructor;
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
@@ -271,10 +278,11 @@
 	}
 	
 	/**
-	 * Clear the sessionStorage cache of any of these objects.
+	 * Clear the cacheMap or sessionStorage cache of any of these objects.
 	 */
 	function clear() {
-		$.sessionStorage.removeAll(this.name);
+		if (this.cacheMap) this.cacheMap = {};
+		else $.sessionStorage.removeAll(this.name);
 	}
 
 	function findOne(map) {
@@ -346,12 +354,14 @@
 			var xhr = ev.target;
 			var type = $.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
-			var value = (xhr.status < 400 && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
+			var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
 			if (value) {
-				$.sessionStorage.setItem(self.name, key, value);
+				if (this.cacheMap) this.cacheMap[key] = value; 
+				else $.sessionStorage.setItem(self.name, key, value);
 				value = $.parseJSON(value, reviver);
 			} else {
-				$.sessionStorage.removeItem(self.name, key);
+				if (this.cacheMap) delete this.cacheMap[key]; 
+				else $.sessionStorage.removeItem(self.name, key);
 			}
 			if (self.dataConstructor && value) value = new self.dataConstructor(value);
 			self.doEvent({ type:"read", keyType:self.name, key:key, value:value });
@@ -382,11 +392,12 @@
 			var xhr = ev.target;
 			var type = $.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("PUT "+ url, xhr.status, xhr.statusText, type);
-			var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
+			var result = (type && type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
 			if (result.ok && result.rev) {
 				value._id = result.id;
 				value._rev = result.rev;
-				$.sessionStorage.setItem(self.name, key, $.formatJSON(value, replacer));
+				if (this.cacheMap) this.cacheMap[key] = value;
+				else $.sessionStorage.setItem(self.name, key, $.formatJSON(value, replacer));
 			}
 			self.doEvent({ type:"write", keyType:self.name, key:key, value:value });
 			$.handleEvent(callbackFnOrOb, result);
@@ -426,9 +437,10 @@
 			xhr = ev.target;
 			var type = $.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("DELETE "+ url, xhr.status, xhr.statusText, type);
-			var result = (type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
+			var result = (type && type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
 			if (result.ok && result.rev) {
-				$.sessionStorage.removeItem(self.name, key);
+				if (this.cacheMap) delete this.cacheMap[key];
+				else $.sessionStorage.removeItem(self.name, key);
 			}
 			self.doEvent({ type:"remove", keyType:self.name, key:key });
 			$.handleEvent(callbackFnOrOb, result);

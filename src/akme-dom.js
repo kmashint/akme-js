@@ -567,7 +567,7 @@ if (!akme.xhr) akme.xhr = {
 	 
 	getResponseContentType : function(/*XMLHttpRequest*/ xhr) {
 		// Handle IE XDomainRequest in addition to W3C standard.
-		return xhr.contentType || xhr.getResponseHeader("Content-Type");
+		return xhr.contentType ? (xhr.contentType || "") : (xhr.getResponseHeader("Content-Type") || "");
 	},
 	getStatus : function(/*XMLHttpRequest*/ xhr) { 
 		// IE8 returns internal 1223 for HTTP 204 NO CONTENT and strips headers.  Can't recover headers.

@@ -27,7 +27,7 @@
  */
 
 angular.module("main", ["akme"])
-.constant("FRAME_ORIGIN_MAP", {
+.value("FRAME_ORIGIN_MAP", {
 	"testFrame": /^https?:\/\/localhost$/
 	})
 .config(["$locationProvider", "$rootScopeProvider", function($locationP,$rootP){
