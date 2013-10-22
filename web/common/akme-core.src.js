@@ -3238,11 +3238,11 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 				value = $.parseJSON(value);
 				var rows = value ? value.rows : null;
 				if (rows) for (var i=0; i<rows.length; i++) {
-					a[i] = rows[i];
 					if (this.cacheMap) this.cacheMap[keys[i]] = $.formatJSON(rows[i], replacer);
 					else $.sessionStorage.setItem(self.name, keys[i], $.formatJSON(rows[i], replacer));
+					a[i] = rows[i];
+					if (self.dataConstructor && a[i]) a[i] = new self.dataConstructor(a[i]);
 				}
-				value = $.parseJSON(value, reviver);
 			} else {
 				if (keys instanceof Array) for (var i=0; i<keys.length; i++) {
 					if (this.cacheMap) delete this.cacheMap[keys[i]];
@@ -3253,9 +3253,9 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 					else $.sessionStorage.removeItem(self.name, k);
 				}
 			}
-			if (self.dataConstructor && value) value = new self.dataConstructor(value);
-			self.doEvent({ type:"read", keyType:self.name, key:key, value:value });
-			$.handleEvent(callbackFnOrOb, value);
+			
+			self.doEvent({ type:"readMany", keyType:self.name, keys:keys, value:a });
+			$.handleEvent(callbackFnOrOb, a);
 			self = xhr = key = callbackFnOrOb = null; // closure cleanup
 		}
 		return xhr;
