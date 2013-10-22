@@ -33,6 +33,11 @@ if (!akme.onEvent) akme.copyAll(akme, {
   isIE8 : document.documentMode && document.documentMode < 9, 
   // W3C support
   isW3C : "addEventListener" in window, 
+  setAttributes : function(elem, map) {
+	if (map === null || typeof map === "undefined") return elem;
+	for (var key in map) elem.setAttribute(key, map[key]);
+    return elem;
+  },
   /**
    * Provide a simpler common way of registering and unregistering DOM Event handlers.
    */

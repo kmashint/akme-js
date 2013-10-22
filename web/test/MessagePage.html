@@ -1,10 +1,10 @@
 <!DOCTYPE html ><html xmlns='http://www.w3.org/1999/xhtml'><head>
-<title>AkmePage</title>
+<title>MessagePage</title>
 <meta http-equiv='X-UA-Compatible' content='IE=edge' />
 <style>
-iframe.postMessage { display:inline; width:0; height:0; border:0; }
+iframe.postMessage { display:inline; width:100; height:100; border:2; }
 </style>
-<script src='AkmeService.js'></script>
+<script src='MessageService.js'></script>
 <script>/*<![CDATA[*/
 
 function callServiceFrame(msg) {
@@ -19,7 +19,7 @@ akme.onEvent(window, "message", function(messageEvent) { // ev.data, ev.origin, 
     var origin = messageEvent.origin;
     var allowOrigin = "http://localhost";
 	if (allowOrigin !== origin) {
-		alert("AkmePage deny "+ origin);
+		alert("MessagePage DENY "+ origin);
 		return;
 	}
 	
@@ -27,12 +27,17 @@ akme.onEvent(window, "message", function(messageEvent) { // ev.data, ev.origin, 
     outputText.value = messageEvent.data;
 });
 
+akme.onLoad(function(ev){
+	document.body.appendChild(akme.setAttributes(document.createElement("iframe"), {
+		id:"ServiceFrame", name:"ServiceFrame", "class":"postMessage", frameborder:"0", scrolling:"no", 
+		src:"MessageFrame.html"
+	}));
+});
+
 /*]]>*/</script>
 </head><body>
-<iframe id="ServiceFrame" name="ServiceFrame" class="postMessage" frameborder="0" scrolling="no" src="AkmeFrame.html"
-></iframe>
 
-AkmePage
+MessagePage
 <form name="" action="" onsubmit="return false;">
   <input type="text" name="inputText" value="Joe"/>
   <input type="button" name="goBtn" value="Call" onclick="callServiceFrame(this.form.elements['inputText'].value)"/>

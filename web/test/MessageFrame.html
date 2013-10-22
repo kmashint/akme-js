@@ -1,7 +1,7 @@
 <!DOCTYPE html ><html xmlns='http://www.w3.org/1999/xhtml'><head>
-<title>AkmeFrame</title>
-<meta http-equiv='X-UA-Compatible' content='IE=edge' />
-<script src='AkmeService.js'></script>
+<title>MessageFrame</title>
+<meta http-equiv='X-UA-Compatible' content='IE=10' />
+<script src='MessageService.js'></script>
 <script>/*<![CDATA[*/
 
 // message EventListener and responder, a service-oriented iframe
@@ -11,11 +11,12 @@ akme.onEvent(window, "message", function(messageEvent) { // ev.data, ev.origin, 
     var origin = messageEvent.origin;
 	var allowOrigin = "http://localhost";
     if (allowOrigin !== origin) {
-      alert("AkmeFrame deny "+ ev.origin);
+      alert("MessageFrame DENY "+ origin);
 	  return;
 	}
 	 
     var result = "Hello "+ messageEvent.data +"!";
+    document.getElementById("body").innerHTML = "Received: "+ messageEvent.data;
     
     if (messageEvent.source) messageEvent.source.postMessage(result, messageEvent.origin);
     else source.postMessage(result, origin);
@@ -23,5 +24,6 @@ akme.onEvent(window, "message", function(messageEvent) { // ev.data, ev.origin, 
 
 /*]]>*/</script>
 </head><body>
-AkmeFrame
+MessageFrame
+<div id='body'></div>
 </body></html>
