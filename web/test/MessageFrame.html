@@ -1,6 +1,9 @@
 <!DOCTYPE html ><html xmlns='http://www.w3.org/1999/xhtml'><head>
 <title>MessageFrame</title>
 <meta http-equiv='X-UA-Compatible' content='IE=10' />
+<style>
+form { display:inline-block; }
+</style>
 <script src='MessageService.js'></script>
 <script>/*<![CDATA[*/
 
@@ -24,6 +27,7 @@ akme.onEvent(window, "message", function(messageEvent) { // ev.data, ev.origin, 
 
 /*]]>*/</script>
 </head><body>
-MessageFrame
+<form><fieldset><legend>MessageFrame</legend>
 <div id='body'></div>
+</fieldset></form>
 </body></html>
