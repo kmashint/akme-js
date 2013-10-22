@@ -3185,7 +3185,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 	}
 
 	/**
-	 * This maintains a copy of the key/value in sessionStorage.
+	 * This maintains a copy of the key/value in cacheMap or sessionStorage.
 	 */
 	function read(key, /*function(result)*/ callbackFnOrOb) { 
 		//if (console.logEnabled) console.log(this.name +".read("+ key +")");
@@ -3209,6 +3209,54 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			self.doEvent({ type:"read", keyType:self.name, key:key, value:value });
 			$.handleEvent(callbackFnOrOb, value);
 			self = xhr = key = callbackFnOrOb = null; // closure cleanup 
+		}
+		return xhr;
+	}
+
+	/**
+	 * This maintains a copy of the key/value pairs in cacheMap or sessionStorage.
+	 */
+	function readMany(keys, /*function(result)*/ callbackFnOrOb) { 
+		//if (console.logEnabled) console.log(this.name +".read() ", keys);
+		var self = this;
+		var a;
+		if (keys instanceof Array) {
+			a = new Array(keys.length);
+			for (var i=0; i<keys.length; i++) a[i] = encodeURIComponent('"'+keys[i]+'"');
+		} else {
+			a = [];
+			for (var k in keys) a[a.length] = encodeURIComponent('"'+keys[k]+'"');
+		}
+		var url = self.url+"/_all_docs?include_docs=true&keys=["+a.join(",")+"]";
+		var xhr = callAsync("GET", url, {"Accept": CONTENT_TYPE_JSON}, null, handleState);
+		function handleState(ev) {
+			var xhr = ev.target;
+			var type = $.xhr.getResponseContentType(xhr);
+			if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
+			var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
+			if (value) {
+				value = $.parseJSON(value);
+				var rows = value ? value.rows : null;
+				if (rows) for (var i=0; i<rows.length; i++) {
+					a[i] = rows[i];
+					if (this.cacheMap) this.cacheMap[keys[i]] = $.formatJSON(rows[i], replacer);
+					else $.sessionStorage.setItem(self.name, keys[i], $.formatJSON(rows[i], replacer));
+				}
+				value = $.parseJSON(value, reviver);
+			} else {
+				if (keys instanceof Array) for (var i=0; i<keys.length; i++) {
+					if (this.cacheMap) delete this.cacheMap[keys[i]];
+					else $.sessionStorage.removeItem(self.name, keys[i]);
+				}
+				else for (var k in keys) {
+					if (this.cacheMap) delete this.cacheMap[k];
+					else $.sessionStorage.removeItem(self.name, k);
+				}
+			}
+			if (self.dataConstructor && value) value = new self.dataConstructor(value);
+			self.doEvent({ type:"read", keyType:self.name, key:key, value:value });
+			$.handleEvent(callbackFnOrOb, value);
+			self = xhr = key = callbackFnOrOb = null; // closure cleanup
 		}
 		return xhr;
 	}
