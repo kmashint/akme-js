@@ -422,5 +422,37 @@ $(document).ready(function(){
 	};
 	img.click(goRaphael);
 	setTimeout(function() { goRaphael(); }, 700);
+
+	
+	window.messageBroker = new akme.core.MessageBroker({id:"messageBroker", allowOrigins:[
+	    "http://localhost", "https://localhost"
+	]});
+	akme.onEvent(window, "message", window.messageBroker);
+	
+	                                                                   	
+	module("postMessage and MessageBroker");
+
+	var iframe = akme.setAttributes(document.createElement("iframe"), {
+		id:"selfOrigin", name:"selfOrigin", "class":"postMessage", frameborder:0, scrolling:"no",
+		src:"index-frame.html"
+	});
+	for (var type in {"abort":1,"error":1,"load":1}) akme.onEvent(iframe, type, doPostMessage);
+	document.body.appendChild(iframe);
+	
+	function doPostMessage(ev) {
+		var iframe = ev.target;
+		
+		asyncTest("postMessage", function() {
+			expect(1);
+			var headers = {call: "XMLHttpRequest", method:"GET", url:"http://www.yahoo.com/"};
+			var content = null;
+			window.messageBroker.callAsync(iframe, headers, content, function(headers, content){
+				console.log(headers, content);
+				ok(headers.status < 400 && headers.status > 0, "status is OK or similar");
+				start();
+			});
+		});
+		
+	}
 	
 });

@@ -99,7 +99,7 @@ akme.copyAll(this.akme, {
 	fixHandleEvent : function (self) {
 		if (document.documentMode && document.documentMode < 9 && typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
 			var handleEvent = self.handleEvent;
-			self.handleEvent = function(ev) { handleEvent.call(self, ev); };
+			self.handleEvent = function() { handleEvent.apply(self, arguments); };
 			self.handleEvent._ie8fix = function() { return handleEvent; };
 		}
 		return self;
@@ -899,7 +899,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			}
 			return;
 		}
-		if (console.logEnabled) alert(akme.formatJSON(headers)+"\n\n"+content);
+		if (console.logEnabled) console.log(akme.formatJSON(headers)+"\n\n"+content);
 		if (callbackFnOrOb) akme.handleEvent(callbackFnOrOb, headers, content);
 	},
 	StorageRequest : function(headers, content, messageEvent) {
@@ -937,7 +937,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			akme.handleEvent(callbackFnOrOb, headers, akme.parseJSON(content));
 			return;
 		}
-		if (console.logEnabled) alert(akme.formatJSON(headers)+"\n\n"+content);
+		if (console.logEnabled) console.log(akme.formatJSON(headers)+"\n\n"+content);
 	},
 	SubmitRequest : function(headers, ev) {
 		var self = this;
@@ -945,7 +945,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 		// TODO: handle <a href=... target=...>...</a> in addition to <form ...>...</form>.
 		var elemName = elem.nodeName.toLowerCase();
 		if ("form" == elemName) {
-			if (typeof elem.onsubmit === "function" && !elem.onsubmit(ev)) returnNullResponse();
+			if (typeof elem.onsubmit === "function" && !elem.onsubmit(ev)) return nullResponse();
 			var callback = elem.elements["callback"];
 			if (!callback) {
 				callback = elem.ownerDocument.createElement("input");
@@ -958,9 +958,9 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			return;
 		} else {
 			if (console.logEnabled) console.log("submitAsync called with unknown Element ", elem);
-			returnNullResponse();
+			return nullResponse();
 		}
-		function returnNullResponse() {
+		function nullResponse() {
 			self.SubmitResponse({call:"SubmitResponse", callback:headers["callback"]}, null);
 			return;
 		}
@@ -971,6 +971,6 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			if (/json;|json$/.test(headers["Content-Type"]) && content) content = akme.parseJSON(content);
 			akme.handleEvent(callbackFnOrOb, headers, content);
 		}
-		else if (console.logEnabled) alert(akme.formatJSON(headers)+"\n\n"+content);
+		else if (console.logEnabled) console.log(akme.formatJSON(headers)+"\n\n"+content);
 	}
 });

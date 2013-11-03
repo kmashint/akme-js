@@ -2009,7 +2009,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			}
 			return;
 		}
-		if (console.logEnabled) alert(akme.formatJSON(headers)+"\n\n"+content);
+		if (console.logEnabled) console.log(akme.formatJSON(headers)+"\n\n"+content);
 		if (callbackFnOrOb) akme.handleEvent(callbackFnOrOb, headers, content);
 	},
 	StorageRequest : function(headers, content, messageEvent) {
@@ -2047,7 +2047,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			akme.handleEvent(callbackFnOrOb, headers, akme.parseJSON(content));
 			return;
 		}
-		if (console.logEnabled) alert(akme.formatJSON(headers)+"\n\n"+content);
+		if (console.logEnabled) console.log(akme.formatJSON(headers)+"\n\n"+content);
 	},
 	SubmitRequest : function(headers, ev) {
 		var self = this;
@@ -2081,7 +2081,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			if (/json;|json$/.test(headers["Content-Type"]) && content) content = akme.parseJSON(content);
 			akme.handleEvent(callbackFnOrOb, headers, content);
 		}
-		else if (console.logEnabled) alert(akme.formatJSON(headers)+"\n\n"+content);
+		else if (console.logEnabled) console.log(akme.formatJSON(headers)+"\n\n"+content);
 	}
 });
 // Add more to the akme object.
