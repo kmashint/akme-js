@@ -115,6 +115,13 @@ if (!this.akme) this.akme = {
 		return ary;
 	},
 	/**
+	 * Helper to delete all Array or Object.hasOwnProperty elements.
+	 */
+	deleteAll : function(aryOrMap) {
+		if (aryOrMap instanceof Array) aryOrMap.length = 0;
+		else for (var key in aryOrMap) if (aryOrMap.hasOwnProperty(key)) delete aryOrMap[key];
+	},
+	/**
 	 * Shallow clone as in Java, returning a new/cloned obj.
 	 * Uses new object.constructor() and then copies hasOwnProperty/non-prototype properties by key.
 	 */
@@ -584,6 +591,167 @@ if (!this.akme) this.akme = {
 	}
 
 })(akme,"akme.core.IndexedMap");
+
+
+/**
+ * akme.core.DataTable
+ */
+(function($,CLASS){
+	if ($.getProperty($.THIS,CLASS)) return; // One-time.
+	
+	//
+	// Private static declarations / closure
+	//
+	var PRIVATES = {}, // Closure guard for privates.
+		SLICE = Array.prototype.slice;
+		KEY_SEP = "\u001f";
+	
+	function mapKeyPrivate(self,p,val,idx) {
+		var key = new Array(p.key.length);
+		for (var j=0; j<key.length; j++) key[j] = val[p.map[p.key[j]]];
+		self.keyMap[key.join(KEY_SEP)] = idx;
+	}
+
+	//
+	// Initialise constructor or singleton instance and public functions
+	//
+	function DataTable() {
+		var p = { idx : -1, key : [], map : {}, cols : [], rows : [] }; // private closure
+		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
+		this.length = p.rows.length;
+		this.keyMap = {};
+	}
+	$.extend($.copyAll( // class constructor
+		DataTable, {CLASS: CLASS, KEY_SEP: KEY_SEP} 
+	), { // super-static prototype, public functions
+    	setColumns : setColumns,
+    	setKey : setKey,
+    	getMeta : getMeta,
+    	clearRows : clearRows,
+    	addRow : addRow,
+    	addRows : addRows,
+    	addRowsFromObjects : addRowsFromObjects,
+    	getColumnIndex : getColumnIndex,
+    	getRowIndex : getRowIndex,
+    	setRowIndex : setRowIndex,
+    	getRowByKey : getRowByKey,
+    	getRow : getRow,
+    	getValue : getValue,
+    	toJSON : toJSON
+	});
+	$.setProperty($.THIS, CLASS, DataTable);
+	
+	function setColumns(aryOrMap /* or arguments */) {
+		if (arguments.length > 1) aryOrMap = SLICE.call(arguments,0);
+		var p = this.PRIVATES(PRIVATES);
+		p.cols.length = 0;
+		$.deleteAll(p.map);
+		if (aryOrMap instanceof Array) for (var i=0; i<aryOrMap.length; i++) p.map[aryOrMap[i]] = i;
+		else $.copy(p.map, aryOrMap);
+		for (var key in p.map) p.cols[p.map[key]] = key;
+	}
+	
+	function setKey(ary) {
+		if (ary != null && !(ary instanceof Array)) ary = [ary];
+		var key = this.PRIVATES(PRIVATES).key;
+		key.length = ary.length;
+		for (var i=0; i<key.length; i++) key[i] = ary[i];
+	}
+	
+	function getMeta() {
+		var p = this.PRIVATES(PRIVATES);
+		return {key: p.key.slice(0), cols: p.cols.slice(0), rowCount: p.rows.length};
+	}
+	
+	function clearRows() {
+		var p = this.PRIVATES(PRIVATES);
+		this.length = p.rows.length = 0;
+		$.deleteAll(this.keyMap);
+	}
+	
+	function addRow(row) {
+		this.addRows([row]);
+	}
+	
+	function addRows(ary,hdr) {
+		var p = this.PRIVATES(PRIVATES);
+		for (var i=0; i<ary.length; i++) {
+			if (hdr) { hdr=false; this.setColumns(ary[i]); continue; }
+			var val = ary[i];
+			p.rows.push(val);
+			mapKeyPrivate(this,p,val,p.rows.length-1);
+		}
+		this.length = p.rows.length;
+	}
+	
+	function addRowsFromObjects(aryObj) {
+		var p = this.PRIVATES(PRIVATES);
+		for (var i=0, j=0; i<aryObj.length; i++) {
+			var obj = aryObj[i];
+			if (p.cols.length === 0) {
+				var map = {};
+				for (var key in obj) map[key] = j++;
+				this.setColumns(map);
+			}
+			var ary = new Array(p.cols.length);
+			for (j=0; j<ary.length; j++) ary[j] = obj[p.cols[j]];
+			p.rows.push(ary);
+			mapKeyPrivate(this,p,ary,p.rows.length-1);
+		}
+		this.length = p.rows.length;
+	}
+	
+	function getColumnIndex(name) {
+		var idx = this.PRIVATES(PRIVATES).map[name];
+		return idx >= 0 ? idx : -1;
+	}
+	
+	function getRowIndex() {
+		return this.PRIVATES(PRIVATES).idx;
+	}
+	
+	function setRowIndex(idx) {
+		var p = this.PRIVATES(PRIVATES);
+		if (typeof idx === "number" && idx >= 0 || idx < p.rows.length) p.idx = idx;
+		else p.idx = -1;
+	}
+	
+	function getIndexByKey(key) {
+		var idx = this.keyMap[arguments.length > 1 ? SLICE.call(arguments,0).join(KEY_SEP) : 
+				(key instanceof Array ? key.join(KEY_SEP) : key)];
+		return idx >= 0 ? idx : -1;
+	}
+	
+	function getRowByKey() {
+		return this.getRow(this.getIndexByKey.apply(this,arguments));
+	}
+	
+	function getRow(idx) {
+		var p = this.PRIVATES(PRIVATES);
+		return p.rows[typeof idx !== "undefined" ? idx : p.idx].slice(0);
+	}
+	
+	function getValue(idxOrName/* or row,idxOrName*/) {
+		var p = this.PRIVATES(PRIVATES);
+		var row = arguments[0], idxOrName = arguments[1];
+		if (arguments.length === 1) { idxOrName = row; row = p.idx; }
+		return p.rows[row][typeof idxOrName === "number" ? idxOrName : this.getIndex(name)];
+	}
+	
+	function fromJSON(json) {
+		var obj = typeof json === "string" || json instanceof String ? $.parseJSON(json) : json;
+		this.setColumns(obj.head);
+		this.setKey(obj.key);
+		this.clearRows();
+		this.addRows(obj.body);
+	}
+	
+	function toJSON() {
+		var p = this.PRIVATES(PRIVATES);
+		return "{key:"+ $.formatJSON(p.key) +",head:"+ $.formatJSON(p.cols) +",body:"+ $.formatJSON(p.rows)+"}";
+	}
+	
+})(akme,"akme.core.DataTable");
 
 
 /**
@@ -1209,7 +1377,7 @@ akme.copyAll(this.akme, {
 	fixHandleEvent : function (self) {
 		if (document.documentMode && document.documentMode < 9 && typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
 			var handleEvent = self.handleEvent;
-			self.handleEvent = function(ev) { handleEvent.call(self, ev); };
+			self.handleEvent = function() { handleEvent.apply(self, arguments); };
 			self.handleEvent._ie8fix = function() { return handleEvent; };
 		}
 		return self;
@@ -2055,7 +2223,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 		// TODO: handle <a href=... target=...>...</a> in addition to <form ...>...</form>.
 		var elemName = elem.nodeName.toLowerCase();
 		if ("form" == elemName) {
-			if (typeof elem.onsubmit === "function" && !elem.onsubmit(ev)) returnNullResponse();
+			if (typeof elem.onsubmit === "function" && !elem.onsubmit(ev)) return nullResponse();
 			var callback = elem.elements["callback"];
 			if (!callback) {
 				callback = elem.ownerDocument.createElement("input");
@@ -2068,9 +2236,9 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 			return;
 		} else {
 			if (console.logEnabled) console.log("submitAsync called with unknown Element ", elem);
-			returnNullResponse();
+			return nullResponse();
 		}
-		function returnNullResponse() {
+		function nullResponse() {
 			self.SubmitResponse({call:"SubmitResponse", callback:headers["callback"]}, null);
 			return;
 		}
@@ -3119,6 +3287,18 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 		return;
 	}
 	
+	function getResponseHeaders(headers, xhr) {
+		if (!headers) headers = {};
+		headers.status = xhr.status;
+		headers.statusText = xhr.statusText; 
+		for (var name in {"Cache-Control":1,"Content-Encoding":1,"Content-Length":1,"Content-Type":1,
+			"Date":1,"ETag":1,"Expires":1,"Last-Modified":1,"Pragma":1,"Server":1,"Vary":1,"Warning":1}) {
+			var val = xhr.getResponseHeader(name);
+			if (val) headers[name] = val;
+		}
+		return headers;
+	}
+	
 	/**
 	 * Clear the cacheMap or sessionStorage cache of any of these objects.
 	 */
@@ -3135,7 +3315,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 	/**
 	 * Just get an Object/Map of the HEAD/header info related to the key including the ETag or rev (ETag less the quotes).
 	 */
-	function info(key, newKey, /*function(result)*/ callbackFnOrOb) { 
+	function info(key, newKey, /*function(result,headers)*/ callbackFnOrOb) { 
 		//if (console.logEnabled) console.log(this.name +".read("+ key +")");
 		var self = this;
 		var url = self.url+"/"+encodeURIComponent(key);
@@ -3143,16 +3323,11 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 		function handleState(ev) {
 			var xhr = ev.target;
 			var rev = xhr.getResponseHeader("ETag");
-			var headers = {id: key, rev: (rev ? rev.replace(/^"|"$/g, "") : null), 
-				status: xhr.status, statusText: xhr.statusText};
-			for (var name in {"Cache-Control":1,"Content-Encoding":1,"Content-Length":1,"Content-Type":1,
-					"Date":1,"ETag":1,"Expires":1,"Last-Modified":1,"Pragma":1,"Server":1,"Vary":1,"Warning":1}) {
-				var val = xhr.getResponseHeader(name);
-				if (val) headers[name] = val;
-			}
+			var headers = {id: key, rev: (rev ? rev.replace(/^"|"$/g, "") : null)};
+			getResponseHeaders(headers, xhr);
 			if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers["rev"]);
 			self.doEvent({ type:"info", keyType:self.name, key:key, info:headers });
-			$.handleEvent(callbackFnOrOb, headers);
+			$.handleEvent(callbackFnOrOb, headers, headers);
 			self = xhr = key = callbackFnOrOb = null; // closure cleanup 
 		}
 		return xhr;
@@ -3161,7 +3336,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 	/**
 	 * Copy the existing key to the newKey, supply newKey?rev=... to overwrite an existing newKey.
 	 */
-	function copy(key, newKey, /*function(result)*/ callbackFnOrOb) { 
+	function copy(key, newKey, /*function(result,headers)*/ callbackFnOrOb) { 
 		//if (console.logEnabled) console.log(this.name +".read("+ key +")");
 		var self = this;
 		var url = self.url+"/"+encodeURIComponent(key);
@@ -3169,25 +3344,20 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 		function handleState(ev) {
 			var xhr = ev.target;
 			var rev = xhr.getResponseHeader("ETag");
-			var headers = {id: key, rev: (rev ? rev.replace(/^"|"$/g, "") : null), 
-				status: xhr.status, statusText: xhr.statusText};
-			for (var name in {"Cache-Control":1,"Content-Encoding":1,"Content-Length":1,"Content-Type":1,
-					"Date":1,"ETag":1,"Expires":1,"Last-Modified":1,"Pragma":1,"Server":1,"Vary":1,"Warning":1}) {
-				var val = xhr.getResponseHeader(name);
-				if (val) headers[name] = val;
-			}
+			var headers = {id: key, rev: (rev ? rev.replace(/^"|"$/g, "") : null)};
+			getResponseHeaders(headers, xhr);
 			if (console.logEnabled) console.log("COPY "+ url, newKey, xhr.status, xhr.statusText, headers["rev"]);
 			self.doEvent({ type:"info", keyType:self.name, key:key, newKey:newKey, info:headers });
-			$.handleEvent(callbackFnOrOb, headers);
+			$.handleEvent(callbackFnOrOb, headers, headers);
 			self = xhr = key = callbackFnOrOb = null; // closure cleanup 
 		}
 		return xhr;
 	}
 
 	/**
-	 * This maintains a copy of the key/value in cacheMap or sessionStorage.
+	 * This maintains a copy of the key/value in a cacheMap or sessionStorage.
 	 */
-	function read(key, /*function(result)*/ callbackFnOrOb) { 
+	function read(key, /*function(result,headers)*/ callbackFnOrOb) { 
 		//if (console.logEnabled) console.log(this.name +".read("+ key +")");
 		var self = this;
 		var url = self.url+"/"+encodeURIComponent(key);
@@ -3196,6 +3366,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			var xhr = ev.target;
 			var type = $.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
+			var headers = getResponseHeaders({}, xhr);
 			var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
 			if (value) {
 				if (this.cacheMap) this.cacheMap[key] = value; 
@@ -3206,17 +3377,17 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 				else $.sessionStorage.removeItem(self.name, key);
 			}
 			if (self.dataConstructor && value) value = new self.dataConstructor(value);
-			self.doEvent({ type:"read", keyType:self.name, key:key, value:value });
-			$.handleEvent(callbackFnOrOb, value);
+			self.doEvent({ type:"read", keyType:self.name, key:key, value:value, headers:headers });
+			$.handleEvent(callbackFnOrOb, value, headers);
 			self = xhr = key = callbackFnOrOb = null; // closure cleanup 
 		}
 		return xhr;
 	}
 
 	/**
-	 * This maintains a copy of the key/value pairs in cacheMap or sessionStorage.
+	 * This maintains a copy of the key/value pairs in a cacheMap or sessionStorage.
 	 */
-	function readMany(keys, /*function(result)*/ callbackFnOrOb) { 
+	function readMany(keys, /*function(result,headers)*/ callbackFnOrOb) { 
 		//if (console.logEnabled) console.log(this.name +".read() ", keys);
 		var self = this;
 		var a;
@@ -3233,6 +3404,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			var xhr = ev.target;
 			var type = $.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
+			var headers = getResponseHeaders({}, xhr);
 			var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
 			if (value) {
 				value = $.parseJSON(value);
@@ -3254,18 +3426,18 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 				}
 			}
 			
-			self.doEvent({ type:"readMany", keyType:self.name, keys:keys, value:a });
-			$.handleEvent(callbackFnOrOb, a);
+			self.doEvent({ type:"readMany", keyType:self.name, keys:keys, value:a, headers:headers });
+			$.handleEvent(callbackFnOrOb, a, headers);
 			self = xhr = key = callbackFnOrOb = null; // closure cleanup
 		}
 		return xhr;
 	}
 
 	/**
-	 * This maintains a copy of the key/value in sessionStorage.
+	 * This maintains a copy of the key/value in a cacheMap or sessionStorage.
 	 * This is so the caller doesn't have to manage the _id and _rev directly that are required to PUT in CouchDB.
 	 */
-	function write(key, value, /*function(result)*/ callbackFnOrOb) { 
+	function write(key, value, /*function(result,headers)*/ callbackFnOrOb) { 
 		//if (console.logEnabled) console.log(this.name +".write("+ key +",...)");
 		var self = this;
 		var valueMap = $.sessionStorage.getItemJSON(self.name, key);
@@ -3282,6 +3454,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			var xhr = ev.target;
 			var type = $.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("PUT "+ url, xhr.status, xhr.statusText, type);
+			var headers = getResponseHeaders({}, xhr);
 			var result = (type && type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
 			if (result.ok && result.rev) {
 				value._id = result.id;
@@ -3289,8 +3462,8 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 				if (this.cacheMap) this.cacheMap[key] = value;
 				else $.sessionStorage.setItem(self.name, key, $.formatJSON(value, replacer));
 			}
-			self.doEvent({ type:"write", keyType:self.name, key:key, value:value });
-			$.handleEvent(callbackFnOrOb, result);
+			self.doEvent({ type:"write", keyType:self.name, key:key, value:value, headers:headers });
+			$.handleEvent(callbackFnOrOb, result, headers);
 			self = xhr = key = value = callbackFnOrOb = null; // closure cleanup 
 		};
 		return xhr;
@@ -3300,7 +3473,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 	 * Remove the given revision or the latest if no rev is given.
 	 * Given the complexity of multiple async it's better to move the HEAD server-side just like authentication. 
 	 */
-	function remove(key, rev, /*function(result)*/ callbackFnOrOb) { 
+	function remove(key, rev, /*function(result,headers)*/ callbackFnOrOb) { 
 		//if (console.logEnabled) console.log(this.name +".remove("+ key +")");
 		// Save-empty rather than delete would reduce the 404 responses, but then there are blank records, normally a bad thing.
 		var self = this; // closure
@@ -3327,13 +3500,14 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			xhr = ev.target;
 			var type = $.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("DELETE "+ url, xhr.status, xhr.statusText, type);
+			var headers = getResponseHeaders({}, xhr);
 			var result = (type && type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
 			if (result.ok && result.rev) {
 				if (this.cacheMap) delete this.cacheMap[key];
 				else $.sessionStorage.removeItem(self.name, key);
 			}
-			self.doEvent({ type:"remove", keyType:self.name, key:key });
-			$.handleEvent(callbackFnOrOb, result);
+			self.doEvent({ type:"remove", keyType:self.name, key:key, headers:headers });
+			$.handleEvent(callbackFnOrOb, result, headers);
 			self = xhr = url = key = rev = callbackFnOrOb = null; // closure cleanup
 		};
 		return xhr;

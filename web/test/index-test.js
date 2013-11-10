@@ -173,7 +173,23 @@ $(document).ready(function(){
 		equal( obj.map["akme"].name, "AKME Solutions", "link to akme name" );
 	});
 
-	
+
+	module(akme.core.DataTable.CLASS);
+	test("basic set/add/get", function() {
+		var dt = new akme.core.DataTable();
+		ok( typeof dt.keyMap === "object", "keyMap exists" );
+		dt.setColumns(["a","b","c"]);
+		dt.setKey("a");
+		dt.addRows([
+		            [1,2,3],
+		            [4,5,6]
+		            ]);
+		var meta = dt.getMeta();
+		equal( meta.cols.length, 3, "cols.length 3" );
+		equal( meta.rowCount, 2, "rowCount 2" );
+		equal( dt.toJSON(), '{key:["a"],head:["a","b","c"],body:[[1,2,3],[4,5,6]]}', "toJSON OK" );
+	});
+
 	module(akme.core.EventSource.CLASS);
 	test("basics", function() {
 		equal( typeof akme.core.EventSource, "function", "exists" );
@@ -443,12 +459,12 @@ $(document).ready(function(){
 		var iframe = ev.target;
 		
 		asyncTest("postMessage", function() {
-			expect(1);
-			var headers = {call: "XMLHttpRequest", method:"GET", url:"http://www.yahoo.com/"};
+			expect(1); // "http://www.yahoo.com/"
+			var headers = {call: "XMLHttpRequest", method:"GET", url:"http://localhost/"};
 			var content = null;
 			window.messageBroker.callAsync(iframe, headers, content, function(headers, content){
 				console.log(headers, content);
-				ok(headers.status < 400 && headers.status > 0, "status is OK or similar");
+				ok(headers.status >= 200 && headers.status < 400, "status is OK or similar");
 				start();
 			});
 		});

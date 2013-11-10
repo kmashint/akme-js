@@ -114,6 +114,13 @@ if (!this.akme) this.akme = {
 		return ary;
 	},
 	/**
+	 * Helper to delete all Array or Object.hasOwnProperty elements.
+	 */
+	deleteAll : function(aryOrMap) {
+		if (aryOrMap instanceof Array) aryOrMap.length = 0;
+		else for (var key in aryOrMap) if (aryOrMap.hasOwnProperty(key)) delete aryOrMap[key];
+	},
+	/**
 	 * Shallow clone as in Java, returning a new/cloned obj.
 	 * Uses new object.constructor() and then copies hasOwnProperty/non-prototype properties by key.
 	 */
@@ -583,6 +590,167 @@ if (!this.akme) this.akme = {
 	}
 
 })(akme,"akme.core.IndexedMap");
+
+
+/**
+ * akme.core.DataTable
+ */
+(function($,CLASS){
+	if ($.getProperty($.THIS,CLASS)) return; // One-time.
+	
+	//
+	// Private static declarations / closure
+	//
+	var PRIVATES = {}, // Closure guard for privates.
+		SLICE = Array.prototype.slice;
+		KEY_SEP = "\u001f";
+	
+	function mapKeyPrivate(self,p,val,idx) {
+		var key = new Array(p.key.length);
+		for (var j=0; j<key.length; j++) key[j] = val[p.map[p.key[j]]];
+		self.keyMap[key.join(KEY_SEP)] = idx;
+	}
+
+	//
+	// Initialise constructor or singleton instance and public functions
+	//
+	function DataTable() {
+		var p = { idx : -1, key : [], map : {}, cols : [], rows : [] }; // private closure
+		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
+		this.length = p.rows.length;
+		this.keyMap = {};
+	}
+	$.extend($.copyAll( // class constructor
+		DataTable, {CLASS: CLASS, KEY_SEP: KEY_SEP} 
+	), { // super-static prototype, public functions
+    	setColumns : setColumns,
+    	setKey : setKey,
+    	getMeta : getMeta,
+    	clearRows : clearRows,
+    	addRow : addRow,
+    	addRows : addRows,
+    	addRowsFromObjects : addRowsFromObjects,
+    	getColumnIndex : getColumnIndex,
+    	getRowIndex : getRowIndex,
+    	setRowIndex : setRowIndex,
+    	getRowByKey : getRowByKey,
+    	getRow : getRow,
+    	getValue : getValue,
+    	toJSON : toJSON
+	});
+	$.setProperty($.THIS, CLASS, DataTable);
+	
+	function setColumns(aryOrMap /* or arguments */) {
+		if (arguments.length > 1) aryOrMap = SLICE.call(arguments,0);
+		var p = this.PRIVATES(PRIVATES);
+		p.cols.length = 0;
+		$.deleteAll(p.map);
+		if (aryOrMap instanceof Array) for (var i=0; i<aryOrMap.length; i++) p.map[aryOrMap[i]] = i;
+		else $.copy(p.map, aryOrMap);
+		for (var key in p.map) p.cols[p.map[key]] = key;
+	}
+	
+	function setKey(ary) {
+		if (ary != null && !(ary instanceof Array)) ary = [ary];
+		var key = this.PRIVATES(PRIVATES).key;
+		key.length = ary.length;
+		for (var i=0; i<key.length; i++) key[i] = ary[i];
+	}
+	
+	function getMeta() {
+		var p = this.PRIVATES(PRIVATES);
+		return {key: p.key.slice(0), cols: p.cols.slice(0), rowCount: p.rows.length};
+	}
+	
+	function clearRows() {
+		var p = this.PRIVATES(PRIVATES);
+		this.length = p.rows.length = 0;
+		$.deleteAll(this.keyMap);
+	}
+	
+	function addRow(row) {
+		this.addRows([row]);
+	}
+	
+	function addRows(ary,hdr) {
+		var p = this.PRIVATES(PRIVATES);
+		for (var i=0; i<ary.length; i++) {
+			if (hdr) { hdr=false; this.setColumns(ary[i]); continue; }
+			var val = ary[i];
+			p.rows.push(val);
+			mapKeyPrivate(this,p,val,p.rows.length-1);
+		}
+		this.length = p.rows.length;
+	}
+	
+	function addRowsFromObjects(aryObj) {
+		var p = this.PRIVATES(PRIVATES);
+		for (var i=0, j=0; i<aryObj.length; i++) {
+			var obj = aryObj[i];
+			if (p.cols.length === 0) {
+				var map = {};
+				for (var key in obj) map[key] = j++;
+				this.setColumns(map);
+			}
+			var ary = new Array(p.cols.length);
+			for (j=0; j<ary.length; j++) ary[j] = obj[p.cols[j]];
+			p.rows.push(ary);
+			mapKeyPrivate(this,p,ary,p.rows.length-1);
+		}
+		this.length = p.rows.length;
+	}
+	
+	function getColumnIndex(name) {
+		var idx = this.PRIVATES(PRIVATES).map[name];
+		return idx >= 0 ? idx : -1;
+	}
+	
+	function getRowIndex() {
+		return this.PRIVATES(PRIVATES).idx;
+	}
+	
+	function setRowIndex(idx) {
+		var p = this.PRIVATES(PRIVATES);
+		if (typeof idx === "number" && idx >= 0 || idx < p.rows.length) p.idx = idx;
+		else p.idx = -1;
+	}
+	
+	function getIndexByKey(key) {
+		var idx = this.keyMap[arguments.length > 1 ? SLICE.call(arguments,0).join(KEY_SEP) : 
+				(key instanceof Array ? key.join(KEY_SEP) : key)];
+		return idx >= 0 ? idx : -1;
+	}
+	
+	function getRowByKey() {
+		return this.getRow(this.getIndexByKey.apply(this,arguments));
+	}
+	
+	function getRow(idx) {
+		var p = this.PRIVATES(PRIVATES);
+		return p.rows[typeof idx !== "undefined" ? idx : p.idx].slice(0);
+	}
+	
+	function getValue(idxOrName/* or row,idxOrName*/) {
+		var p = this.PRIVATES(PRIVATES);
+		var row = arguments[0], idxOrName = arguments[1];
+		if (arguments.length === 1) { idxOrName = row; row = p.idx; }
+		return p.rows[row][typeof idxOrName === "number" ? idxOrName : this.getIndex(name)];
+	}
+	
+	function fromJSON(json) {
+		var obj = typeof json === "string" || json instanceof String ? $.parseJSON(json) : json;
+		this.setColumns(obj.head);
+		this.setKey(obj.key);
+		this.clearRows();
+		this.addRows(obj.body);
+	}
+	
+	function toJSON() {
+		var p = this.PRIVATES(PRIVATES);
+		return "{key:"+ $.formatJSON(p.key) +",head:"+ $.formatJSON(p.cols) +",body:"+ $.formatJSON(p.rows)+"}";
+	}
+	
+})(akme,"akme.core.DataTable");
 
 
 /**

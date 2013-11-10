@@ -35,6 +35,11 @@ angular.module("main", ["akme"])
 	
 	$locationP.html5Mode(true);
 	
+}]).factory("shiftAccess", ["CouchAsyncAccess", function(self){
+	
+	self.constructor("shiftdb","http://localhost:5984/shiftdb");
+	return self;
+	
 }]).run(["$rootScope", function($scope){
 	// .run() can be used to access the root scope after module construction/configuration.
 
@@ -62,9 +67,70 @@ angular.element(document).ready(function(){
 	angular.bootstrap(document.body, ["main","sync"]);
 	//console.log( angular.module("main") );
 
+	var $ = angular.injector(["akme"]);
+	var $q = $.get("$q");
+	var $rootScope = $.get("$rootScope");
+
 	test("angular basics", function(){
 		ok( typeof angular === "object", "angular exists" );
 		//for (var key in angular) console.log("angular."+key);
 	});
+	
+	/*asyncTest("CouchAsyncAccess", function() {
+		expect(1);
+		var main = angular.injector(["main"]);
+		var shiftAccess = main.get("shiftAccess");
+		console.log(shiftAccess);
+		var promise = shiftAccess.read(1);
+		promise.then(done, function(headers){done(null,headers);});
+		function done(result,headers) {
+			ok(result != null, "result != null");
+			start();
+		}
+	});*/
 
+	asyncTest("angular $q promise.always", function(){
+		expect(4);
+		var defer;
+		for (var i=0; i<2; i++) {
+			defer = $q.defer();
+			if (i==1) defer.reject(true);
+			else defer.resolve(true);
+			defer.promise.then(function pass(result){
+				ok( Boolean((i==1) ^ true), "promise.then pass: "+ result );
+			}, function fail(reason){
+				ok( Boolean((i==1) ^ false), "promise.then fail: "+ reason );
+			});
+			defer.promise.always(function (result,reason){
+				ok( Boolean((i==1) ^ (!reason)), "reason should not exist on success: "+ reason );
+			});
+			$rootScope.$apply();
+		}
+		start();
+	});
+	
+	asyncTest("angular $q promise.catch and .finally", function(){
+		expect(4);
+		var defer, promise;
+		var ary = [{}, {}];
+		for (var i=0; i<ary.length; i++) {
+			defer = $q.defer();
+			promise = defer.promise;
+			if (i==1) defer.reject(true);
+			else defer.resolve(true);
+			promise.then(function (avalue){
+				ary[i].result = avalue;
+			});
+			promise["catch"](function (areason){
+				ary[i].reason = areason;
+			});
+			promise["finally"](function(){
+				ok( Boolean((i==1) ^ (ary[i].result)), "result should exist on success: "+ ary[i].result );
+				ok( Boolean((i==1) ^ (!ary[i].reason)), "reason should not exist on success: "+ ary[i].reason );
+			});
+			$rootScope.$apply();
+		}
+		start();
+	});
+	
 });
