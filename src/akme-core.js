@@ -739,15 +739,15 @@ if (!this.akme) this.akme = {
 	
 	function fromJSON(json) {
 		var obj = typeof json === "string" || json instanceof String ? $.parseJSON(json) : json;
-		this.setColumns(obj.head);
+		this.setColumns(obj.columns);
 		this.setKey(obj.key);
 		this.clearRows();
-		this.addRows(obj.body);
+		this.addRows(obj.rows);
 	}
 	
 	function toJSON() {
 		var p = this.PRIVATES(PRIVATES);
-		return "{key:"+ $.formatJSON(p.key) +",head:"+ $.formatJSON(p.cols) +",body:"+ $.formatJSON(p.rows)+"}";
+		return "{key:"+ $.formatJSON(p.key) +",columns:"+ $.formatJSON(p.cols) +",rows:"+ $.formatJSON(p.rows)+"}";
 	}
 	
 })(akme,"akme.core.DataTable");
