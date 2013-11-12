@@ -6,6 +6,5 @@ Also note:
 http://www.jslint.com/jslint.js
 http://www.jslint.com/webjslint.js
 
-For DataTable, toJSON {cols:["",...],rows:[[],...]}.
-dt.addRowsOfObjects to convert from [{name:"value"}].
-Can then use toJSON when saving (check if tyepof obj.toJSON === "function").
+For DataTable, toJSON {key:["",...],columns:["",...],rows:[[],...]}.
+Can then use toJSON when saving (check if typeof obj.toJSON === "function").
