@@ -640,7 +640,7 @@ if (!akme.xhr) akme.xhr = {
 	 */
 	callAsync : function(method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
 		var xhr = new XMLHttpRequest();
-		this.callAsyncXHR(xhr, headers, content, callbackFnOrOb);
+		this.callAsyncXHR(xhr, method, url, headers, content, callbackFnOrOb);
 		return xhr;
 	},
 	

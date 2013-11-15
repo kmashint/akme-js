@@ -3,14 +3,16 @@
 <meta http-equiv="Expires" content="0" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Content-Type" content="application/hta; charset=windows-1252" />
+<meta http-equiv="Script-Content-Type" content="text/javascript" />
 <meta http-equiv="X-UA-Compatible" content="IE=9" />
 <title>Couch By Windows</title>
 <hta:application id="HTA"
     applicationName="CouchByWindows"
 	/>
-<script type="text/javascript">window.resizeTo(800,600);</script>
+<script>window.resizeTo(800,600);</script>
 <script language="vbscript">Function AkmeGetObject(path) Set AkmeGetObject = GetObject(path) End Function</script>
-<script type="text/javascript" src="CouchByWindows.js"></script>
+<script src="../web/common/akme-core.src.js"></script>
+<script src="CouchByWindows.js"></script>
 </head><body>
 
 <form name="upload" onsubmit="return false;">

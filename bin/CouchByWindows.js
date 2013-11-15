@@ -31,15 +31,63 @@ if (!this.AkmeMS) this.AkmeMS = {
 	wmiInstancesOf : function(path) { return this.wmi.InstancesOf(path, this.wbemFlagReturnImmediately | this.wbemFlagForwardOnly); },
 	wmiExecQuery : function(qry) { return this.wmi.ExecQuery(qry, this.wbemFlagReturnImmediately | this.wbemFlagForwardOnly); },
 
-	xhr : {
-		open : function(method, url, async) {
-			var xhr = new ActiveXObject("Msxml2.ServerXMLHTTP.6.0");
-		  	xhr.open(method, url, async!=false);
-		  	xhr.setRequestHeader("X-Requested-With","XMLHttpRequest");
-		  	return xhr;
-		 }
-	}
 };
+
+akme.xhr.open = function(method, url, async, user, pass) {
+	var xhr = new ActiveXObject("Msxml2.ServerXMLHTTP.6.0");
+  	if (user) xhr.open(method, url, async!=false, user, pass);
+  	else xhr.open(method, url, async!=false);
+  	xhr.setRequestHeader("X-Requested-With","XMLHttpRequest");
+  	return xhr;
+};
+
+akme.xhr.callAsync = function(method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
+	var xhr = new ActiveXObject("Msxml2.ServerXMLHTTP.6.0");
+	this.callAsyncXHR(xhr, method, url, headers, content, callbackFnOrOb);
+	return xhr;
+};
+
+akme.xhr.callAsyncXHR = function(/*XMLHttpRequest*/ xhr, method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
+	var self = this; // closure
+	xhr.open(method, url, true);
+	xhr.setRequestHeader("X-Requested-With","XMLHttpRequest");
+	for (var key in headers) {
+		var name = self.formatHttpHeaderName(key);
+		xhr.setRequestHeader(name, headers[key]);
+		if (name != key) {
+			headers[name] = headers[key];
+			delete headers[key];
+		}
+	}
+	if (headers && !(typeof content === 'string' || content instanceof String)) {
+		var type = headers["Content-Type"];
+		if (/json;|json$/.test(type)) content = akme.formatJSON(content);
+		else if (/xml;|xml$/.test(type)) content = akme.formatXML(content);
+	}
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState !== 4) return;
+		var headers = self.parseHeaders(xhr.getAllResponseHeaders());
+		headers.status = self.getStatus(xhr);
+		headers.statusText = xhr.statusText;
+		var content, type = headers["Content-Type"];
+		try {
+			if (/json;|json$/.test(type)) content = self.getResponseJSON(xhr);
+			else if (/xml;|xml$/.test(type)) content = self.getResponseXML(xhr);
+			else content = xhr.responseText;
+		}
+		catch (er) { 
+			headers.status = 500; 
+			headers.statusText = String(er); 
+			content = xhr.responseText; 
+		}
+		akme.handleEvent(callbackFnOrOb, headers, content);
+		self = xhr = callbackFnOrOb = null; // closure cleanup
+	};
+	if (typeof content !== 'undefined') xhr.send(content);
+	else xhr.send();
+	return;
+};
+
 
 /**
  *  Base64 encode / decode
@@ -154,20 +202,20 @@ var Base64 = {
 (function(self){
 	var SLICE = Array.prototype.slice;
 	
-	if (!self.console) self.console = {
+	akme.copy(self.console, {
 		log : function() { this.write.apply(this,arguments); },
 		write : function() { 
 			var div = document.getElementById("log");
 			div.appendChild(document.createTextNode(SLICE.call(arguments,0).join("\t")));
 			div.appendChild(document.createElement("br"));
 		}
-	};
+	});
 })(this);
 
 window.addEventListener("DOMContentLoaded", doContent);
 window.addEventListener("load", doLoad);
 
-function doContent(ev) {
+function doContent(ev) { 
 	console.log("documentMode:"+document.documentMode);
 	console.log("XMLHttpRequest:"+XMLHttpRequest);
 	console.log("MSXML2.ServerXMLHTTP:"+(new ActiveXObject("MSXML2.ServerXMLHTTP") != null));
@@ -177,15 +225,20 @@ function doContent(ev) {
 		console.log(item.Name, item.Description); // key=DeviceID
 	}
 	var form = document.forms[0];
-	form.onsubmit = function(ev) {
-		try {
-			var params = {remote:null, user:null, pass:null};
-			for (var key in params) { params[key] = form.elements[key].value; }
-			params.method = "GET";
-			params.remote = "https://"+ params.remote;
-			console.log(params.method, params.remote);
-			var xhr = AkmeMS.xhr.open(params.method, params.remote, true);
-			xhr.setRequestHeader("Authorization", "Basic "+ Base64.encode(params.user+":"+params.pass));
+	akme.onEvent(form, "submit", doSubmit);
+	function doSubmit(ev) {
+		var params = {remote:null, user:null, pass:null};
+		for (var key in params) { params[key] = form.elements[key].value; }
+		params.remote = "https://"+ params.remote;
+		console.log(params.remote);
+		var headers = {"Authorization": "Basic "+ Base64.encode(params.user+":"+params.pass)};
+		akme.xhr.callAsync("GET", params.remote, headers, null, getResult);
+		function getResult(headers,content) {
+			console.log(akme.formatJSON(headers));
+		}
+		/*try {
+			var xhr = akme.xhr.open("GET", params.remote, true, params.user, params.pass);
+			//xhr.setRequestHeader("Authorization", "Basic "+ Base64.encode(params.user+":"+params.pass));
 			xhr.onreadystatechange = function(){
 				if (xhr.readyState !== 4) return;
 				console.log("status ", xhr.status +" "+ xhr.statusText);
@@ -194,9 +247,8 @@ function doContent(ev) {
 			};
 			xhr.send();
 		}
-		catch (er) { console.log(String(er)); }
-		return false;
-	};
+		catch(er) { throw er; }*/
+	}
 }
 
 function doLoad(ev) {
