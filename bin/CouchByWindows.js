@@ -226,30 +226,28 @@ function doContent(ev) {
 	}
 	var form = document.forms[0];
 	akme.onEvent(form, "submit", doSubmit);
-	function doSubmit(ev) {
-		var params = {remote:null, user:null, pass:null};
-		for (var key in params) { params[key] = form.elements[key].value; }
-		params.remote = "https://"+ params.remote;
-		console.log(params.remote);
-		var headers = {"Authorization": "Basic "+ Base64.encode(params.user+":"+params.pass)};
-		akme.xhr.callAsync("GET", params.remote, headers, null, getResult);
-		function getResult(headers,content) {
-			console.log(akme.formatJSON(headers));
-		}
-		/*try {
-			var xhr = akme.xhr.open("GET", params.remote, true, params.user, params.pass);
-			//xhr.setRequestHeader("Authorization", "Basic "+ Base64.encode(params.user+":"+params.pass));
-			xhr.onreadystatechange = function(){
-				if (xhr.readyState !== 4) return;
-				console.log("status ", xhr.status +" "+ xhr.statusText);
-				console.log("response ", xhr.responseText);
-				xhr = null; // closure cleanup
-			};
-			xhr.send();
-		}
-		catch(er) { throw er; }*/
-	}
+	
 }
 
 function doLoad(ev) {
+}
+
+function doSubmit(ev) {
+	var form = ev.target;
+	var params = {remote:null, user:null, pass:null};
+	for (var key in params) { params[key] = form.elements[key].value; }
+	params.remote = "https://"+ params.remote;
+	console.log(params.remote);
+	var headers = {"Authorization": "Basic "+ Base64.encode(params.user+":"+params.pass)};
+	akme.xhr.callAsync("GET", params.remote, headers, null, getResult);
+	function getResult(headers,content) {
+		console.log(akme.formatJSON(headers));
+	}
+	
+	var ins = AkmeMS.fso.OpenTextFile("CouchByWindows/_design/live.json", AkmeMS.fsoRead);
+	try { while (!ins.AtEnd) {
+		;
+	} }
+	finally { ins.Close(); }
+	
 }

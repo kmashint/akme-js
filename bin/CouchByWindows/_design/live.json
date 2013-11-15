@@ -1,0 +1,6 @@
+{
+  "_id" : "_design/live",
+  "shows" : {
+    "index" : "function(doc, req){ return doc; }"
+  }
+}
