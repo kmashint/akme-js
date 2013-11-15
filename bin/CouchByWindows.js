@@ -244,10 +244,12 @@ function doSubmit(ev) {
 		console.log(akme.formatJSON(headers));
 	}
 	
+	/*
+	// Note _attachments ... data should be Base64-encoded.
 	var ins = AkmeMS.fso.OpenTextFile("CouchByWindows/_design/live.json", AkmeMS.fsoRead);
 	try { while (!ins.AtEnd) {
 		;
 	} }
 	finally { ins.Close(); }
-	
+	*/
 }
