@@ -1,0 +1,24 @@
+<!DOCTYPE html ><html xmlns='http://www.w3.org/1999/xhtml'><head>
+<title>MessageFrame</title>
+<meta http-equiv='X-UA-Compatible' content='IE=10' />
+<style>
+form { display:inline-block; }
+</style>
+<script src='../common/akme-core.src.js'></script>
+<script>/*<![CDATA[*/
+
+// message EventListener and responder, a service-oriented iframe
+
+akme.onContent(function(ev){
+	window.messageBroker = new akme.core.MessageBroker({id:"messageBroker", allowOrigins:[
+	    "http://localhost", "https://localhost"
+	]});
+	akme.onEvent(window, "message", window.messageBroker);
+});
+
+/*]]>*/</script>
+</head><body>
+<form><fieldset><legend>MessageFrame</legend>
+<div id='body'></div>
+</fieldset></form>
+</body></html>

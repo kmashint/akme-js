@@ -1,0 +1,9 @@
+<html><body><div style="height:20px;width:0px;background-color:green"></div>
+<script>
+var timer = setInterval(function() {
+  var style = document.getElementsByTagName("div")[0].style
+  style.width = (parseInt(style.width)+2)%400 + "px"
+}, 30)
+</script>
+<a href="javascript:clearInterval(timer)">clearInterval(timer)</a>
+</body></html>
