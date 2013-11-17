@@ -22,14 +22,15 @@ if (!this.AkmeMS) this.AkmeMS = {
 	wbemFlagReturnWhenComplete : 0, // wbem or wmi
 	wbemFlagReturnImmediately : 16,
 	wbemFlagForwardOnly : 32,
+	wbemFast : 16 | 32,
 	winHide : 0,
 	winShow : 1,
 	
 	fso : new ActiveXObject("Scripting.FileSystemObject"),
 	wsh : new ActiveXObject("WScript.Shell"),
 	wmi : AkmeGetObject("winmgmts://./root/cimv2"),
-	wmiInstancesOf : function(path) { return this.wmi.InstancesOf(path, this.wbemFlagReturnImmediately | this.wbemFlagForwardOnly); },
-	wmiExecQuery : function(qry) { return this.wmi.ExecQuery(qry, this.wbemFlagReturnImmediately | this.wbemFlagForwardOnly); },
+	wmiInstancesOf : function(path) { return this.wmi.InstancesOf(path, this.wbemFlagForwardOnly); },
+	wmiExecQuery : function(qry) { return this.wmi.ExecQuery(qry, this.wbemFlagForwardOnly); },
 
 };
 
@@ -212,10 +213,8 @@ var Base64 = {
 	});
 })(this);
 
-window.addEventListener("DOMContentLoaded", doContent);
-window.addEventListener("load", doLoad);
 
-function doContent(ev) { 
+akme.onEvent(window, "DOMContentLoaded", function doContent(ev) { 
 	console.log("documentMode:"+document.documentMode);
 	console.log("XMLHttpRequest:"+XMLHttpRequest);
 	console.log("MSXML2.ServerXMLHTTP:"+(new ActiveXObject("MSXML2.ServerXMLHTTP") != null));
@@ -226,11 +225,12 @@ function doContent(ev) {
 	}
 	var form = document.forms[0];
 	akme.onEvent(form, "submit", doSubmit);
-	
-}
+});
 
-function doLoad(ev) {
-}
+
+akme.onEvent(window, "load", function doLoad(ev) {
+});
+
 
 function doSubmit(ev) {
 	var form = ev.target;
@@ -241,7 +241,7 @@ function doSubmit(ev) {
 	var headers = {"Authorization": "Basic "+ Base64.encode(params.user+":"+params.pass)};
 	akme.xhr.callAsync("GET", params.remote, headers, null, getResult);
 	function getResult(headers,content) {
-		console.log(akme.formatJSON(headers));
+		console.log(akme.formatJSON(headers), content);
 	}
 	
 	/*
@@ -253,3 +253,57 @@ function doSubmit(ev) {
 	finally { ins.Close(); }
 	*/
 }
+
+akme.CouchCrossOrigin = {
+	doc : null,
+	ok : function(headers) { 
+		return headers.status >= 200 && headers.status < 400; 
+	},
+	call : function(method, callbackFnOrOb) {
+		var form = document.forms[0];
+		var params = {remote:null, user:null, pass:null};
+		for (var key in params) { params[key] = form.elements[key].value; }
+		params.remote = "https://"+ params.remote;
+		var headers = {"Authorization": "Basic "+ Base64.encode(params.user+":"+params.pass)};
+		return akme.xhr.callAsync(method, params.remote, headers, this.doc, callbackFnOrOb);
+	},
+	info : function(callback) {
+		return this.call("HEAD", callback);
+	},
+	read : function(callback) {
+		return this.call("GET", function(headers,content) {
+			if (this.ok(headers)) this.doc = content;
+			akme.handleEvent(callback, headers, content);
+		});
+	},
+	write : function(callback) {
+		return this.call("PUT", callback);
+	},
+	remove : function(callback) {
+		return this.call("DELETE", callback);
+	},
+	sync : function() {
+		// e.g. /cross-origin/_design/live/_show/index.json/index.html
+		// then index.html will include index.min.js, another attachment under index.json.
+		//
+		// How to use a session rather than an Authorization header from the browser?
+		// https://docs.cloudant.com/api/authn.html - it supports _session and AuthSession cookie.
+		// GET /_session to check, POST /_session to create, DELETE /_session to end.
+		// They don't mention the default session timeout, but from an example it could be a day.  Nice.
+		// Set-Cookie: AuthSession="a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz"; Expires=Tue, 05 Mar 2013 14:06:11 GMT; Max-Age=86400; Path=/; HttpOnly; Version=1
+		// Direct from browser will need to use JS cookies, so be it, unless going through a proxy.jsp or similar.
+		// Even then a server will need to be involved to establish an AuthSession to keep the password private.
+		// So the browser will try, if 401 call the server to re-establish the AuthSession, then try again.
+		// Need to make the re-try in CouchAsyncAccess an option that can be turned on, and use a separate server URL.
+		/* Is this correct below to send an AuthSession header rather than a Cookie header?
+		 	GET /_session HTTP/1.1
+		 	AuthSession: AuthSession="a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz"
+			Accept: application/json
+		*/
+		// !!! But having a AuthSession in the browser to a public CouchDB allows for _all_docs.  End of line.
+		// Still need proxy.jsp, but can be at Rackspace, e.g. cloudant.frameworks.ca, cloudant-test.frameworks.ca.
+		// So no need for cross-origin at cloudant.  The cross-origin would remain on a web server with proxy.jsp.
+		var dir = AkmeMS.fso.GetFolder("CouchByWindows");
+		
+	}
+};

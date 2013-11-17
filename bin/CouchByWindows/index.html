@@ -1,15 +1,24 @@
 <!DOCTYPE html >
 <html><head>
 <meta http-equiv="Expires" content="0" />
-<meta http-equiv="Pragma" content="private, max-age=900" />
+<meta http-equiv="Pragma" content="private, max-age=0" />
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 <meta http-equiv="X-UA-Compatible" content="IE=9" />
 <title>CouchDB MessageBroker</title>
+<style>
+iframe.postMessage { }
+</style>
 </head><body>
 <script src='index.min.js'></script>
 <script>
-window.messageBroker = new akme.core.MessageBroker(window.name, [
-	"https://localhost", "http://localhost"
-]);
+akme.onEvent(window, "DOMContentLoaded", function(ev){
+	function setAttributes(elem, map) { for (var key in map) elem.setAttribute(key, map[key]); return elem; }
+	document.body.appendChild(setAttributes(document.createElement("iframe"), {
+		id: "_session", name: "_session", "class": "postMessage", src: "javascript:void(0)"
+	}));
+	window.messageBroker = new akme.core.MessageBroker(window.name, [
+		"https://localhost", "http://localhost"
+	]);
+});
 </script>
 </body></html>

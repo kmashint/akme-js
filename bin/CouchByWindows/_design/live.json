@@ -1,6 +1,6 @@
 {
-  "_id" : "_design/live",
+  "_id" : "_design/cross-origin",
   "shows" : {
-    "index" : "function(doc, req){ return doc; }"
+    "cross-origin" : "function(doc, req){ return doc; }"
   }
 }
