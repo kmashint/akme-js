@@ -187,7 +187,7 @@ $(document).ready(function(){
 		var meta = dt.getMeta();
 		equal( meta.cols.length, 3, "cols.length 3" );
 		equal( meta.rowCount, 2, "rowCount 2" );
-		equal( dt.toJSON(), '{key:["a"],columns:["a","b","c"],rows:[[1,2,3],[4,5,6]]}', "toJSON OK" );
+		equal( dt.toJSON(), '{key:["a"],head:["a","b","c"],body:[[1,2,3],[4,5,6]]}', "toJSON OK" );
 	});
 
 	module(akme.core.EventSource.CLASS);

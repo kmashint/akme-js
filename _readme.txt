@@ -6,5 +6,5 @@ Also note:
 http://www.jslint.com/jslint.js
 http://www.jslint.com/webjslint.js
 
-For DataTable, toJSON {key:["",...],columns:["",...],rows:[[],...]}.
+For DataTable, toJSON {key:["",...],head:["",...],body:[[],...]}.
 Can then use toJSON when saving (check if typeof obj.toJSON === "function").

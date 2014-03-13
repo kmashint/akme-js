@@ -29,11 +29,12 @@ if (!this.AkmeMS) this.AkmeMS = {
 	fso : new ActiveXObject("Scripting.FileSystemObject"),
 	wsh : new ActiveXObject("WScript.Shell"),
 	wmi : AkmeGetObject("winmgmts://./root/cimv2"),
-	wmiInstancesOf : function(path) { return this.wmi.InstancesOf(path, this.wbemFlagForwardOnly); },
-	wmiExecQuery : function(qry) { return this.wmi.ExecQuery(qry, this.wbemFlagForwardOnly); },
+	wmiInstancesOf : function(path) { return this.wmi.InstancesOf(path, this.wbemFast); },
+	wmiExecQuery : function(qry) { return this.wmi.ExecQuery(qry, this.wbemFast); },
 
 };
 
+// override akme.xhr
 akme.xhr.open = function(method, url, async, user, pass) {
 	var xhr = new ActiveXObject("Msxml2.ServerXMLHTTP.6.0");
   	if (user) xhr.open(method, url, async!=false, user, pass);
@@ -41,13 +42,11 @@ akme.xhr.open = function(method, url, async, user, pass) {
   	xhr.setRequestHeader("X-Requested-With","XMLHttpRequest");
   	return xhr;
 };
-
 akme.xhr.callAsync = function(method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
 	var xhr = new ActiveXObject("Msxml2.ServerXMLHTTP.6.0");
 	this.callAsyncXHR(xhr, method, url, headers, content, callbackFnOrOb);
 	return xhr;
 };
-
 akme.xhr.callAsyncXHR = function(/*XMLHttpRequest*/ xhr, method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb) {
 	var self = this; // closure
 	xhr.open(method, url, true);

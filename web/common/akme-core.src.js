@@ -652,7 +652,7 @@ if (!this.akme) this.akme = {
 	}
 	
 	function setKey(ary) {
-		if (ary != null && !(ary instanceof Array)) ary = [ary];
+		if (ary != null && !(ary instanceof Array)) ary = [ary || 0];
 		var key = this.PRIVATES(PRIVATES).key;
 		key.length = ary.length;
 		for (var i=0; i<key.length; i++) key[i] = ary[i];
@@ -740,15 +740,15 @@ if (!this.akme) this.akme = {
 	
 	function fromJSON(json) {
 		var obj = typeof json === "string" || json instanceof String ? $.parseJSON(json) : json;
-		this.setColumns(obj.columns);
+		this.setColumns(obj.head);
 		this.setKey(obj.key);
 		this.clearRows();
-		this.addRows(obj.rows);
+		this.addRows(obj.body);
 	}
 	
 	function toJSON() {
 		var p = this.PRIVATES(PRIVATES);
-		return "{key:"+ $.formatJSON(p.key) +",columns:"+ $.formatJSON(p.cols) +",rows:"+ $.formatJSON(p.rows)+"}";
+		return "{key:"+ $.formatJSON(p.key) +",head:"+ $.formatJSON(p.cols) +",body:"+ $.formatJSON(p.rows)+"}";
 	}
 	
 })(akme,"akme.core.DataTable");
