@@ -173,10 +173,14 @@ $(document).ready(function(){
 		equal( obj.map["akme"].name, "AKME Solutions", "link to akme name" );
 	});
 
-
 	module(akme.core.DataTable.CLASS);
 	test("basic set/add/get", function() {
-		var dt = new akme.core.DataTable();
+		var DataTable = akme.core.DataTable,
+			dt = new DataTable();
+		console.info("DataTable ", akme.formatJSON(dt));
+		
+		ok( dt instanceof Array, akme.core.DataTable.CLASS+" instanceof Array" );
+		ok( typeof dt.indexOf === "function", "indexOf function exists" );
 		ok( typeof dt.keyMap === "object", "keyMap exists" );
 		dt.setColumns(["a","b","c"]);
 		dt.setKey("a");
@@ -185,10 +189,25 @@ $(document).ready(function(){
 		            [4,5,6]
 		            ]);
 		var meta = dt.getMeta();
-		equal( meta.cols.length, 3, "cols.length 3" );
-		equal( meta.rowCount, 2, "rowCount 2" );
-		equal( dt.toJSON(), '{key:["a"],head:["a","b","c"],body:[[1,2,3],[4,5,6]]}', "toJSON OK" );
+		equal( meta.head.length, 3, "head.length 3" );
+		equal( meta.length, 2, "length 2" );
+		//equal( akme.formatJSON(dt), '{"key":["a"],"head":["a","b","c"],"body":[[1,2,3],[4,5,6]]}', "toJSON OK" );
+		equal( dt.toJSON(), '{"key":["a"],"head":["a","b","c"],"body":[[1,2,3],[4,5,6]]}', "toJSON OK" );
+		equal( dt.getRowByKey(1)[1], 2, "row a=1 should have column 1(b)=2" );
+		if (!akme.isIE8) {
+			var rowProto = new Array;
+			var propName = "x";
+			Object.defineProperty(rowProto, propName, {
+				get: function() { return this[0]+"z"; },
+				set: function(v) { this[0] = v+"y"; }
+			});
+			var obj = Object.create(rowProto);
+			obj.x = 1;
+			equal( obj.x, "1yz", "obj.x should return 1yz" );
+			equal( dt.getRowByKey(1).b, 2, "row a=1 should have property b=2" );
+		}
 	});
+	
 
 	module(akme.core.EventSource.CLASS);
 	test("basics", function() {

@@ -123,7 +123,7 @@ if (!this.akme) this.akme = {
 	},
 	/**
 	 * Shallow clone as in Java, returning a new/cloned obj.
-	 * Uses new object.constructor() and then copies hasOwnProperty/non-prototype properties by key.
+	 * Uses Object.create(Object.getPrototypeOf(obj)) and then copies hasOwnProperty/non-prototype properties by key.
 	 */
 	clone : function (obj) {
 		if (obj === undefined || obj === null) return obj;
@@ -374,7 +374,34 @@ if (!this.akme) this.akme = {
         var dn = (dt.getFullYear()*10000+(dt.getMonth()+1)*100+dt.getDate()) * 1000000 +
         	dt.getHours()*10000+dt.getMinutes()*100+dt.getSeconds();
         return String(dn).replace(/^(....)(..)(..)(..)(..)(..)/, "$1-$2-$3"+delimiter+"$4:$5:$6."+String(dt.getMilliseconds()+1000).substring(1));
-	}
+	},
+	
+	/**
+     * Return a 7-digit year*1000+dayOfYear where dayOfYear=1 on the Monday of the week with 4-Jan in it,
+     * equivalently the dayOfYear=1 on the Monday of the week with the first Thursday in it (ISO-8601).
+     * Use (int)result/1000 to get the year, (int)result%1000 to get the dayOfYear,
+     * and (int)(result%1000-1)/7+1 to get the weekOfYear.
+     */
+	getYearDayByIsoMonday : function(date) {
+		var thuOffset = 3 - (date.getDay()+6)%7; // 0=Sun
+		var thuDate = new Date(date.getTime());
+		thuDate.setDate(thuDate.getDate() + thuOffset); // bridge year by first Thursday
+		var isoYear = thuDate.getFullYear();
+        var isoWeek0 = Math.round(( thuDate.getTime()-new Date(thuDate.getFullYear(),0,1).getTime() )/this.MILLIS_IN_DAY-1)/7;
+		return isoYear*1000 + isoWeek0*7 + 3-thuOffset;
+	}, 
+	
+	/**
+	 * Return a Date given a year and day of year based on ISO weeks (ISO-8601) that start the Monday of the week with 4-Jan in it.
+	 * JavaScript getDay() gives 0 for Sunday to 6 for Saturday. Java gives 1 for Sunday to 7 for Saturday. Ouch.
+	 */
+	getDateByIsoMonday : function(year, doy) {
+		year = Math.floor(year);
+		week = Math.floor(doy);
+        var result = new Date(year, 1-1, 4);
+        result.setDate(result.getDate() -(result.getDay()+6)%7 + (doy-1));
+        return result;
+	} 
 
 };
 
@@ -604,6 +631,7 @@ if (!this.akme) this.akme = {
 	//
 	var PRIVATES = {}, // Closure guard for privates.
 		SLICE = Array.prototype.slice;
+		SPLICE = Array.prototype.splice;
 		KEY_SEP = "\u001f";
 	
 	function mapKeyPrivate(self,p,val,idx) {
@@ -616,14 +644,13 @@ if (!this.akme) this.akme = {
 	// Initialise constructor or singleton instance and public functions
 	//
 	function DataTable() {
-		var p = { idx : -1, key : [], map : {}, cols : [], rows : [] }; // private closure
+		var p = { idx : -1, map : {}, key : [], head : [], rowProperties : {} }; // private closure
 		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
-		this.length = p.rows.length;
 		this.keyMap = {};
 	}
 	$.extend($.copyAll( // class constructor
 		DataTable, {CLASS: CLASS, KEY_SEP: KEY_SEP} 
-	), { // super-static prototype, public functions
+	), $.copyAll(new Array, { // super-static prototype, public functions
     	setColumns : setColumns,
     	setKey : setKey,
     	getMeta : getMeta,
@@ -634,21 +661,37 @@ if (!this.akme) this.akme = {
     	getColumnIndex : getColumnIndex,
     	getRowIndex : getRowIndex,
     	setRowIndex : setRowIndex,
+    	getIndexByKey : getIndexByKey,
     	getRowByKey : getRowByKey,
     	getRow : getRow,
     	getValue : getValue,
+    	fromJSON : fromJSON,
     	toJSON : toJSON
-	});
+	}));
 	$.setProperty($.THIS, CLASS, DataTable);
 	
 	function setColumns(aryOrMap /* or arguments */) {
 		if (arguments.length > 1) aryOrMap = SLICE.call(arguments,0);
 		var p = this.PRIVATES(PRIVATES);
-		p.cols.length = 0;
+		p.head.length = 0;
 		$.deleteAll(p.map);
 		if (aryOrMap instanceof Array) for (var i=0; i<aryOrMap.length; i++) p.map[aryOrMap[i]] = i;
 		else $.copy(p.map, aryOrMap);
-		for (var key in p.map) p.cols[p.map[key]] = key;
+
+		//function DataRow(){ this.constructor.constructor.apply(this, arguments); }
+		//$.extend(DataRow, new Array);
+//			if (!akme.isIE8) Object.defineProperty(DataRow.prototype, name, {
+//				get: function() { return this[p.map[name]]; },
+//				set: function(v) { this[p.map[name]] = v; }
+//			});
+		p.rowProperties = {};
+		for (var name in p.map) {
+			p.head[p.map[name]] = name;
+			if (!akme.isIE8) (function(name) { p.rowProperties[name] = {
+				get: function() { console.log("xx ", name, p.map[name]); return this[p.map[name]]; },
+				set: function(v) { this[p.map[name]] = v; }
+			}; })(name);
+		}
 	}
 	
 	function setKey(ary) {
@@ -660,12 +703,11 @@ if (!this.akme) this.akme = {
 	
 	function getMeta() {
 		var p = this.PRIVATES(PRIVATES);
-		return {key: p.key.slice(0), cols: p.cols.slice(0), rowCount: p.rows.length};
+		return {key: p.key.slice(0), head: p.head.slice(0), length: this.length};
 	}
 	
 	function clearRows() {
-		var p = this.PRIVATES(PRIVATES);
-		this.length = p.rows.length = 0;
+		this.length = 0;
 		$.deleteAll(this.keyMap);
 	}
 	
@@ -676,29 +718,29 @@ if (!this.akme) this.akme = {
 	function addRows(ary,hdr) {
 		var p = this.PRIVATES(PRIVATES);
 		for (var i=0; i<ary.length; i++) {
-			if (hdr) { hdr=false; this.setColumns(ary[i]); continue; }
-			var val = ary[i];
-			p.rows.push(val);
-			mapKeyPrivate(this,p,val,p.rows.length-1);
+			var row = ary[i];
+			if (hdr) { hdr=false; this.setColumns(row); continue; }
+			Object.defineProperties(row, p.rowProperties);
+			this.push(row);
+			mapKeyPrivate(this,p,row,this.length-1);
 		}
-		this.length = p.rows.length;
 	}
 	
 	function addRowsFromObjects(aryObj) {
 		var p = this.PRIVATES(PRIVATES);
 		for (var i=0, j=0; i<aryObj.length; i++) {
 			var obj = aryObj[i];
-			if (p.cols.length === 0) {
+			if (p.head.length === 0) {
 				var map = {};
 				for (var key in obj) map[key] = j++;
 				this.setColumns(map);
 			}
-			var ary = new Array(p.cols.length);
-			for (j=0; j<ary.length; j++) ary[j] = obj[p.cols[j]];
-			p.rows.push(ary);
-			mapKeyPrivate(this,p,ary,p.rows.length-1);
+			var row = new Array(p.head.length);
+			Object.defineProperties(row, p.rowProperties);
+			for (j=0; j<row.length; j++) row[j] = obj[p.head[j]];
+			this.push(row);
+			mapKeyPrivate(this,p,row,this.length-1);
 		}
-		this.length = p.rows.length;
 	}
 	
 	function getColumnIndex(name) {
@@ -712,7 +754,7 @@ if (!this.akme) this.akme = {
 	
 	function setRowIndex(idx) {
 		var p = this.PRIVATES(PRIVATES);
-		if (typeof idx === "number" && idx >= 0 || idx < p.rows.length) p.idx = idx;
+		if (typeof idx === "number" && idx >= 0 || idx < this.length) p.idx = idx;
 		else p.idx = -1;
 	}
 	
@@ -728,14 +770,14 @@ if (!this.akme) this.akme = {
 	
 	function getRow(idx) {
 		var p = this.PRIVATES(PRIVATES);
-		return p.rows[typeof idx !== "undefined" ? idx : p.idx].slice(0);
+		return this[typeof idx !== "undefined" ? idx : p.idx];
 	}
 	
 	function getValue(idxOrName/* or row,idxOrName*/) {
 		var p = this.PRIVATES(PRIVATES);
 		var row = arguments[0], idxOrName = arguments[1];
 		if (arguments.length === 1) { idxOrName = row; row = p.idx; }
-		return p.rows[row][typeof idxOrName === "number" ? idxOrName : this.getIndex(name)];
+		return this[row][typeof idxOrName === "number" ? idxOrName : this.getIndex(name)];
 	}
 	
 	function fromJSON(json) {
@@ -747,8 +789,17 @@ if (!this.akme) this.akme = {
 	}
 	
 	function toJSON() {
+		// return $.formatJSON(this); avoid circular reference
 		var p = this.PRIVATES(PRIVATES);
-		return "{key:"+ $.formatJSON(p.key) +",head:"+ $.formatJSON(p.cols) +",body:"+ $.formatJSON(p.rows)+"}";
+		var a = new Array(this.length+2);
+		a[0] = '{"key":'+ $.formatJSON(p.key) +
+			',"head":'+ $.formatJSON(p.head) +
+			',"body":[';
+		for (var i=0; i<this.length; i++) {
+			a[i+1] = (i!=0 ? "," : "")+$.formatJSON(this[i]);
+		}
+		a[a.length-1] = "]}";
+		return a.join("");
 	}
 	
 })(akme,"akme.core.DataTable");
