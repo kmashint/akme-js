@@ -1,5 +1,5 @@
 // ..\web\common\akme-core
-// fw-core.js
+// akme-core.js
 // Javascript Types: undefined, null, boolean, number, string, function, or object; Date and Array are typeof object.
 // Javascript typeof works for a function or object but cannot always be trusted, e.g. typeof String(1) is string but typeof new String(1) is object.
 // instanceof is better, but will not work between frames/windows/js-security-contexts due to different underlying prototypes.
@@ -100,11 +100,33 @@ if (!this.akme) this.akme = {
 	PRINTABLE_EXCLUDE_REGEXP : /[^\x20-\x7e\xc0-\xff]/g,
 
 	/**
-	 * Check if the given is not undefined (primitive) and not null (object).
+	 * Check if the object is not undefined (primitive) and not null (object).
 	 */
-	isDefinedNotNull : function (obj) {
-		return typeof obj !== "undefined" && obj !== null;
-	},
+	isDefinedNotNull : function(x) { return typeof x !== "undefined" && x !== null; },
+	/**
+	 * Check if the object is instanceof Array (object, there is no typeof array primitive).
+	 */
+	isArray : function(x) { return x instanceof Array; },
+	/**
+	 * Check if the object is typeof boolean (primitive) or instanceof Boolean (object).
+	 */
+	isBoolean : function(x) { return typeof x === "boolean" || x instanceof Boolean; },
+	/**
+	 * Check if the object is instanceof Date (object, there is no typeof date primitive).
+	 */
+	isDate : function(x) { return x instanceof Date; },
+	/**
+	 * Check if the object is typeof function (a typeof function is also instanceof Object and instanceof Function unlike other typeof primitives).
+	 */
+	isFunction : function(x) { return typeof x === "function"; },
+	/**
+	 * Check if the object is typeof number (primitive) or instanceof Number (object).
+	 */
+	isNumber : function(x) { return typeof x === "number" || x instanceof Number; },
+	/**
+	 * Check if the object is typeof string (primitive) or instanceof String (object).
+	 */
+	isString : function(x) { return typeof x === "string" || x instanceof String; },
 	/**
 	 * Concat a collection to an array and return it, helpful for HTMLCollection results of getElementsByTagName.
 	 */
@@ -630,84 +652,116 @@ if (!this.akme) this.akme = {
 	// Private static declarations / closure
 	//
 	var PRIVATES = {}, // Closure guard for privates.
-		SLICE = Array.prototype.slice;
-		SPLICE = Array.prototype.splice;
-		KEY_SEP = "\u001f";
+		KEY_SEP = "\u001f",
+		ARRAY = Array.prototype;
 	
-	function mapKeyPrivate(self,p,val,idx) {
-		var key = new Array(p.key.length);
-		for (var j=0; j<key.length; j++) key[j] = val[p.map[p.key[j]]];
-		self.keyMap[key.join(KEY_SEP)] = idx;
+	function mapKeyPrivate(self,p,row,idx) {
+		if (p.key.length === 1) {
+			var col = p.key[0];
+			if ($.isNumber(col)) self.keyMap[row[col]] = idx;
+			else self.keyMap[row[p.map[col]]] = idx;
+		} else {
+			var key = new Array(p.key.length);
+			for (var j=0; j<key.length; j++) key[j] = row[$.isNumber(p.key[j]) ? p.key[j] : p.map[p.key[j]]];
+			self.keyMap[key.join(KEY_SEP)] = idx;
+		}
+	}
+	
+	function applyArrayMethod(name) {
+		return function(){ return ARRAY[name].apply(this.PRIVATES(PRIVATES).body,arguments); };
 	}
 
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
 	function DataTable() {
-		var p = { idx : -1, map : {}, key : [], head : [], rowProperties : {} }; // private closure
+		var p = { idx : -1, key : [], map : {}, head : [], body : [], rowMap : null }; // private closure
 		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
+		this.length = p.body.length;
 		this.keyMap = {};
 	}
 	$.extend($.copyAll( // class constructor
 		DataTable, {CLASS: CLASS, KEY_SEP: KEY_SEP} 
-	), $.copyAll(new Array, { // super-static prototype, public functions
-    	setColumns : setColumns,
+	), { // super-static prototype, public functions
+    	setHead : setHead,
     	setKey : setKey,
     	getMeta : getMeta,
-    	clearRows : clearRows,
+    	clearBody : clearBody,
     	addRow : addRow,
     	addRows : addRows,
     	addRowsFromObjects : addRowsFromObjects,
-    	getColumnIndex : getColumnIndex,
+    	getHeadIndex : getHeadIndex,
+    	getRowIndexByKey : getRowIndexByKey,
     	getRowIndex : getRowIndex,
     	setRowIndex : setRowIndex,
-    	getIndexByKey : getIndexByKey,
     	getRowByKey : getRowByKey,
     	getRow : getRow,
     	getValue : getValue,
     	fromJSON : fromJSON,
-    	toJSON : toJSON
-	}));
+    	toJSON : toJSON,
+    	join : join // enhanced from Array.prototype.join
+	});
+	// Apply read-only non-mutating methods from Array.
+	for (var key in {"concat":1,"every":1,"filter":1,"forEach":1,"indexOf":1,"lastIndexOf":1,"map":1,"reduce":1,"reduceRight":1,"slice":1,"some":1}) {
+		DataTable.prototype[key] = applyArrayMethod(key);
+	}
+	// Note writing, mutating methods: pop, push, reverse, shift, sort, splice, unshift.
+	// Publish the constructor.
 	$.setProperty($.THIS, CLASS, DataTable);
+
+	/**
+	 * Enhance join to take up to two arguments (rowSeparator,colSeparator) leaving the default as commas for both.
+	 * e.g. dt.join("\n","\t") would be TSV, text/tab-separated-values.
+	 */
+	function join() {
+		var p = this.PRIVATES(PRIVATES);
+		if (arguments.length > 1) {
+			var a = new Array(p.body.length);
+			for (var i=0; i<a.length; i++) a[i] = p.body[i].join(arguments[1]);
+			return a.join(arguments[0]);
+		}
+		else return ARRAY.join.apply(p.body,arguments);
+	}
 	
-	function setColumns(aryOrMap /* or arguments */) {
-		if (arguments.length > 1) aryOrMap = SLICE.call(arguments,0);
+	function setHead(aryOrMap /* or arguments */) {
+		if (arguments.length > 1) aryOrMap = ARRAY.slice.call(arguments,0);
 		var p = this.PRIVATES(PRIVATES);
 		p.head.length = 0;
 		$.deleteAll(p.map);
 		if (aryOrMap instanceof Array) for (var i=0; i<aryOrMap.length; i++) p.map[aryOrMap[i]] = i;
 		else $.copy(p.map, aryOrMap);
-
-		//function DataRow(){ this.constructor.constructor.apply(this, arguments); }
-		//$.extend(DataRow, new Array);
-//			if (!akme.isIE8) Object.defineProperty(DataRow.prototype, name, {
-//				get: function() { return this[p.map[name]]; },
-//				set: function(v) { this[p.map[name]] = v; }
-//			});
-		p.rowProperties = {};
+		
+//		function RowMap(row){ this.row = function() { return row; } };
+//		p.rowMap = RowMap;
+		if (!$.isIE8) p.rowMap = {};
 		for (var name in p.map) {
 			p.head[p.map[name]] = name;
-			if (!akme.isIE8) (function(name) { p.rowProperties[name] = {
-				get: function() { console.log("xx ", name, p.map[name]); return this[p.map[name]]; },
+//			if (!$.isIE8) Object.defineProperty(RowMap.prototype, name, (function(name) { return {
+//				get: function() { return this[p.map[name]]; },
+//				set: function(v) { this[p.map[name]] = v; }
+//			}; } )(name) );
+			if (p.rowMap)  p.rowMap[name] = (function(name) { return {
+				get: function() { return this[p.map[name]]; },
 				set: function(v) { this[p.map[name]] = v; }
-			}; })(name);
+			}; } )(name);
 		}
 	}
 	
-	function setKey(ary) {
-		if (ary != null && !(ary instanceof Array)) ary = [ary || 0];
-		var key = this.PRIVATES(PRIVATES).key;
-		key.length = ary.length;
-		for (var i=0; i<key.length; i++) key[i] = ary[i];
+	function setKey(intStrAry) {
+		var p = this.PRIVATES(PRIVATES);
+		if (!(intStrAry instanceof Array)) intStrAry = [intStrAry || 0];
+		p.key.length = intStrAry.length;
+		for (var i=0; i<p.key.length; i++) p.key[i] = intStrAry[i];
 	}
 	
 	function getMeta() {
 		var p = this.PRIVATES(PRIVATES);
-		return {key: p.key.slice(0), head: p.head.slice(0), length: this.length};
+		return {key: p.key.slice(0), head: p.head.slice(0), headLength: p.head.length, bodyLength: p.body.length};
 	}
 	
-	function clearRows() {
-		this.length = 0;
+	function clearBody() {
+		var p = this.PRIVATES(PRIVATES);
+		this.length = p.body.length = 0;
 		$.deleteAll(this.keyMap);
 	}
 	
@@ -719,11 +773,13 @@ if (!this.akme) this.akme = {
 		var p = this.PRIVATES(PRIVATES);
 		for (var i=0; i<ary.length; i++) {
 			var row = ary[i];
-			if (hdr) { hdr=false; this.setColumns(row); continue; }
-			Object.defineProperties(row, p.rowProperties);
-			this.push(row);
-			mapKeyPrivate(this,p,row,this.length-1);
+			if (hdr) { hdr=false; this.setHead(row); continue; }
+			//row.map = (function(rowMap){ return function() { return rowMap; }; })(new p.rowMap(row));
+			if (p.rowMap) Object.defineProperties(row, p.rowMap);
+			p.body.push(row);
+			mapKeyPrivate(this,p,row,p.body.length-1);
 		}
+		this.length = p.body.length;
 	}
 	
 	function addRowsFromObjects(aryObj) {
@@ -733,17 +789,18 @@ if (!this.akme) this.akme = {
 			if (p.head.length === 0) {
 				var map = {};
 				for (var key in obj) map[key] = j++;
-				this.setColumns(map);
+				this.setHead(map);
 			}
 			var row = new Array(p.head.length);
-			Object.defineProperties(row, p.rowProperties);
+			if (p.rowMap) Object.defineProperties(row, p.rowMap);
 			for (j=0; j<row.length; j++) row[j] = obj[p.head[j]];
-			this.push(row);
-			mapKeyPrivate(this,p,row,this.length-1);
+			p.body.push(row);
+			mapKeyPrivate(this,p,row,p.body.length-1);
 		}
+		this.length = p.body.length;
 	}
 	
-	function getColumnIndex(name) {
+	function getHeadIndex(name) {
 		var idx = this.PRIVATES(PRIVATES).map[name];
 		return idx >= 0 ? idx : -1;
 	}
@@ -754,52 +811,44 @@ if (!this.akme) this.akme = {
 	
 	function setRowIndex(idx) {
 		var p = this.PRIVATES(PRIVATES);
-		if (typeof idx === "number" && idx >= 0 || idx < this.length) p.idx = idx;
+		if ($.isNumber(idx) && idx >= 0 || idx < p.body.length) p.idx = idx;
 		else p.idx = -1;
 	}
 	
-	function getIndexByKey(key) {
-		var idx = this.keyMap[arguments.length > 1 ? SLICE.call(arguments,0).join(KEY_SEP) : 
+	function getRowIndexByKey(key) {
+		var idx = this.keyMap[arguments.length > 1 ? ARRAY.slice.call(arguments,0).join(KEY_SEP) : 
 				(key instanceof Array ? key.join(KEY_SEP) : key)];
 		return idx >= 0 ? idx : -1;
 	}
 	
 	function getRowByKey() {
-		return this.getRow(this.getIndexByKey.apply(this,arguments));
+		return this.getRow(this.getRowIndexByKey.apply(this,arguments));
 	}
 	
 	function getRow(idx) {
 		var p = this.PRIVATES(PRIVATES);
-		return this[typeof idx !== "undefined" ? idx : p.idx];
+		return p.body[typeof idx !== "undefined" ? idx : p.idx];
 	}
 	
 	function getValue(idxOrName/* or row,idxOrName*/) {
 		var p = this.PRIVATES(PRIVATES);
 		var row = arguments[0], idxOrName = arguments[1];
 		if (arguments.length === 1) { idxOrName = row; row = p.idx; }
-		return this[row][typeof idxOrName === "number" ? idxOrName : this.getIndex(name)];
+		return p.body[row][typeof idxOrName === "number" ? idxOrName : this.getIndex(name)];
 	}
 	
 	function fromJSON(json) {
-		var obj = typeof json === "string" || json instanceof String ? $.parseJSON(json) : json;
-		this.setColumns(obj.head);
+		var obj = $.isString(json) ? $.parseJSON(json) : json;
+		this.setHead(obj.head);
 		this.setKey(obj.key);
-		this.clearRows();
+		this.clearBody();
 		this.addRows(obj.body);
 	}
 	
 	function toJSON() {
 		// return $.formatJSON(this); avoid circular reference
 		var p = this.PRIVATES(PRIVATES);
-		var a = new Array(this.length+2);
-		a[0] = '{"key":'+ $.formatJSON(p.key) +
-			',"head":'+ $.formatJSON(p.head) +
-			',"body":[';
-		for (var i=0; i<this.length; i++) {
-			a[i+1] = (i!=0 ? "," : "")+$.formatJSON(this[i]);
-		}
-		a[a.length-1] = "]}";
-		return a.join("");
+		return $.formatJSON({key: p.key, head: p.head, body: p.body});
 	}
 	
 })(akme,"akme.core.DataTable");

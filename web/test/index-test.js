@@ -174,23 +174,23 @@ $(document).ready(function(){
 	});
 
 	module(akme.core.DataTable.CLASS);
-	test("basic set/add/get", function() {
+ 	test("basics and row defineProperties accessors", function() {
 		var DataTable = akme.core.DataTable,
 			dt = new DataTable();
 		console.info("DataTable ", akme.formatJSON(dt));
 		
-		ok( dt instanceof Array, akme.core.DataTable.CLASS+" instanceof Array" );
+		ok( typeof dt.forEach === "function", "forEach function exists" );
 		ok( typeof dt.indexOf === "function", "indexOf function exists" );
 		ok( typeof dt.keyMap === "object", "keyMap exists" );
-		dt.setColumns(["a","b","c"]);
+		dt.setHead(["a","b","c"]);
 		dt.setKey("a");
 		dt.addRows([
 		            [1,2,3],
 		            [4,5,6]
 		            ]);
 		var meta = dt.getMeta();
-		equal( meta.head.length, 3, "head.length 3" );
-		equal( meta.length, 2, "length 2" );
+		equal( meta.headLength, 3, "headLength 3" );
+		equal( meta.bodyLength, 2, "bodyLength 2" );
 		//equal( akme.formatJSON(dt), '{"key":["a"],"head":["a","b","c"],"body":[[1,2,3],[4,5,6]]}', "toJSON OK" );
 		equal( dt.toJSON(), '{"key":["a"],"head":["a","b","c"],"body":[[1,2,3],[4,5,6]]}', "toJSON OK" );
 		equal( dt.getRowByKey(1)[1], 2, "row a=1 should have column 1(b)=2" );

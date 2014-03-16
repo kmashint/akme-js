@@ -23,4 +23,4 @@ popd
 
 @echo off
 endlocal
-pause
+if not "%1"=="NOPAUSE" pause
