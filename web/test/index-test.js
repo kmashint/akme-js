@@ -55,6 +55,24 @@ $(document).ready(function(){
 		equal( x.b, 2, "copyMissing should set a=2" );
 
 	});
+	test("akme date utils", function(){
+		var now = new Date(),
+			date = new Date(now);
+		
+		equal( akme.formatIsoDate(akme.parseDate("2011-12-31")), akme.formatIsoDate(new Date(2011, 12-1, 31)), "should be 2011-12-31" );
+		
+		date.setHours(date.getHours()-10);
+		equal( akme.diffDays(date, now), 0, "should be 0 for -10 hours" );
+
+		date.setHours(date.getHours()-10);
+		equal( akme.diffDays(date, now), 1, "should be 1 for -20 hours" );
+
+		date.setHours(date.getHours()-4);
+		equal( akme.diffDays(date, now), 1, "should be 1 for -24 hours" );
+
+		date.setHours(date.getHours()-24);
+		equal( akme.diffDays(date, now), 2, "should be 2 for -48 hours" );
+	});
 
 	
 	module("akme extend and PRIVATES");

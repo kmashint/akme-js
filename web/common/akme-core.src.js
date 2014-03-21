@@ -98,6 +98,8 @@ if (!this.akme) this.akme = {
 	THIS : this, // reference the global object, e.g. will be window in a web browser
 	WHITESPACE_TRIM_REGEXP : /^\s*|\s*$/gm,
 	PRINTABLE_EXCLUDE_REGEXP : /[^\x20-\x7e\xc0-\xff]/g,
+	MILLIS_IN_HOUR : 60*60000,
+	MILLIS_IN_DAY : 24*60*60000,
 
 	/**
 	 * Check if the object is not undefined (primitive) and not null (object).
@@ -398,6 +400,17 @@ if (!this.akme) this.akme = {
         return String(dn).replace(/^(....)(..)(..)(..)(..)(..)/, "$1-$2-$3"+delimiter+"$4:$5:$6."+String(dt.getMilliseconds()+1000).substring(1));
 	},
 	
+    /**
+     * Return the rounded (.5 up) number of days between date1 and date2, negative if date2 < date1.
+     * This will be affected by daylight saving time forward/back of an hour and leap seconds (e.g. 2012-07-01).
+     * Giving pure dates, trimmed of time to midnight, will remove the effects of DST and leap seconds.
+     */
+    diffDays : function (date1OrMillis, date2OrMillis) {
+    	if (date1OrMillis instanceof Date) date1OrMillis = date1OrMillis.getTime();
+        if (date2OrMillis instanceof Date) date2OrMillis = date2OrMillis.getTime();
+        return Math.floor((date2OrMillis - date1OrMillis + 12*this.MILLIS_IN_HOUR) / this.MILLIS_IN_DAY);
+    },
+	
 	/**
      * Return a 7-digit year*1000+dayOfYear where dayOfYear=1 on the Monday of the week with 4-Jan in it,
      * equivalently the dayOfYear=1 on the Monday of the week with the first Thursday in it (ISO-8601).
@@ -678,6 +691,7 @@ if (!this.akme) this.akme = {
 		var p = { idx : -1, key : [], map : {}, head : [], body : [], rowMap : null }; // private closure
 		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
 		this.length = p.body.length;
+		this.width = p.head.length;
 		this.keyMap = {};
 	}
 	$.extend($.copyAll( // class constructor
@@ -730,6 +744,7 @@ if (!this.akme) this.akme = {
 		$.deleteAll(p.map);
 		if (aryOrMap instanceof Array) for (var i=0; i<aryOrMap.length; i++) p.map[aryOrMap[i]] = i;
 		else $.copy(p.map, aryOrMap);
+		this.width = p.head.length;
 		
 //		function RowMap(row){ this.row = function() { return row; } };
 //		p.rowMap = RowMap;
