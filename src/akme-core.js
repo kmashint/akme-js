@@ -696,23 +696,24 @@ if (!this.akme) this.akme = {
 	$.extend($.copyAll( // class constructor
 		DataTable, {CLASS: CLASS, KEY_SEP: KEY_SEP} 
 	), { // super-static prototype, public functions
-    	setHead : setHead,
-    	setKey : setKey,
-    	getMeta : getMeta,
+    	head : head,
+    	key : key,
+    	meta : meta,
     	clearBody : clearBody,
-    	addRow : addRow,
-    	addRows : addRows,
-    	addRowsFromObjects : addRowsFromObjects,
-    	getHeadIndex : getHeadIndex,
-    	getRowIndexByKey : getRowIndexByKey,
-    	getRowIndex : getRowIndex,
-    	setRowIndex : setRowIndex,
-    	getRowByKey : getRowByKey,
-    	getRow : getRow,
-    	getValue : getValue,
+    	push : push,
+    	body : body,
+    	bodyObjects : bodyObjects,
+    	headIndex : headIndex,
+    	rowIndexByKey : rowIndexByKey,
+    	rowIndex : rowIndex,
+    	rowByKey : rowByKey,
+    	row : row,
+    	value : value,
     	fromJSON : fromJSON,
     	toJSON : toJSON,
-    	join : join // enhanced from Array.prototype.join
+    	join : join, // enhanced from Array.prototype.join
+    	select : applyArrayMethod("filter"),
+    	indexBy : indexBy
 	});
 	// Apply read-only non-mutating methods from Array.
 	for (var key in {"concat":1,"every":1,"filter":1,"forEach":1,"indexOf":1,"lastIndexOf":1,"map":1,"reduce":1,"reduceRight":1,"slice":1,"some":1}) {
@@ -736,7 +737,7 @@ if (!this.akme) this.akme = {
 		else return ARRAY.join.apply(p.body,arguments);
 	}
 	
-	function setHead(aryOrMap /* or arguments */) {
+	function head(aryOrMap /* or arguments */) {
 		if (arguments.length > 1) aryOrMap = ARRAY.slice.call(arguments,0);
 		var p = this.PRIVATES(PRIVATES);
 		p.head.length = 0;
@@ -761,14 +762,14 @@ if (!this.akme) this.akme = {
 		}
 	}
 	
-	function setKey(intStrAry) {
+	function key(intStrAry) {
 		var p = this.PRIVATES(PRIVATES);
 		if (!(intStrAry instanceof Array)) intStrAry = [intStrAry || 0];
 		p.key.length = intStrAry.length;
 		for (var i=0; i<p.key.length; i++) p.key[i] = intStrAry[i];
 	}
 	
-	function getMeta() {
+	function meta() {
 		var p = this.PRIVATES(PRIVATES);
 		return {key: p.key.slice(0), head: p.head.slice(0), headLength: p.head.length, bodyLength: p.body.length};
 	}
@@ -779,15 +780,15 @@ if (!this.akme) this.akme = {
 		$.deleteAll(this.keyMap);
 	}
 	
-	function addRow(row) {
-		this.addRows([row]);
+	function push(row) {
+		this.body([row]);
 	}
 	
-	function addRows(ary,hdr) {
+	function body(ary,hdr) {
 		var p = this.PRIVATES(PRIVATES);
 		for (var i=0; i<ary.length; i++) {
 			var row = ary[i];
-			if (hdr) { hdr=false; this.setHead(row); continue; }
+			if (hdr) { hdr=false; this.head(row); continue; }
 			//row.map = (function(rowMap){ return function() { return rowMap; }; })(new p.rowMap(row));
 			if (p.rowMap) Object.defineProperties(row, p.rowMap);
 			p.body.push(row);
@@ -796,14 +797,14 @@ if (!this.akme) this.akme = {
 		this.length = p.body.length;
 	}
 	
-	function addRowsFromObjects(aryObj) {
+	function bodyObjects(aryObj) {
 		var p = this.PRIVATES(PRIVATES);
 		for (var i=0, j=0; i<aryObj.length; i++) {
 			var obj = aryObj[i];
 			if (p.head.length === 0) {
 				var map = {};
 				for (var key in obj) map[key] = j++;
-				this.setHead(map);
+				this.head(map);
 			}
 			var row = new Array(p.head.length);
 			if (p.rowMap) Object.defineProperties(row, p.rowMap);
@@ -814,41 +815,57 @@ if (!this.akme) this.akme = {
 		this.length = p.body.length;
 	}
 	
-	function getHeadIndex(name) {
+	function headIndex(name) {
 		var idx = this.PRIVATES(PRIVATES).map[name];
 		return idx >= 0 ? idx : -1;
 	}
 	
-	function getRowIndex() {
-		return this.PRIVATES(PRIVATES).idx;
-	}
-	
-	function setRowIndex(idx) {
+	function rowIndex(idx) {
 		var p = this.PRIVATES(PRIVATES);
+		if (!(idx >= 0)) return this.PRIVATES(PRIVATES).idx; 
 		if ($.isNumber(idx) && idx >= 0 || idx < p.body.length) p.idx = idx;
 		else p.idx = -1;
 	}
 	
-	function getRowIndexByKey(key) {
+	function rowIndexByKey(key) {
 		var idx = this.keyMap[arguments.length > 1 ? ARRAY.slice.call(arguments,0).join(KEY_SEP) : 
 				(key instanceof Array ? key.join(KEY_SEP) : key)];
 		return idx >= 0 ? idx : -1;
 	}
 	
-	function getRowByKey() {
-		return this.getRow(this.getRowIndexByKey.apply(this,arguments));
+	function rowByKey() {
+		return this.row(this.rowIndexByKey.apply(this,arguments));
 	}
 	
-	function getRow(idx) {
+	function row(idx) {
 		var p = this.PRIVATES(PRIVATES);
 		return p.body[typeof idx !== "undefined" ? idx : p.idx];
 	}
 	
-	function getValue(idxOrName/* or row,idxOrName*/) {
+	function value(idxOrName/* or row,idxOrName*/) {
 		var p = this.PRIVATES(PRIVATES);
 		var row = arguments[0], idxOrName = arguments[1];
 		if (arguments.length === 1) { idxOrName = row; row = p.idx; }
-		return p.body[row][typeof idxOrName === "number" ? idxOrName : this.getIndex(name)];
+		return p.body[row][typeof idxOrName === "number" ? idxOrName : this.headIndex(name)];
+	}
+	
+	/**
+	 * The result is map object with keys returned by the given keyFn,
+	 * the values in the map being the arrays of rows with the same key.
+	 * e.g. 
+	 * 	dt.byCity = dt.indexBy(function keyFn(row){ return row["city"]; });
+	 */
+	function indexBy(keyFn) {
+		var map = {};
+		this.forEach(function(row,idx){
+			var key = keyFn(row), ary;
+			if (key != null) {
+				ary = map[key] || [];
+				ary[ary.length] = row;
+				if (ary.length === 1) map[key] = ary;
+			}
+		});
+		return map;
 	}
 	
 	function fromJSON(json) {

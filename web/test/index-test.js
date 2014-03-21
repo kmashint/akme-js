@@ -200,19 +200,24 @@ $(document).ready(function(){
 		ok( typeof dt.forEach === "function", "forEach function exists" );
 		ok( typeof dt.indexOf === "function", "indexOf function exists" );
 		ok( typeof dt.keyMap === "object", "keyMap exists" );
-		dt.setHead(["a","b","c"]);
-		dt.setKey("a");
-		dt.addRows([
+		dt.head(["a","b","c"]);
+		dt.key("a");
+		dt.body([
 		            [1,2,3],
-		            [4,5,6]
+		            [4,5,6],
+		            [7,8,9]
 		            ]);
-		var meta = dt.getMeta();
+		var meta = dt.meta();
 		equal( meta.headLength, 3, "headLength 3" );
-		equal( meta.bodyLength, 2, "bodyLength 2" );
-		//equal( akme.formatJSON(dt), '{"key":["a"],"head":["a","b","c"],"body":[[1,2,3],[4,5,6]]}', "toJSON OK" );
-		equal( dt.toJSON(), '{"key":["a"],"head":["a","b","c"],"body":[[1,2,3],[4,5,6]]}', "toJSON OK" );
-		equal( dt.getRowByKey(1)[1], 2, "row a=1 should have column 1(b)=2" );
+		equal( meta.bodyLength, 3, "bodyLength 3" );
+		//equal( akme.formatJSON(dt), '{"key":["a"],"head":["a","b","c"],"body":[[1,2,3],[4,5,6],[7,8,9]]}', "toJSON OK" );
+		equal( dt.toJSON(), '{"key":["a"],"head":["a","b","c"],"body":[[1,2,3],[4,5,6],[7,8,9]]}', "toJSON OK" );
+		equal( dt.rowByKey(1)[1], 2, "row a=1 should have column 1(b)=2" );
 		if (!akme.isIE8) {
+			var byEvenOdd = dt.indexBy(function(row){ return row[0]%2; });
+			equal( byEvenOdd[0].length, 1, "even 0 should have length 1" );
+			equal( byEvenOdd[1].length, 2, "odd 1 should have length 2" );
+			
 			var rowProto = new Array;
 			var propName = "x";
 			Object.defineProperty(rowProto, propName, {
@@ -222,7 +227,7 @@ $(document).ready(function(){
 			var obj = Object.create(rowProto);
 			obj.x = 1;
 			equal( obj.x, "1yz", "obj.x should return 1yz" );
-			equal( dt.getRowByKey(1).b, 2, "row a=1 should have property b=2" );
+			equal( dt.rowByKey(1).b, 2, "row a=1 should have property b=2" );
 		}
 	});
 	
