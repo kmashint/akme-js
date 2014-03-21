@@ -214,9 +214,9 @@ $(document).ready(function(){
 		equal( dt.toJSON(), '{"key":["a"],"head":["a","b","c"],"body":[[1,2,3],[4,5,6],[7,8,9]]}', "toJSON OK" );
 		equal( dt.rowByKey(1)[1], 2, "row a=1 should have column 1(b)=2" );
 		if (!akme.isIE8) {
-			var byEvenOdd = dt.indexBy(function(row){ return row[0]%2; });
-			equal( byEvenOdd[0].length, 1, "even 0 should have length 1" );
-			equal( byEvenOdd[1].length, 2, "odd 1 should have length 2" );
+			var byEvenOdd = dt.mapBy(function(row){ return row[0]%2; });
+			equal( byEvenOdd["0"].length, 1, "even 0 should have length 1" );
+			equal( byEvenOdd["1"].length, 2, "odd 1 should have length 2" );
 			
 			var rowProto = new Array;
 			var propName = "x";

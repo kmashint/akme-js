@@ -713,7 +713,7 @@ if (!this.akme) this.akme = {
     	toJSON : toJSON,
     	join : join, // enhanced from Array.prototype.join
     	select : applyArrayMethod("filter"),
-    	indexBy : indexBy
+    	mapBy : mapBy
 	});
 	// Apply read-only non-mutating methods from Array.
 	for (var key in {"concat":1,"every":1,"filter":1,"forEach":1,"indexOf":1,"lastIndexOf":1,"map":1,"reduce":1,"reduceRight":1,"slice":1,"some":1}) {
@@ -820,6 +820,9 @@ if (!this.akme) this.akme = {
 		return idx >= 0 ? idx : -1;
 	}
 	
+	/**
+	 * Get or set the internal row index, setting if an idx is given.  
+	 */
 	function rowIndex(idx) {
 		var p = this.PRIVATES(PRIVATES);
 		if (!(idx >= 0)) return this.PRIVATES(PRIVATES).idx; 
@@ -837,6 +840,9 @@ if (!this.akme) this.akme = {
 		return this.row(this.rowIndexByKey.apply(this,arguments));
 	}
 	
+	/**
+	 * Get the row at the given index or 
+	 */
 	function row(idx) {
 		var p = this.PRIVATES(PRIVATES);
 		return p.body[typeof idx !== "undefined" ? idx : p.idx];
@@ -850,12 +856,13 @@ if (!this.akme) this.akme = {
 	}
 	
 	/**
-	 * The result is map object with keys returned by the given keyFn,
+	 * The result is map/object with keys returned by the given keyFn,
 	 * the values in the map being the arrays of rows with the same key.
 	 * e.g. 
-	 * 	dt.byCity = dt.indexBy(function keyFn(row){ return row["city"]; });
+	 * 	dt.byCity = dt.mapBy(function keyFn(row){ return row["city"]; });
+	 *  for (var name in dt.byCity) dt.byCity[name].forEach(function(row){ console.log(name,row); }); 
 	 */
-	function indexBy(keyFn) {
+	function mapBy(keyFn) {
 		var map = {};
 		this.forEach(function(row,idx){
 			var key = keyFn(row), ary;
@@ -870,10 +877,10 @@ if (!this.akme) this.akme = {
 	
 	function fromJSON(json) {
 		var obj = $.isString(json) ? $.parseJSON(json) : json;
-		this.setHead(obj.head);
-		this.setKey(obj.key);
+		this.head(obj.head);
+		this.key(obj.key);
 		this.clearBody();
-		this.addRows(obj.body);
+		this.body(obj.body);
 	}
 	
 	function toJSON() {
