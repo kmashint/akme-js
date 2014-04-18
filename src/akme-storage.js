@@ -131,7 +131,7 @@ interface Storage {
 		var storage = this.getStorage();
 		var starts = type+SPLIT_CHAR;
 		var count = 0;
-		for (var i=0; i<storage.length; i++) {
+		for (var i=storage.length-1; i>=0; i--) { // in reverse to remove
 			var key = storage.key(i);
 			if (key.lastIndexOf(starts, starts.length) === 0) {
 				storage.removeItem(key);

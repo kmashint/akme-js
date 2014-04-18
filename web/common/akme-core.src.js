@@ -9,7 +9,7 @@
 // http://www.tuttoaster.com/learning-javascript-and-dom-with-console/
 // http://www.thecssninja.com/javascript/console
 if (typeof console === "undefined") console = { 
-	log : function(){}, info : function(){}, warn : function(){}, error : function(){}, assert : function(){} 
+	log : function(){}, debug : function(){}, info : function(){}, warn : function(){}, error : function(){}, assert : function(){} 
 };
 if (typeof console.logEnabled === "undefined") console.logEnabled = false;
 
@@ -857,16 +857,16 @@ if (!this.akme) this.akme = {
 	}
 	
 	/**
-	 * The result is map/object with keys returned by the given keyFn,
+	 * Return a map/object with keys returned by the given keyFn,
 	 * the values in the map being the arrays of rows with the same key.
 	 * e.g. 
 	 * 	dt.byCity = dt.mapBy(function keyFn(row){ return row["city"]; });
 	 *  for (var name in dt.byCity) dt.byCity[name].forEach(function(row){ console.log(name,row); }); 
 	 */
-	function mapBy(keyFn) {
-		var map = {};
+	function mapBy(keyFn /*, thisArg */) {
+		var map = {}, thisArg = arguments.length >= 2 ? arguments[1] : undefined;
 		this.forEach(function(row,idx){
-			var key = keyFn(row), ary;
+			var key = keyFn.call(thisArg,row,idx,this), ary;
 			if (key != null) {
 				ary = map[key] || [];
 				ary[ary.length] = row;
@@ -3079,7 +3079,7 @@ interface Storage {
 		var storage = this.getStorage();
 		var starts = type+SPLIT_CHAR;
 		var count = 0;
-		for (var i=0; i<storage.length; i++) {
+		for (var i=storage.length-1; i>=0; i--) { // in reverse to remove
 			var key = storage.key(i);
 			if (key.lastIndexOf(starts, starts.length) === 0) {
 				storage.removeItem(key);
