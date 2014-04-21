@@ -1,0 +1,37 @@
+<!DOCTYPE html >
+<html><head>
+<title>test/console.html</title>
+<style>
+
+
+</style>
+</head><body>
+
+test/console.html
+
+<form name="test">
+	<input type="button" name="logBtn" value="log" onclick="log()" />
+	<input type="button" name="infoBtn" value="info" onclick="info()" />
+	<input type="button" name="warnBtn" value="warn" onclick="warn()" />
+	<input type="button" name="errorBtn" value="error" onclick="error()" />
+</form>
+
+<script src='../common/akme-core.src.js'></script>
+<!--[if lt IE 10]><script src='../common/fix-ie9.js'></script><![endif]-->
+<script src='../common/console-sender.js'></script>
+<script>/*<![CDATA[*/
+//
+
+akme.onContent(function(ev){
+	console.remoteURL = "/akme-js/log/console";
+	//console.debug("console.debug ",2,new Date(),{debug:2}); // MSIE10 has no console.debug
+	log(); info(); warn(); error();
+});
+
+function log(){ console.log("console.log ",1,new Date(),{log:1}); }
+function info(){ console.info("console.info ",3,new Date(),{info:3}); }
+function warn(){ console.warn("console.warn ",4,new Date(),{warn:4}); }
+function error(){ console.error("console.error ",5,new Date(),{error:5}); }
+
+/*]]>*/</script>
+</body></html>
