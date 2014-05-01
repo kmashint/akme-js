@@ -40,7 +40,7 @@
 	//
 	// public constructor/injector/singleton
 	//
-	self = {
+	var self = {
 			sendTimeout: SEND_TIMEOUT,
 			recvTimeout: RECV_TIMEOUT,
 			checkTimeout: CHECK_TIMEOUT,
