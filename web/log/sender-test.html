@@ -14,7 +14,14 @@ test/console.html
 	<input type="button" name="infoBtn" value="info" onclick="info()" />
 	<input type="button" name="warnBtn" value="warn" onclick="warn()" />
 	<input type="button" name="errorBtn" value="error" onclick="error()" />
+	<input type="button" name="clearBtn" value="clear" onclick="console.akme().clear()" />
+<br/>user: <input type="text" name="user" value="user" onchange="console.akme({remoteUser:this.value});" />
+	pass: <input type="password" name="pass" value="" onchange="console.akme({remotePass:this.value});" />
 </form>
+<br/>Open the console in the browser developer tools to see the interactions. 
+<br/>The X-Debug response header, if enabled, holds a test user/pass.
+<br/>By default only error is sent to the server. 
+<br/>You can change this with console.remoteLevel = "info"; for example.
 
 <script src='../common/akme-core.src.js'></script>
 <!--[if lt IE 10]><script src='../common/fix-ie9.js'></script><![endif]-->
@@ -23,8 +30,16 @@ test/console.html
 //
 
 akme.onContent(function(ev){
-	console.remoteURL = "/akme-js/log/console";
 	//console.debug("console.debug ",2,new Date(),{debug:2}); // MSIE10 has no console.debug
+	var form = document.forms[0];
+	console.akme({
+		remoteURL : "/akme-js/log/console-receiver", // "/akme-js/log/console-receiver";
+		remoteUser : form.user.value,
+		remotePass : form.pass.value,
+		remoteRegExp: null,
+		localRegExp: null 
+	});
+	
 	log(); info(); warn(); error();
 });
 

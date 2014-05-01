@@ -763,7 +763,17 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 		delete this.callbackMap[key];
 		delete this.callbackTime[key];
 	},
-	callAsync : function(frame, headers, content, callbackFnOrOb) {
+	callAsync : function(headers, content, callbackFnOrOb) {
+		// OR older function(frame, headers, content, callbackFnOrOb)
+		var frame;
+		if (headers instanceof Element) {
+		 	frame = arguments[0];
+		 	headers = arguments[1];
+		 	content = arguments[2];
+		 	callbackFnOrOb = arguments[3];
+		} else {
+			frame = document.getElementById(this.id);
+		}
 		var key = this.newCallbackKey();
 		headers["callback"] = this.id+".callbackMap."+key;
 		var self = this; // closure
@@ -809,7 +819,11 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll
 	   			)) deny = false; // allow self both http and https
 		var data = this.parseMessage(ev.data);
 		if (deny) { console.error(this.id+" at "+ location.href +" DENY "+ data.call +" from "+ ev.origin); return; }
-		if (!data.headers.call || typeof this[data.headers.call] !== 'function') return;
+		var callback = data.headers.callback;
+		if (!data.headers.call || typeof this[data.headers.call] !== 'function' || 
+				(callback && callback.substring(0, callback.lastIndexOf(".callbackMap.")) != this.id)) {
+			return;
+		}
 		this[data.headers.call].call(this, data.headers, data.content, ev);
 	},
 	formatMessage : function(headers, content) {
