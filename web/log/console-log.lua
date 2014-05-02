@@ -10,7 +10,9 @@ require "authenticate-shared"
 local USER_LOG_LEVELS = {
 	["user"] = "warn"
 }
-
+local USER_LOG_REGEXP = {
+}
+--	["user"] = "."
 
 -- Handle the request to store browser console logs, expected as a POST of Content-Type: application/json.
 function handle(r)
@@ -46,6 +48,10 @@ function handle(r)
 	local logLevel = r.user and USER_LOG_LEVELS[r.user] or nil
 	if logLevel and logLevel ~= r.headers_in["X-Log-Level"] then
 		r.headers_out["X-Log-Level"] = logLevel
+	end
+	local logRegExp = r.user and USER_LOG_REGEXP[r.user] or nil
+	if logRegExp and logRegExp ~= r.headers_in["X-Log-RegExp"] then
+		r.headers_out["X-Log-RegExp"] = logRegExp
 	end
 	return apache2.OK
 end

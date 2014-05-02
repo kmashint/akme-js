@@ -10,7 +10,16 @@
  * TODO: Only provide Authorization once as a re-try, assuming *_token cookie will handle it thereafter.
  * TODO: If even the AUthorization re-try fails, purge the logs to be sent.
  * TODO: Encapsulate behind a function, console.akme() / console.akme({}) style, but still publish *Local methods.
- * 
+ * 	
+	console.akme({
+		authUser : form.user.value,
+		authPass : form.pass.value,
+		remoteURL : "/akme-js/log/console-receiver",
+		remoteLevel : "error",
+		localLevel : null
+	});
+	// remoteRegExp : null
+
  */
 (function($,console){
 	if (!console || console.logLocal) return; // One-time.
@@ -32,10 +41,11 @@
 		itemType = "console",
 		NAMES = {
 			"localLevel":1,
-			"remoteURL":1,
 			"remoteLevel":1,
 			"remoteAttemptDate":1,
-			"remoteSuccessDate":1 };
+			"remoteSuccessDate":1,
+			"remoteRegExp":1,
+			"remoteUser":1 };
 	
 	//
 	// public constructor/injector/singleton
@@ -48,6 +58,7 @@
 			clear: clear };
 	
 	for (var key in NAMES) self[key] = storage.getItem(itemType, key) || self[key];
+	if (self.remoteRegExp) setRemoteRegExp(self.remoteRegExp);
 	for (var key in LOG_EVENTS) (function(key){
 		console[key+"Local"] = console[key];
 		console[key] = function(){
@@ -61,14 +72,13 @@
 				if (isIE) for (var i=0; i<arguments.length; i++) {
 					if (typeof arguments[i]==="object") arguments[i] = $.formatJSON(arguments[i]);
 				}
-				if (testRegExp(self.localRegExp, arguments)) {
-					result = isIE9 ? console[key+"Local"]($.concat([],arguments)) : console[key+"Local"].apply(console,arguments);
-				}
+				result = isIE9 ? console[key+"Local"]($.concat([],arguments)) : console[key+"Local"].apply(console,arguments);
 			}
 			checkLevel();
 			return result;
 		};
 	})(key);
+console.logLocal("remoteRegExp", self.remoteRegExp)
 
 	// Publish API for console.akme() (getter) and console.akme({remoteURL:"",...}) setter for the singleton.
 	console.akme = function(map) {
@@ -90,7 +100,15 @@
 		return LOG_EVENTS[level] && LOG_EVENTS[key] >= LOG_EVENTS[level];
 	}
 	function testRegExp(re, args) {
-		return ! re || (args.length != 0 && re instanceof RegExp && re.test(args[0]));
+		return ! re || (re instanceof RegExp && (
+				(args instanceof Array && args.length != 0 && re.test(args[0])) ||
+				re.test(args)
+				));
+	}
+	function setRemoteRegExp(re) {
+		if (re==null || re=="") removeSelfAndStore("remoteRegExp");
+		else try { setSelfAndStore("remoteRegExp", re instanceof RegExp ? re : new RegExp(re.replace(/^\/|\/$/g,""))); }
+		catch (er) { setSelfAndStore("remoteRegExp", null); }
 	}
 	
 	function setSelfAndStore(key, val) {
@@ -126,7 +144,7 @@
 	function getTimeIfGreaterThanMillis(millis) {
 		var nowMillis = new Date().getTime();
 		var remoteMillis = self.remoteSuccessDate || self.remoteAttemptDate;
-//console.infoLocal("getTimeIfGreaterThanMillis", nowMillis, remoteMillis, Math.abs(nowMillis-remoteMillis), self.checkTimeout)
+//console.logLocal("getTimeIfGreaterThanMillis", nowMillis, remoteMillis, Math.abs(nowMillis-remoteMillis), self.checkTimeout)
 		return (console.remoteURL && (!remoteMillis || 
 				Math.abs(nowMillis-remoteMillis) >= millis)) ? nowMillis : null;
 	};
@@ -157,7 +175,7 @@
 		}
 		
 		var url = self.remoteURL+"."+worstEvent;
-		var user = self.remoteUser, pass = self.remotePass;
+		var user = self.authUser, pass = self.authPass;
 		var tryCount = 0;
 		trySend();
 		
@@ -193,14 +211,16 @@
 					return;
 				}
 				setSelfAndStore("remoteSuccessDate", new Date().getTime());
-				var logLevel = headers["X-Log-Level"];
-				if (logLevel && LOG_EVENTS[logLevel] >= LOG_EVENTS["log"]) {
-					setSelfAndStore("remoteLevel", logLevel);
-				}
-				logLevel = headers["X-Log-Local-Level"];
+				var logLevel = headers["X-Log-Local-Level"];
 				if (logLevel && LOG_EVENTS[logLevel] >= LOG_EVENTS["log"]) {
 					setSelfAndStore("localLevel", logLevel);
 				}
+				logLevel = headers["X-Log-Level"];
+				if (logLevel && LOG_EVENTS[logLevel] >= LOG_EVENTS["log"]) {
+					setSelfAndStore("remoteLevel", logLevel);
+				}
+				var logRegExp = headers["X-Log-RegExp"];
+				if (logRegExp != null) setRemoteRegExp(logRegExp);
 				console.logLocal("POST "+ url +" response ", 
 					isIE?"\n"+$.formatJSON(headers):headers, 
 					isIE?"\n"+$.formatJSON(content):content);
