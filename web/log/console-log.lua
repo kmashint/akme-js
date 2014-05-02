@@ -49,6 +49,7 @@ function handle(r)
 	if logLevel and logLevel ~= r.headers_in["X-Log-Level"] then
 		r.headers_out["X-Log-Level"] = logLevel
 	end
+	-- Request a specific log RegExp filter for a user if configured and different.
 	local logRegExp = r.user and USER_LOG_REGEXP[r.user] or nil
 	if logRegExp and logRegExp ~= r.headers_in["X-Log-RegExp"] then
 		r.headers_out["X-Log-RegExp"] = logRegExp

@@ -187,8 +187,9 @@ console.logLocal("remoteRegExp", self.remoteRegExp)
 			// MSIE10+HTML5 has Base64 btoa (to ASCII) and atob (to Binary) and use library to cover older browsers.
 			var headers = {
 				"Content-Type": MIME_TYPE,
-				"X-Log-Level": self.remoteLevel || "",
-				"X-Log-Local-Level": self.localLevel || ""};
+				"X-Log-Level": self.remoteLevel || ""};
+			if (self.localLevel) headers["X-Log-Local-Level"] = self.localLevel;
+			if (self.removeRegExp) headers["X-Log-RegExp"] = self.removeRegExp;
 			if (tryCount==2 || !(self.remoteSuccessDate || self.remoteAttemptDate) ||
 					typeof getTimeIfGreaterThanMillis(self.checkTimeout) == "number") {
 				headers["Authorization"] = "Basic "+ btoa(user+":"+pass);
