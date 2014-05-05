@@ -12,7 +12,7 @@ local timeoutSecs = 65*60
 local refreshSecs = timeoutSecs/ 2
 
 local allowOrigins = {"http://localhost","https://localhost"}
-for i,v in ipairs(allowOrigins) do allowOrigins[v] = i end
+for i = 1, #allowOrigins do allowOrigins[allowOrigins[i]] = i end
 
 -- function handle(r) authenticate(r) end
 

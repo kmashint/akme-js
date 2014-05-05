@@ -1,4 +1,4 @@
-// console-sender.js - send console.log/info/warn/error events to console.remoteURL
+// console-sender.js - send console.log/info/warn/error events to a remoteURL
 //
 
 /**
@@ -62,7 +62,7 @@
 	for (var key in LOG_EVENTS) (function(key){
 		console[key+"Local"] = console[key];
 		console[key] = function(){
-			if (self.remoteURL && testLevel(self.remoteLevel, key)) {
+			if (self.remoteURL && testLevel(self.remoteLevel, key) && (!self.remoteUser || self.remoteUser==self.authUser)) {
 				if (testRegExp(self.remoteRegExp, arguments)) {
 					defer.apply(undefined,$.concat([key],arguments));
 				}
@@ -78,7 +78,7 @@
 			return result;
 		};
 	})(key);
-console.logLocal("remoteRegExp", self.remoteRegExp)
+//console.logLocal("remoteRegExp", self.remoteRegExp)
 
 	// Publish API for console.akme() (getter) and console.akme({remoteURL:"",...}) setter for the singleton.
 	console.akme = function(map) {
@@ -134,6 +134,7 @@ console.logLocal("remoteRegExp", self.remoteRegExp)
 	 * Do this initially and then every 15 minutes or similarly configurable upon console events/calls.
 	 */
 	function checkLevel() {
+		if (timer) return; // Already queued to call server.
 		var nowMillis = getTimeIfGreaterThanMillis(self.checkTimeout);
 		if (typeof nowMillis === "number") defer("check",nowMillis);
 	};
