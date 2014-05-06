@@ -20,12 +20,6 @@ for i = 1, #allowOrigins do allowOrigins[allowOrigins[i]] = i end
 function authenticate(r)
 debug(r)
 	local username, password = parseAuth(r)
-    if not (username) and "POST" == r.method then
-    	args = r:parsebody()
-       	username = args["j_username"]
-       	password = args["j_password"]
-	end
-
 	local cookie, pos = r:getcookie(cookieName), -1
 	local hasCookie = cookie ~= nil
 	if not (username) and hasCookie then
