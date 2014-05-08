@@ -3,7 +3,12 @@
  e.g. where the :password is the UTC_millis:MD5_hash_of_(username:millis:secret).
  username=j_keith.mashinter&j_password=1257629271921:157a7437ef7ce274754d24f0e655a225
  fw_token=keith.mashinter:1257629271921:157a7437ef7ce274754d24f0e655a225
+ 
+ Careful with MSIE and P3P:
+ http://stackoverflow.com/questions/999534/ie-p3p-iframe-and-blocked-cookies-works-until-page-host-page-has-personal-inf
 ]]
+
+require "apache2"
 
 local secret, secretPast = "foobar", nil
 local cookieName = "akme_token"
@@ -11,7 +16,9 @@ local keepSecure = false
 local timeoutSecs = 65*60
 local refreshSecs = timeoutSecs/ 2
 
-local allowOrigins = {"http://localhost","https://localhost"}
+local p3pValue = 'CP="See http://www.w3.org/P3P/"'
+local allowOrigins = {
+	"http://localhost","https://localhost"}
 for i = 1, #allowOrigins do allowOrigins[allowOrigins[i]] = i end
 
 -- function handle(r) authenticate(r) end
@@ -31,7 +38,7 @@ debug(r)
 		end
 	end
 
-	local contextPathOrRoot = string.len(r.context_prefix) ~= 0 and r.context_prefix or "/"
+	local contextPathOrRoot = string.len(r.context_prefix) ~= 0 and r.context_prefix or '/'
 
 	-- Lua os.time() is to seconds but typically timestamps are millis.
   	local now, cooked = os.time(), (hasCookie and username ~= nil and password ~= nil)
@@ -74,6 +81,7 @@ debug(r)
 					  secure = r.is_https and keepSecure,
 					  httponly = true
 					})
+				addPrivacyIfRequired(r)
 			end
 	        -- Finally set the Principal username on the request.
 			r.user = username
@@ -91,6 +99,7 @@ debug(r)
 				  secure = i==0,
 				  httponly = true
 				})
+			addPrivacyIfRequired(r)
 		end end
 		--r.user = nil
 		return 401
@@ -116,13 +125,23 @@ end
 
 -- Parse the Authorization header into a username and a password.
 function parseAuth(r)
-	local auth, user, pass = r.headers_in['Authorization'], nil, nil
+	local auth, user, pass = r.headers_in["Authorization"], nil, nil
 	if auth and auth:len() > 0 then
 		auth = r:base64_decode(auth:sub(7))
 		user, pass = auth:match("([^:]+)%:(%S*)")
     end
     return user, pass
 end
+
+
+-- Add defunct P3P header for Microsoft browsers although others ignore.
+function addPrivacyIfRequired(r)
+	local agent = r.headers_in["User-Agent"]
+	if string.find(agent," Trident/") >= 1 and not r.err_headers_out["P3P"] then
+		r.err_headers_out["P3P"] = p3pValue
+	end
+end
+
 
 -- r.notes["1"] = tostring( username ); debug(r)
 function debug(r)
