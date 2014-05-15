@@ -1,3 +1,4 @@
+-- authenticate-shared.lua
 --[[
  Handle authentication through a shared secret and message digest/hash.
  e.g. where the :password is the UTC_millis:MD5_hash_of_(username:millis:secret).
