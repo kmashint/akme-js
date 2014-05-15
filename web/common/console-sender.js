@@ -79,7 +79,7 @@
 			return result;
 		};
 	})(key);
-//console.logLocal("remoteRegExp", self.remoteRegExp)
+//console.logLocal("remoteRegExp ", self.remoteRegExp)
 
 	// Publish API for console.akme() (getter) and console.akme({remoteURL:"",...}) setter for the singleton.
 	console.akme = function(map) {
