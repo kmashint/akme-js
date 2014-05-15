@@ -15,7 +15,7 @@ function handle(r)
 	-- r.headers_in["X-Requested-With"] == "XMLHttpRequest"
 	local args = r:parseargs()
 	r.notes["date"] = args["date"] or ""
-	r.notes["time"] = args["time"] or "12"
+	r.notes["time"] = args["time"] or "14"
 	r.notes["user"] = args["user"] or ""
 
 	headers(r)
