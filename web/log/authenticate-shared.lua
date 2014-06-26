@@ -25,7 +25,7 @@ for i = 1, #allowOrigins do allowOrigins[allowOrigins[i]] = i end
 
 -- If including in another script.
 function authenticate(r)
-debug(r)
+r.notes["1"]= r.context_prefix; debug(r)
 	local username, password = parseAuth(r)
 	local cookie, pos = r:getcookie(cookieName), -1
 	local hasCookie = cookie ~= nil
@@ -73,11 +73,11 @@ debug(r)
 			if (not cooked) then
             	-- Set session/memory Cookies with username and password.
 				value = r:escape(username..":"..password)
-				r:setcookie({
+				setCookie(r,{
 					  key = cookieName,
 					  value = value,
-					  domain = nil,
-					  path = r.context_prefix,
+					  -- domain = nil,
+					  path = contextPathOrRoot,
 					  secure = r.is_https and keepSecure,
 					  httponly = true
 					})
@@ -91,11 +91,11 @@ debug(r)
     if (not validated) then 
 		if (hasCookie) then for i = 0,1 do 
 			-- Remove related Secure and non-Secure Cookies.
-			r:setcookie({
+			setCookie(r,{
 				  key = cookieName,
 				  value = "",
 				  expires = 1, -- "Thu, 01 Jan 1970 00:00:01 GMT", 1 to delete, zero means session cookie
-				  path = r.context_prefix,
+				  path = contextPathOrRoot,
 				  secure = i==0,
 				  httponly = true
 				})
@@ -140,6 +140,26 @@ function addPrivacyIfRequired(r)
 	if string.find(agent," Trident/") >= 1 and not r.err_headers_out["P3P"] then
 		r.err_headers_out["P3P"] = p3pValue
 	end
+end
+
+
+-- Use this setCookie instead of Apache r:setcookie.
+-- Apache r:setcookie is broken where double-quotes are added to Path
+function setCookie(r,c)
+	local expires = ''
+	if c.expires ~= nil then
+		if type(c.expires) == "number" then expires = '; Expires='.. os.date("!%a, %d %b %Y GMT",c.expires)
+		else expires = '; Expires='.. c.expires
+		end
+	else 
+		expires = ''
+	end
+	
+	r.err_headers_out["Set-Cookie"] = c.key ..'='.. c.value .. expires ..
+		(c.domain ~= nil and '; Domain='.. c.domain or '') ..
+		((c.path ~= nil and c.path) and '; Path='.. c.path or '') ..
+		((c.secure ~= nil and c.secure) and '; Secure' or '') ..
+		((c.httponly ~= nil and c.httponly) and '; HttpOnly')
 end
 
 
