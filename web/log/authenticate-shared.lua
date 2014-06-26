@@ -148,7 +148,7 @@ end
 function setCookie(r,c)
 	local expires = ''
 	if c.expires ~= nil then
-		if type(c.expires) == "number" then expires = '; Expires='.. os.date("!%a, %d %b %Y GMT",c.expires)
+		if type(c.expires) == "number" then expires = '; Expires='.. os.date("!%a, %d %b %Y %H:%M:%S GMT",c.expires)
 		else expires = '; Expires='.. c.expires
 		end
 	else 
