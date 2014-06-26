@@ -159,7 +159,7 @@ function setCookie(r,c)
 		(c.domain ~= nil and '; Domain='.. c.domain or '') ..
 		((c.path ~= nil and c.path) and '; Path='.. c.path or '') ..
 		((c.secure ~= nil and c.secure) and '; Secure' or '') ..
-		((c.httponly ~= nil and c.httponly) and '; HttpOnly')
+		((c.httponly ~= nil and c.httponly) and '; HttpOnly' or '')
 end
 
 
