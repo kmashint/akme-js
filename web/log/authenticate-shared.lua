@@ -157,7 +157,7 @@ function setCookie(r,c)
 	
 	r.err_headers_out["Set-Cookie"] = c.key ..'='.. c.value .. expires ..
 		(c.domain ~= nil and '; Domain='.. c.domain or '') ..
-		((c.path ~= nil and c.path) and '; Path='.. c.path or '') ..
+		((c.path ~= nil and string.len(c.path) ~= 0) and '; Path='.. c.path or '') ..
 		((c.secure ~= nil and c.secure) and '; Secure' or '') ..
 		((c.httponly ~= nil and c.httponly) and '; HttpOnly' or '')
 end
