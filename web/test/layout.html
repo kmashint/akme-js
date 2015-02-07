@@ -1,0 +1,95 @@
+<!DOCTYPE html >
+<html><head>
+<meta charset="UTF-8" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store" />
+<meta http-equiv="X-UA-Compatible" content="IE=10" />
+<title>layout-test</title>
+<style>
+
+html {
+  -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+body {
+	margin: 0;
+}
+
+.float-top {
+	position: fixed; /* problems on ipad with zoom and scroll */
+	/*position: -webkit-sticky;*/
+	margin: 0;
+	border: 1px;
+	width: 100%;
+	height: 50px;
+	top: -50px;  /* start off screen */
+	background-color: yellow;
+	opacity: 0.6;
+    filter: alpha(opacity=60);
+	-webkit-transition: -webkit-transform 0.2s ease-out;
+	-webkit-transform: translateZ(0);
+}
+
+</style>
+</head><body>
+<div class="float-top">&nbsp;<form><input type="text"/></form></div>
+<pre>
+top
+<br/>asdf
+<br/>vasd
+<br/>fsa
+<br/>fsa
+<br/>dff
+<br/>asdf
+<br/>asd
+<br/>fsa
+<br/>fsa
+<br/>dff
+<br/>asdf
+<br/>asd
+<br/>fsa
+<br/>fsa
+<br/>dff
+<br/>asdf
+<br/>asd
+<br/>fsa
+<br/>fsa
+<br/>dff
+<br/>bottom 
+</pre>
+<script>
+
+var akme = {
+	copy: function(obj, map) {
+		for (var key in map) if (obj.hasOwnProperty(key)) { obj[key] = map[key]; }
+		return obj;
+	},
+	extend: function(/*function*/ construct, /*object*/ proto) {
+		if (typeof proto === "object") construct.prototype = Object.create(proto);
+		return construct;
+	}
+};
+
+akme.FloatTop = akme.extend(function (elem) {
+	this.elem = elem;
+	this.setTop();
+}, {
+	// Called when it's time for the floater to move.
+	setTop : function () {
+		this.elem.style.top = window.scrollY + 'px';
+	},
+	// Called when the floater menu is dismissed.
+	hideOffScreen : function () {
+		this.elem.style['-webkit-transform'] = 'translateY(0px)';
+	}
+});
+akme.floatTop = new akme.FloatTop(document.querySelector(".float-top"));
+
+// Listen for scroll events on the top level window.
+if (/iPad|iPhone/.test(navigator.userAgent)) window.onscroll = function() {
+	akme.floatTop.setTop();
+};
+
+</script>
+</body></html>

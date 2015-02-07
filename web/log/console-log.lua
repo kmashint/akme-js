@@ -1,6 +1,7 @@
 -- Apache24/lua/console-log.lua
 
-package.path = package.path .. ";D:/_Project/akme-js/web/log/?.lua"
+package.path = package.path .. "D:/_Project/akme-js/web/log/?.lua;"
+--package.cpath = package.cpath .. "D:/_Project/akme-js/web/log/?.dll;"
 
 require "apache2"
 require "io"

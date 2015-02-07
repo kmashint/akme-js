@@ -10,7 +10,7 @@ require "io"
 -- os.date("%G-%V-%u") gives the ISO-8601 Year(####) Week(01-53) Weekday(1-7) by ISO Monday.
 
 
--- Handler request.
+-- Handle request.
 function handle(r)
 	-- r.headers_in["X-Requested-With"] == "XMLHttpRequest"
 	local args = r:parseargs()
@@ -25,6 +25,7 @@ function handle(r)
 	else
 		head(r)
 		body(r)
+		tail(r)
 		return apache2.OK
 	end
 end
@@ -71,7 +72,12 @@ Replay: <input type='checkbox' name='replay' value='1' />
 <div id='log'>
 </div>
 <script src='viewer.js'></script>
-</body></html>]]);
+]]);
+end
+
+
+function tail(r)
+	r:write([[</body></html>]]);
 end
 
 

@@ -2,7 +2,7 @@
 
 var	tridentPos = navigator.userAgent.indexOf(" Trident/"),
 	isIE = tridentPos != -1,
-	isIE9 = / Trident\/[45]\./.test(navigator.userAgent.substring(tridentPos,tridentPos+11));
+	isIE9 = isIE && / Trident\/[45]\./.test(navigator.userAgent.substring(tridentPos,tridentPos+11));
 
 window.addEventListener("DOMContentLoaded", function(ev){
 	
@@ -24,7 +24,8 @@ function findLines(elem) {
 	function receive(xhr) {
 		if (xhr.readyState !== 4) return;
 		if (!xhr.status == 200) console.warn(xhr.status, " "+params.join(""));
-		var type = xhr.getResponseHeader("Content-Type"), content;
+		var type = xhr.getResponseHeader("Content-Type"), 
+			content = null;
 		if (/^application\/json/.test(type)) {
 			//try { content = JSON.parse(xhr.responseText); }
 			//catch (er) 

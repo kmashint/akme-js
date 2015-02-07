@@ -4,7 +4,7 @@
 /**
  * Buffer console.log/info/warn/error and send remotely if so configured.
  * If remoteURL is configured only error level logs will be sent.
- * If remoteLevel is configure only those level logs or higher will be sent {"log":1,"info":3,"warn":4,"error":5}.
+ * If remoteLevel is configured only those logs or higher will be sent {"log":1,"debug":2,"info":3,"warn":4,"error":5}.
  * MSIE/Trident, even 10, does not support console.debug.
  * 
  * TODO: Only provide Authorization once as a re-try, assuming *_token cookie will handle it thereafter.
@@ -22,13 +22,14 @@
 
  */
 (function($,console){
-	if (!console || console.logLocal) return; // One-time.
+	if (!console || console.akme) return; // One-time.
+	if (!console.debug && console.log) console.debug = console.log;
 
 	//
 	// private closure variables 
 	//
-	var	//"debug":2, //console.debug not in MSIE10
-		LOG_EVENTS = {"log":1,"info":3,"warn":4,"error":5}, 
+	var	//"debug":2, // console.debug not in MSIE10 ? alias to console.log. 
+		LOG_EVENTS = {"log":1,"debug":2,"info":3,"warn":4,"error":5}, 
 		SEND_TIMEOUT = 5*1000,
 		RECV_TIMEOUT = 45*1000,
 		CHECK_TIMEOUT = 15*60*1000,

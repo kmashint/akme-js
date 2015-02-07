@@ -25,7 +25,7 @@ for i = 1, #allowOrigins do allowOrigins[allowOrigins[i]] = i end
 
 -- If including in another script.
 function authenticate(r)
-r.notes["1"]= r.context_prefix; debug(r)
+r.notes["1"] = r.context_prefix; debug(r)
 	local username, password = parseAuth(r)
 	local cookie, pos = r:getcookie(cookieName), -1
 	local hasCookie = cookie ~= nil
@@ -137,7 +137,8 @@ end
 -- Add defunct P3P header for Microsoft browsers although others ignore.
 function addPrivacyIfRequired(r)
 	local agent = r.headers_in["User-Agent"]
-	if string.find(agent," Trident/") >= 1 and not r.err_headers_out["P3P"] then
+	local pos = string.find(agent," Trident/")
+	if pos and pos >= 1 and not r.err_headers_out["P3P"] then
 		r.err_headers_out["P3P"] = p3pValue
 	end
 end
