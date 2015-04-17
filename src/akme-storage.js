@@ -195,7 +195,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 	size : function() { this.length = sessionStorage.length; return this.length; },
 	key : function(idx) { return sessionStorage.key(idx); },
 	getItem : function(key) { return sessionStorage.getItem(key); },
-	setItem : function(key, value) { sessionStorage.setItem(key, value); this.length = window.sessionStorage.length; },
-	removeItem : function(key) { sessionStorage.removeItem(key); this.length = window.sessionStorage.length; },
-	clear : function() { sessionStorage.clear(); this.length = window.sessionStorage.length; }
+	setItem : function(key, value) { sessionStorage.setItem(key, value); this.length = sessionStorage.length; },
+	removeItem : function(key) { sessionStorage.removeItem(key); this.length = sessionStorage.length; },
+	clear : function() { sessionStorage.clear(); this.length = sessionStorage.length; }
 });

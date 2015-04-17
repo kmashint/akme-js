@@ -1,23 +1,26 @@
 // akme-core.js
 // Javascript Types: undefined, null, boolean, number, string, function, or object; Date and Array are typeof object.
-// Javascript typeof works for a function or object but cannot always be trusted, e.g. typeof String(1) is string but typeof new String(1) is object.
+// Javascript typeof works for a function or object but note typeof String(1) is string yet typeof new String(1) is object.
 // instanceof is better, but will not work between frames/windows/js-security-contexts due to different underlying prototypes.
 // This limitation of instanceof is another reason to use postMessage between frames.
 
 // Simple ability to ensure console.log and allow for use of if (console.logEnabled).
 // http://www.tuttoaster.com/learning-javascript-and-dom-with-console/
 // http://www.thecssninja.com/javascript/console
-if (typeof console === "undefined") console = { 
-	log : function(){}, info : function(){}, warn : function(){}, error : function(){}, assert : function(){} 
-};
-if (typeof console.logEnabled === "undefined") console.logEnabled = false;
-
 
 // Add safe (from side-effects) compatibility to built-in JS constructor functions like Object, Function, Array.
 (function(){
-	var ARRAY = Array.prototype,
-		SLICE = Array.prototype.slice;
+	'use strict';
 	
+	var NOOP = function(){},
+		ARRAY = Array.prototype,
+		SLICE = Array.prototype.slice;
+
+	if (typeof console === "undefined") console = { 
+			log : NOOP, info : NOOP, warn : NOOP, error : NOOP, assert : NOOP
+		};
+	if (typeof console.logEnabled === "undefined") console.logEnabled = false;
+
 	/**
 	 * Utility method on functions to return a short version of a dot-delimited constructor name.
 	 * Useful for constructor functions, e.g. with obj.constructor.name as "akme.core.EventSource" 
@@ -719,7 +722,7 @@ if (!this.akme) this.akme = {
 	for (var key in {"concat":1,"every":1,"filter":1,"forEach":1,"indexOf":1,"lastIndexOf":1,"map":1,"reduce":1,"reduceRight":1,"slice":1,"some":1}) {
 		DataTable.prototype[key] = applyArrayMethod(key);
 	}
-	// Note writing, mutating methods: pop, push, reverse, shift, sort, splice, unshift.
+	// Avoid writing, mutating methods: pop, push, reverse, shift, sort, splice, unshift.
 	// Publish the constructor.
 	$.setProperty($.THIS, CLASS, DataTable);
 
@@ -841,7 +844,7 @@ if (!this.akme) this.akme = {
 	}
 	
 	/**
-	 * Get the row at the given index or 
+	 * Get the row at the given index or the current index. 
 	 */
 	function row(idx) {
 		var p = this.PRIVATES(PRIVATES);

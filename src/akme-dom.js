@@ -33,9 +33,7 @@
 			return this.xmldoc;
 		}
 	};
-})(this);
 
-(function(self){
 	// Helper for MSIE, MSIE9.
 	// http://www.erichynds.com/jquery/working-with-xml-jquery-and-javascript/
 	// http://www.vistax64.com/vista-news/284014-domparser-xmlserializer-ie9-beta.html
@@ -43,9 +41,7 @@
 	if (!self.XMLSerializer) self.XMLSerializer = function(){};
 	if (!self.XMLSerializer.prototype.serializeToString || (document.documentMode && document.documentMode == 9)) 
 		self.XMLSerializer.prototype.serializeToString = function(xmlobj) { return xmlobj.xml; };
-})(this);
 
-(function(self){
 	// Use new ActiveXObject("Msxml2.ServerXMLHTTP.6.0") to avoid Access is Denied in HTA.
 	// For Microsoft Scripting in general: try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); }
 	// catch (er) { throw new ReferenceError("This browser does not support XMLHttpRequest."); }

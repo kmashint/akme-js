@@ -131,7 +131,7 @@ akme.copy(akme, {
 		appendInfoToElement : function (elem) {
 			var items = this.items;
 			var a = [];
-			for (var i=0; i<items.length; i++) a[a.length]=(
+			for (var i=0; i<items.length; i++) a.push(
 				(items[i][0] ? items[i][0]+" : " : "") + (i==0 ? items[i][1] : items[i][1]-items[i-1][1])
 				);
 			elem.appendChild(document.createTextNode("{"+a.join(", ")+"}")); 
@@ -346,6 +346,7 @@ if (!akme.form) akme.form = {
 };
 
 
+// TODO: encapsulate with constructor/destructor.
 akme.selectHelper = akme.selectHelper || {
 	timeout : 1500,
 	timestamp : 0,
