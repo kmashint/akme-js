@@ -22,13 +22,13 @@
 
  */
 (function($,console){
-	if (!console || console.akme) return; // One-time.
+	if (!console || console.logLocal) return; // One-time.
 	if (!console.debug && console.log) console.debug = console.log;
 
 	//
 	// private closure variables 
 	//
-	var	//"debug":2, // console.debug not in MSIE10 ? alias to console.log. 
+	var	//"debug":2, // console.debug not in MSIE9/10 ? alias to console.log.
 		LOG_EVENTS = {"log":1,"debug":2,"info":3,"warn":4,"error":5}, 
 		SEND_TIMEOUT = 5*1000,
 		RECV_TIMEOUT = 45*1000,

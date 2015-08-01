@@ -48,8 +48,8 @@ if ( document.documentMode && document.documentMode == 8 ) (function(){
 	    useSetter = !!useSetter;
 		var prpd = Object.getOwnPropertyDescriptor( domConstructor.prototype, originalName );
 		var prpSetGet = {};
-		if ( useGetter ) prpSetGet.get = function () { return prpd.get.call ( this ); };
-		if ( useSetter ) prpSetGet.set = function ( x ) { return prpd.set.call ( this, x ); };
+		if ( useGetter ) prpSetGet.get = function () { return prpd.get.call( this ); };
+		if ( useSetter ) prpSetGet.set = function ( x ) { return prpd.set.call( this, x ); };
 		Object.defineProperty( domConstructor.prototype, attachName, prpSetGet );
 	}
 	
@@ -65,27 +65,27 @@ if ( document.documentMode && document.documentMode == 8 ) (function(){
  * Extension to provide a function whose context is bound to a specific object, part of ECMAScript 5.
  * https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
  */
-if (!Function.prototype.bind) Function.prototype.bind = function (oThis) {  
-      if (typeof this !== "function") {  
-        // closest thing possible to the ECMAScript 5 internal IsCallable function  
+if (!Function.prototype.bind) Function.prototype.bind = function (oThis) {
+    if (typeof this !== "function") {  
+    	// closest thing possible to the ECMAScript 5 internal IsCallable function  
         throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");  
-      }  
+    }  
     
-      var fSlice = Array.prototype.slice,  
-          aArgs = fSlice.call(arguments, 1),   
-          fToBind = this,   
-          fNOP = function () {},  
-          fBound = function () {  
+    var fSlice = Array.prototype.slice,  
+        aArgs = fSlice.call(arguments, 1),   
+        fToBind = this,   
+        fNOP = function () {},  
+        fBound = function () {  
             return fToBind.apply(this instanceof fNOP  
-                                   ? this  
-                                   : oThis || window,  
+                                 ? this  
+                                 : oThis || window,  
                                  aArgs.concat(fSlice.call(arguments)));  
-          };  
+        };  
     
-      fNOP.prototype = this.prototype;  
-      fBound.prototype = new fNOP();  
+    fNOP.prototype = this.prototype;  
+    fBound.prototype = new fNOP();  
     
-      return fBound;  
+    return fBound;  
 };
 
 
@@ -109,7 +109,7 @@ if (!Object.create) Object.create = (function(){
  * This will only work in IE8 if the object.constructor and constructor.prototype have not been changed.
  * https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/getPrototypeOf
  */
- if ( !Object.getPrototypeOf ) {
+if ( !Object.getPrototypeOf ) {
 	// Before Object.getPrototypeOf, there was the non-standard __proto__ but not in IE8.
 	// For IE8, this must fall back to obj.constructor.prototype although that's mutable (but please don't mutate it).
 	if ({}.hasOwnProperty("__proto__")) Object.getPrototypeOf = function(obj){ return obj.__proto__; };
@@ -119,24 +119,23 @@ if (!Object.create) Object.create = (function(){
  * Add Object.keys() if not available that returns an Array of the hasOwnProperty keys of the given object.
  * https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
  */
-if (!Object.keys) {
-  Object.keys = (function () {
-    var hasOwnProperty = Object.prototype.hasOwnProperty,
-        hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString'),
-        dontEnums = [
-          'toString',
-          'toLocaleString',
-          'valueOf',
-          'hasOwnProperty',
-          'isPrototypeOf',
-          'propertyIsEnumerable',
-          'constructor'
-        ],
-        dontEnumsLength = dontEnums.length;
-
-    return function (obj) {
-      if (typeof obj !== 'object' && typeof obj !== 'function' || obj === null) throw new TypeError('Object.keys called on non-object');
-
+if (!Object.keys) Object.keys = (function(){
+	var hasOwnProperty = Object.prototype.hasOwnProperty,
+	    hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString'),
+	    dontEnums = [
+	      'toString',
+	      'toLocaleString',
+	      'valueOf',
+	      'hasOwnProperty',
+	      'isPrototypeOf',
+	      'propertyIsEnumerable',
+	      'constructor'
+	    ],
+	    dontEnumsLength = dontEnums.length;
+	
+	return function (obj) {
+	  if (typeof obj !== 'object' && typeof obj !== 'function' || obj === null) throw new TypeError('Object.keys called on non-object');
+	
       var result = [];
 
       for (var prop in obj) {
@@ -150,8 +149,8 @@ if (!Object.keys) {
       }
       return result;
     };
-  })();
-};
+})();
+
 
 
 if (!Array.indexOf) Array.indexOf = (Array.prototype.indexOf) ? 

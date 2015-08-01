@@ -17,11 +17,11 @@
 		ARRAY = Array.prototype,
 		SLICE = Array.prototype.slice;
 
-	if (typeof console === "undefined") console = { 
-			log : NOOP, info : NOOP, warn : NOOP, error : NOOP, assert : NOOP
+	if (typeof console === "undefined") console = {
+			log: NOOP, debug: NOOP, info: NOOP, warn: NOOP, error: NOOP, assert: NOOP
 		};
 	if (typeof console.logEnabled === "undefined") console.logEnabled = false;
-
+	
 	/**
 	 * Utility method on functions to return a short version of a dot-delimited constructor name.
 	 * Useful for constructor functions, e.g. with obj.constructor.name as "akme.core.EventSource" 
@@ -71,15 +71,6 @@
 		return v;
 	};
 
-	//
-	// Cross-reference JS 1.5 Array methods against the JS 1.3 Array constructor for backwards compatibility.
-	//
-	for (var key in {"indexOf":1,"lastIndexOf":1,"every":1,"filter":1,"forEach":1,"map":1,"some":1,"reduce":1,"reduceRight":1}){
-		(function(key) {
-			if (!Array[key]) Array[key] = function(ary) { return ARRAY[key].apply(ary, SLICE.call(arguments,1)); }; 
-		})(key);
-	}
-
 	/**
 	 * Perform a binary search of an array for an object assuming the array is already sorted.
 	 */
@@ -91,6 +82,16 @@
 	    }
 	    return (u == -2) ? m : -1;
 	};
+
+	//
+	// Cross-reference JS 1.5 Array methods against the JS 1.3 Array constructor for backwards compatibility.
+	//
+	for (var key in {"indexOf":1,"lastIndexOf":1,"every":1,"filter":1,"forEach":1,"map":1,"some":1,"reduce":1,"reduceRight":1}){
+		(function(key) {
+			if (!Array[key]) Array[key] = function(ary) { return ARRAY[key].apply(ary, SLICE.call(arguments,1)); }; 
+		})(key);
+	}
+
 })();
 
 
@@ -103,6 +104,9 @@ if (!this.akme) this.akme = {
 	PRINTABLE_EXCLUDE_REGEXP : /[^\x20-\x7e\xc0-\xff]/g,
 	MILLIS_IN_HOUR : 60*60000,
 	MILLIS_IN_DAY : 24*60*60000,
+	
+	noop: function(){},
+	slice : Array.prototype.slice,
 
 	/**
 	 * Check if the object is not undefined (primitive) and not null (object).
@@ -111,7 +115,7 @@ if (!this.akme) this.akme = {
 	/**
 	 * Check if the object is instanceof Array (object, there is no typeof array primitive).
 	 */
-	isArray : function(x) { return x instanceof Array; },
+	isArray : Array.isArray || function(x) { return x instanceof Array; },
 	/**
 	 * Check if the object is typeof boolean (primitive) or instanceof Boolean (object).
 	 */
@@ -201,6 +205,20 @@ if (!this.akme) this.akme = {
 		if (typeof valName != 'undefined') for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i][valName];
 		else for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i];
 		return obj;
+	},
+	/**
+	 * Convert an array-like object into an actual Array, with optional map function to convert values.
+	 * This is similar to Array.from() in ES6 but does not support iterables.
+	 * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
+	 */
+	copyArray : function (obj, /* optional function(val, key, obj) */ mapFcn, /* optional */ thisArg) {
+		var i, len = obj.length || 0, ary = new Array(len);
+		if (typeof mapFcn === "function") {
+			for (i=0; i<len; i++) ary[i] = mapFcn.call(thisArg, obj[i], i, obj);
+		} else {
+			for (i=0; i<len; i++) ary[i] = obj[i];
+		}
+		return ary;
 	},
 	/**
 	 * Append the keys in the map to the given array.
@@ -311,11 +329,11 @@ if (!this.akme) this.akme = {
 	/**
 	 * Helper to invoke a callback function or {handleEvent:function(ev){...}}.
 	 */
-	handleEvent : function (fnOrHandleEventOb) {
-		if (!fnOrHandleEventOb) return;
-		var args = Array.prototype.slice.call(arguments, 1);
-		if (typeof fnOrHandleEventOb === "function") fnOrHandleEventOb.apply(undefined, args);
-		else fnOrHandleEventOb.handleEvent.apply(fnOrHandleEventOb, args);
+	handleEvent : function (evHandler) {
+		if (!evHandler) return;
+		var args = this.slice.call(arguments, 1);
+		if (typeof evHandler === "function") evHandler.apply(undefined, args);
+		else evHandler.handleEvent.apply(evHandler, args);
 	},
 	/** 
 	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.
@@ -1421,6 +1439,17 @@ if (!this.akme) this.akme = {
 // akme-dom.js
 
 (function(self){
+
+	akme.copyAll(akme, {
+		isIE8 : "documentMode" in document && document.documentMode === 8,
+		isW3C : "addEventListener" in window
+	});
+    if (!(akme.isW3C || akme.isIE8) || !window.postMessage || !window.XMLHttpRequest) {
+        console.error(
+            "This browser is unsupported, it must be MSIE 8 or support HTML 5 with postMessage and XMLHttpRequest."
+            );
+    }
+	
 	// IE8 and earlier do not support DOMParser directly.
 	// http://www.w3schools.com/Xml/xml_parser.asp
 	// http://www.w3schools.com/dom/dom_errors_crossbrowser.asp
@@ -1474,39 +1503,73 @@ if (!this.akme) this.akme = {
 
 akme.copyAll(this.akme, {
 	_html5 : null,
-	// IE8 documentMode or below
-	isIE8 : "documentMode" in document && document.documentMode < 9,
-	// W3C support
-	isW3C : "addEventListener" in window,
-	
-	onEvent : function (elem, evnt, fnOrHandleEvent) {
-		if ("click" === evnt && window.Touch && this.onEventTouch) this.onEventTouch(elem, fnOrHandleEvent);
-		else if (this.isW3C) elem.addEventListener(evnt, fnOrHandleEvent, false);
-		else elem.attachEvent("on"+evnt, typeof fnOrHandleEvent.handleEvent === "function" ? this.fixHandleEvent(fnOrHandleEvent).handleEvent : fnOrHandleEvent);
-	},
-	onContent : function (fnOrHandleEvent) {
-		var elem = document;
-		var evnt = "DOMContentLoaded";
-		if (this.isW3C) elem.addEventListener(evnt, fnOrHandleEvent, false);
-		else {
-			// http://unixpapa.com/js/dyna.html
-			if (notComplete()) elem.attachEvent("onreadystatechange", notComplete);
-			function notComplete(ev) {
-				//if (console) console.log(elem, " readyState ", elem.readyState, " ev ", ev, " type ", ev.type);
-				if ("loaded"!=elem.readyState && "complete"!=elem.readyState) return true;
-				else {
-					if (typeof fnOrHandleEvent === "function") fnOrHandleEvent.call(elem, {type:evnt});
-					else fnOrHandleEvent.handleEvent.call(fnOrHandleEvent, {type:evnt});
+	onContent : function (evCallback) {
+		console.log("onContent from ", location.href)
+		var self = this, elem = document, type = "DOMContentLoaded";
+		// Includes special handling to emulate DOMContentLoaded in MSIE 8.
+		if (!contentLoaded()) {
+			if (self.isW3C) {
+				elem.addEventListener(type, contentLoaded, false);
+				window.addEventListener("load", contentLoaded, false);
+			} else {
+				elem.attachEvent("onreadystatechange", contentLoaded);
+				window.attachEvent("onload", contentLoaded);
+			}
+		}
+		function contentLoaded(ev) {
+			// See https://developer.mozilla.org/en-US/docs/Web/API/Document/readyState
+			// Some documents may only get to readyState interactive, not complete, e.g. iframes.
+			// Note checks for premature IE interactive state further below.
+			//console.log("contentLoaded", location.href, " readyState ", elem && elem.readyState, " ev ", ev);
+			if ((!ev || ev.type !== "load") && !/interactive|complete/.test(elem.readyState)) {
+				return false;
+			}
+			if (self.isW3C) {
+				elem.removeEventListener(type, contentLoaded, false);
+				window.removeEventListener("load", contentLoaded);
+				contentReady(ev);
+			} else {
+				elem.detachEvent("onreadystatechange", contentLoaded);
+				window.detachEvent("onload", contentLoaded);
+				// DOMContentLoaded approximation that uses a doScroll,
+				// as found by Diego Perini: http://javascript.nwbox.com/IEContentLoaded/.
+				// Modified by other RequireJS contributors, including jdalton.
+				// See https://github.com/requirejs/domReady/blob/master/domReady.js
+				var isTop = false, testDiv = document.createElement('div'), intervalId;
+				try {
+					isTop = window.frameElement === null;
+				} catch (er) {}
+				if (testDiv.doScroll && isTop && window.external) {
+					intervalId = setInterval(function () {
+						try {
+							testDiv.doScroll();
+							clearInterval(intervalId);
+							contentReady(ev);
+						} catch (er) {}
+					}, 50);
+				} else {
+					contentReady(ev);
 				}
-			};
+			}
+		}
+		function contentReady(ev) {
+			// Handle immediately after the next IO cycle, once the DOM content is ready.
+			setTimeout(function(){
+				self.handleEvent(evCallback, {type:type, target:elem});
+			});
 		}
 	},
-	onLoad : function (fnOrHandleEvent) { this.onEvent(window, "load", fnOrHandleEvent); },
-	onUnload : function (fnOrHandleEvent) { this.onEvent(window, "unload", fnOrHandleEvent); },
-	unEvent : function (elem, evnt, fnOrHandleEvent) {
-		if ("click" === evnt && window.Touch && this.unEventTouch) this.unEventTouch(elem, fnOrHandleEvent);
-		else if (this.isW3C) elem.removeEventListener(evnt, fnOrHandleEvent, false);
-		else elem.detachEvent("on"+evnt, typeof fnOrHandleEvent.handleEvent === "function" ? fnOrHandleEvent.handleEvent : fnOrHandleEvent);
+ 	onLoad : function (evCallback) { this.onEvent(window, "load", evCallback); },
+	onUnload : function (evCallback) { this.onEvent(window, "unload", evCallback); },
+	onEvent : function (elem, evnt, evCallback) {
+		if ("click" === evnt && window.Touch && this.onEventTouch) this.onEventTouch(elem, evCallback);
+		else if (this.isW3C) elem.addEventListener(evnt, evCallback, false);
+		else elem.attachEvent("on"+evnt, typeof evCallback.handleEvent === "function" ? this.fixHandleEvent(evCallback).handleEvent : evCallback);
+	},
+	unEvent : function (elem, evnt, evCallback) {
+		if ("click" === evnt && window.Touch && this.unEventTouch) this.unEventTouch(elem, evCallback);
+		else if (this.isW3C) elem.removeEventListener(evnt, evCallback, false);
+		else elem.detachEvent("on"+evnt, typeof evCallback.handleEvent === "function" ? evCallback.handleEvent : evCallback);
 	},
 	/** 
 	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.
@@ -1566,7 +1629,6 @@ akme.copyAll(this.akme, {
 		ev.preventDefault();
 		ev.stopPropagation();
 	},
-	noop: function(){},
 	getBaseHref : function () {
 		var a = document.getElementsByTagName("base");
 		return a.length != 0 ? a[0]["href"] : "";

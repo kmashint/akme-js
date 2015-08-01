@@ -16,11 +16,11 @@
 		ARRAY = Array.prototype,
 		SLICE = Array.prototype.slice;
 
-	if (typeof console === "undefined") console = { 
-			log : NOOP, info : NOOP, warn : NOOP, error : NOOP, assert : NOOP
+	if (typeof console === "undefined") console = {
+			log: NOOP, debug: NOOP, info: NOOP, warn: NOOP, error: NOOP, assert: NOOP
 		};
 	if (typeof console.logEnabled === "undefined") console.logEnabled = false;
-
+	
 	/**
 	 * Utility method on functions to return a short version of a dot-delimited constructor name.
 	 * Useful for constructor functions, e.g. with obj.constructor.name as "akme.core.EventSource" 
@@ -70,15 +70,6 @@
 		return v;
 	};
 
-	//
-	// Cross-reference JS 1.5 Array methods against the JS 1.3 Array constructor for backwards compatibility.
-	//
-	for (var key in {"indexOf":1,"lastIndexOf":1,"every":1,"filter":1,"forEach":1,"map":1,"some":1,"reduce":1,"reduceRight":1}){
-		(function(key) {
-			if (!Array[key]) Array[key] = function(ary) { return ARRAY[key].apply(ary, SLICE.call(arguments,1)); }; 
-		})(key);
-	}
-
 	/**
 	 * Perform a binary search of an array for an object assuming the array is already sorted.
 	 */
@@ -90,6 +81,16 @@
 	    }
 	    return (u == -2) ? m : -1;
 	};
+
+	//
+	// Cross-reference JS 1.5 Array methods against the JS 1.3 Array constructor for backwards compatibility.
+	//
+	for (var key in {"indexOf":1,"lastIndexOf":1,"every":1,"filter":1,"forEach":1,"map":1,"some":1,"reduce":1,"reduceRight":1}){
+		(function(key) {
+			if (!Array[key]) Array[key] = function(ary) { return ARRAY[key].apply(ary, SLICE.call(arguments,1)); }; 
+		})(key);
+	}
+
 })();
 
 
@@ -102,6 +103,9 @@ if (!this.akme) this.akme = {
 	PRINTABLE_EXCLUDE_REGEXP : /[^\x20-\x7e\xc0-\xff]/g,
 	MILLIS_IN_HOUR : 60*60000,
 	MILLIS_IN_DAY : 24*60*60000,
+	
+	noop: function(){},
+	slice : Array.prototype.slice,
 
 	/**
 	 * Check if the object is not undefined (primitive) and not null (object).
@@ -110,7 +114,7 @@ if (!this.akme) this.akme = {
 	/**
 	 * Check if the object is instanceof Array (object, there is no typeof array primitive).
 	 */
-	isArray : function(x) { return x instanceof Array; },
+	isArray : Array.isArray || function(x) { return x instanceof Array; },
 	/**
 	 * Check if the object is typeof boolean (primitive) or instanceof Boolean (object).
 	 */
@@ -200,6 +204,20 @@ if (!this.akme) this.akme = {
 		if (typeof valName != 'undefined') for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i][valName];
 		else for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i];
 		return obj;
+	},
+	/**
+	 * Convert an array-like object into an actual Array, with optional map function to convert values.
+	 * This is similar to Array.from() in ES6 but does not support iterables.
+	 * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
+	 */
+	copyArray : function (obj, /* optional function(val, key, obj) */ mapFcn, /* optional */ thisArg) {
+		var i, len = obj.length || 0, ary = new Array(len);
+		if (typeof mapFcn === "function") {
+			for (i=0; i<len; i++) ary[i] = mapFcn.call(thisArg, obj[i], i, obj);
+		} else {
+			for (i=0; i<len; i++) ary[i] = obj[i];
+		}
+		return ary;
 	},
 	/**
 	 * Append the keys in the map to the given array.
@@ -310,11 +328,11 @@ if (!this.akme) this.akme = {
 	/**
 	 * Helper to invoke a callback function or {handleEvent:function(ev){...}}.
 	 */
-	handleEvent : function (fnOrHandleEventOb) {
-		if (!fnOrHandleEventOb) return;
-		var args = Array.prototype.slice.call(arguments, 1);
-		if (typeof fnOrHandleEventOb === "function") fnOrHandleEventOb.apply(undefined, args);
-		else fnOrHandleEventOb.handleEvent.apply(fnOrHandleEventOb, args);
+	handleEvent : function (evHandler) {
+		if (!evHandler) return;
+		var args = this.slice.call(arguments, 1);
+		if (typeof evHandler === "function") evHandler.apply(undefined, args);
+		else evHandler.handleEvent.apply(evHandler, args);
 	},
 	/** 
 	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.

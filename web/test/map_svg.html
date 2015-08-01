@@ -1,0 +1,56 @@
+<!DOCTYPE html >
+<html><head>
+<style>
+body { padding: 0; height: 100%; }
+#map { position: relative; margin: 0 auto; height: 80%; background: lightgray; } 
+#map svg { position: absolute; stroke: blue; fill: gray; } /* fill: #d3d3d3; */
+#map #CA-ON { fill: green; }
+#map #CA-QC { fill: yellow; }
+#map #CA-BC { fill: red; }
+</style>
+</head><body>
+
+<svg id="map" ></svg>
+
+<br/>Note px = pt/0.75.
+<br/><a href="http://stackoverflow.com/questions/9566792/scale-svg-to-container-without-mask-crop">Scale SVG to Container.</a>
+<br/><a href="http://www.seowarp.com/blog/2011/06/svg-scaling-problems-in-ie9-and-other-browsers/">SVG Resizing</a>
+<script>
+
+function fitSvgInsideElement(svg,elem) { // Not needed.  viewBox not viewPort.
+	var srect = svg.getAttribute("viewBox").split(" "),
+		erect = elem.getBoundingClientRect(),
+		widthR = erect.width / Number(srect[2]),
+		heightR = erect.height / Number(srect[3]),
+		g = svg.querySelector("g"),
+		s, x = 0, y = 0;
+	if (widthR < heightR && widthR < 1.0) { s = widthR; }
+	else if (heightR < widthR && heightR < 1.0) { s = heightR; }
+	if (s) {
+		if (!g.hasAttribute("transformOrig")) g.setAttribute("transformOrig",g.getAttribute("transform"));
+		g.setAttribute("transform", "scale("+ s +") translate("+ x +","+ y +") "+ g.getAttribute("transformOrig"));
+	}
+}
+
+window.onload = function(ev){
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", "map_CA.svg", true);
+	xhr.onreadystatechange = function(ev) { //console.log(ev);
+		if (xhr.readyState != 4) return; //console.log(xhr.responseXML);		
+		var svg = document.importNode(xhr.responseXML.documentElement, true);
+		var map = document.getElementById("map");
+		map.appendChild(svg);
+	}
+	xhr.send();
+	
+	//window.addEventListener("resize", onResize, false);
+	function onResize(ev) {
+		var map = document.getElementById("map"),
+			svg = map.querySelector("svg");
+		fitSvgInsideElement(svg,map);
+	}
+};
+
+</script>
+
+</body></html>

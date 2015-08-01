@@ -1,6 +1,17 @@
 // akme-dom.js
 
 (function(self){
+
+	akme.copyAll(akme, {
+		isIE8 : "documentMode" in document && document.documentMode === 8,
+		isW3C : "addEventListener" in window
+	});
+    if (!(akme.isW3C || akme.isIE8) || !window.postMessage || !window.XMLHttpRequest) {
+        console.error(
+            "This browser is unsupported, it must be MSIE 8 or support HTML 5 with postMessage and XMLHttpRequest."
+            );
+    }
+	
 	// IE8 and earlier do not support DOMParser directly.
 	// http://www.w3schools.com/Xml/xml_parser.asp
 	// http://www.w3schools.com/dom/dom_errors_crossbrowser.asp
@@ -54,39 +65,73 @@
 
 akme.copyAll(this.akme, {
 	_html5 : null,
-	// IE8 documentMode or below
-	isIE8 : "documentMode" in document && document.documentMode < 9,
-	// W3C support
-	isW3C : "addEventListener" in window,
-	
-	onEvent : function (elem, evnt, fnOrHandleEvent) {
-		if ("click" === evnt && window.Touch && this.onEventTouch) this.onEventTouch(elem, fnOrHandleEvent);
-		else if (this.isW3C) elem.addEventListener(evnt, fnOrHandleEvent, false);
-		else elem.attachEvent("on"+evnt, typeof fnOrHandleEvent.handleEvent === "function" ? this.fixHandleEvent(fnOrHandleEvent).handleEvent : fnOrHandleEvent);
-	},
-	onContent : function (fnOrHandleEvent) {
-		var elem = document;
-		var evnt = "DOMContentLoaded";
-		if (this.isW3C) elem.addEventListener(evnt, fnOrHandleEvent, false);
-		else {
-			// http://unixpapa.com/js/dyna.html
-			if (notComplete()) elem.attachEvent("onreadystatechange", notComplete);
-			function notComplete(ev) {
-				//if (console) console.log(elem, " readyState ", elem.readyState, " ev ", ev, " type ", ev.type);
-				if ("loaded"!=elem.readyState && "complete"!=elem.readyState) return true;
-				else {
-					if (typeof fnOrHandleEvent === "function") fnOrHandleEvent.call(elem, {type:evnt});
-					else fnOrHandleEvent.handleEvent.call(fnOrHandleEvent, {type:evnt});
+	onContent : function (evCallback) {
+		console.log("onContent from ", location.href)
+		var self = this, elem = document, type = "DOMContentLoaded";
+		// Includes special handling to emulate DOMContentLoaded in MSIE 8.
+		if (!contentLoaded()) {
+			if (self.isW3C) {
+				elem.addEventListener(type, contentLoaded, false);
+				window.addEventListener("load", contentLoaded, false);
+			} else {
+				elem.attachEvent("onreadystatechange", contentLoaded);
+				window.attachEvent("onload", contentLoaded);
+			}
+		}
+		function contentLoaded(ev) {
+			// See https://developer.mozilla.org/en-US/docs/Web/API/Document/readyState
+			// Some documents may only get to readyState interactive, not complete, e.g. iframes.
+			// Note checks for premature IE interactive state further below.
+			//console.log("contentLoaded", location.href, " readyState ", elem && elem.readyState, " ev ", ev);
+			if ((!ev || ev.type !== "load") && !/interactive|complete/.test(elem.readyState)) {
+				return false;
+			}
+			if (self.isW3C) {
+				elem.removeEventListener(type, contentLoaded, false);
+				window.removeEventListener("load", contentLoaded);
+				contentReady(ev);
+			} else {
+				elem.detachEvent("onreadystatechange", contentLoaded);
+				window.detachEvent("onload", contentLoaded);
+				// DOMContentLoaded approximation that uses a doScroll,
+				// as found by Diego Perini: http://javascript.nwbox.com/IEContentLoaded/.
+				// Modified by other RequireJS contributors, including jdalton.
+				// See https://github.com/requirejs/domReady/blob/master/domReady.js
+				var isTop = false, testDiv = document.createElement('div'), intervalId;
+				try {
+					isTop = window.frameElement === null;
+				} catch (er) {}
+				if (testDiv.doScroll && isTop && window.external) {
+					intervalId = setInterval(function () {
+						try {
+							testDiv.doScroll();
+							clearInterval(intervalId);
+							contentReady(ev);
+						} catch (er) {}
+					}, 50);
+				} else {
+					contentReady(ev);
 				}
-			};
+			}
+		}
+		function contentReady(ev) {
+			// Handle immediately after the next IO cycle, once the DOM content is ready.
+			setTimeout(function(){
+				self.handleEvent(evCallback, {type:type, target:elem});
+			});
 		}
 	},
-	onLoad : function (fnOrHandleEvent) { this.onEvent(window, "load", fnOrHandleEvent); },
-	onUnload : function (fnOrHandleEvent) { this.onEvent(window, "unload", fnOrHandleEvent); },
-	unEvent : function (elem, evnt, fnOrHandleEvent) {
-		if ("click" === evnt && window.Touch && this.unEventTouch) this.unEventTouch(elem, fnOrHandleEvent);
-		else if (this.isW3C) elem.removeEventListener(evnt, fnOrHandleEvent, false);
-		else elem.detachEvent("on"+evnt, typeof fnOrHandleEvent.handleEvent === "function" ? fnOrHandleEvent.handleEvent : fnOrHandleEvent);
+ 	onLoad : function (evCallback) { this.onEvent(window, "load", evCallback); },
+	onUnload : function (evCallback) { this.onEvent(window, "unload", evCallback); },
+	onEvent : function (elem, evnt, evCallback) {
+		if ("click" === evnt && window.Touch && this.onEventTouch) this.onEventTouch(elem, evCallback);
+		else if (this.isW3C) elem.addEventListener(evnt, evCallback, false);
+		else elem.attachEvent("on"+evnt, typeof evCallback.handleEvent === "function" ? this.fixHandleEvent(evCallback).handleEvent : evCallback);
+	},
+	unEvent : function (elem, evnt, evCallback) {
+		if ("click" === evnt && window.Touch && this.unEventTouch) this.unEventTouch(elem, evCallback);
+		else if (this.isW3C) elem.removeEventListener(evnt, evCallback, false);
+		else elem.detachEvent("on"+evnt, typeof evCallback.handleEvent === "function" ? evCallback.handleEvent : evCallback);
 	},
 	/** 
 	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.
@@ -146,7 +191,6 @@ akme.copyAll(this.akme, {
 		ev.preventDefault();
 		ev.stopPropagation();
 	},
-	noop: function(){},
 	getBaseHref : function () {
 		var a = document.getElementsByTagName("base");
 		return a.length != 0 ? a[0]["href"] : "";

@@ -7,7 +7,7 @@ require "apache2"
 require "io"
 require "authenticate-shared"
 
--- Accept remote logs for "log", "info", "warn", "error"; "debug" not supported by MSIE.
+-- Accept remote logs for "log", "debug", "info", "warn", "error".
 local USER_LOG_LEVELS = {
 	["user"] = "warn"
 }

@@ -324,6 +324,13 @@ $(document).ready(function(){
 	});
 	
 	module("akme dom");
+	asyncTest("onContent", function() {
+		expect(1);
+		akme.onContent(function() {
+			ok(true, "document ready");
+		});
+		start();
+	});
 	test("get/setAttributes on DOM Element", function(){
 		var elem = akme.setAttributes(document.createElement("div"), {id:123});
 		var map1 = {id:234};
@@ -467,7 +474,7 @@ $(document).ready(function(){
 	var div = document.createElement("div");
 	akme.copyAll(div, {id: 'raphael'});
 	akme.copyAll(div.style, {width: '615px', height: '175px'});
-	document.body.appendChild(div);	
+	document.body.appendChild(div);
 	var paper = new Raphael("raphael");
 	div.insertBefore(document.createTextNode(div.id), div.firstChild);
 	console.log(" width ", paper.width, " height ", paper.height);
