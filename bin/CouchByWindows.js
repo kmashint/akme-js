@@ -30,7 +30,7 @@ if (!this.AkmeMS) this.AkmeMS = {
 	wsh : new ActiveXObject("WScript.Shell"),
 	wmi : AkmeGetObject("winmgmts://./root/cimv2"),
 	wmiInstancesOf : function(path) { return this.wmi.InstancesOf(path, this.wbemFast); },
-	wmiExecQuery : function(qry) { return this.wmi.ExecQuery(qry, this.wbemFast); },
+	wmiExecQuery : function(qry) { return this.wmi.ExecQuery(qry, this.wbemFast); }
 
 };
 
@@ -255,16 +255,16 @@ function doSubmit(ev) {
 
 akme.CouchCrossOrigin = {
 	doc : null,
-	ok : function(headers) { 
-		return headers.status >= 200 && headers.status < 400; 
+	ok : function(headers) {
+		return headers.status >= 200 && headers.status < 400;
 	},
-	call : function(method, callbackFnOrOb) {
+	call : function(method, evCallback) {
 		var form = document.forms[0];
 		var params = {remote:null, user:null, pass:null};
 		for (var key in params) { params[key] = form.elements[key].value; }
 		params.remote = "https://"+ params.remote;
 		var headers = {"Authorization": "Basic "+ Base64.encode(params.user+":"+params.pass)};
-		return akme.xhr.callAsync(method, params.remote, headers, this.doc, callbackFnOrOb);
+		return akme.xhr.callAsync(method, params.remote, headers, this.doc, evCallback);
 	},
 	info : function(callback) {
 		return this.call("HEAD", callback);
@@ -300,7 +300,7 @@ akme.CouchCrossOrigin = {
 			Accept: application/json
 		*/
 		// !!! But having a AuthSession in the browser to a public CouchDB allows for _all_docs.  End of line.
-		// Still need proxy.jsp, but can be at Rackspace, e.g. cloudant.frameworks.ca, cloudant-test.frameworks.ca.
+		// Still need proxy.jsp, but can be at Rackspace, e.g. cloudant.akme.org, cloudant-test.akme.org.
 		// So no need for cross-origin at cloudant.  The cross-origin would remain on a web server with proxy.jsp.
 		var dir = AkmeMS.fso.GetFolder("CouchByWindows");
 		

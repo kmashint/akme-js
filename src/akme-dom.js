@@ -736,15 +736,17 @@ if (!akme.xhr) akme.xhr = {
 	},
 	
 	callPromiseXHR : function(/*XMLHttpRequest*/ xhr, method, url, headers, content) {
-		var promise = new akme.core.Promise();
-		this.callAsyncXHR(xhr, method, url, headers, content, function(headers,content){
-			if (headers.status >= 400) {
-				promise.reject(headers,content);
-			} else {
-				promise.resolve(headers,content);
-			}
-		});
-		return promise.promise();
+		var self = this, promise = new akme.core.Promise(executor);
+		function executor(resolve, reject) {
+			self.callAsyncXHR(xhr, method, url, headers, content, function(headers,content){
+				if (headers.status >= 400) {
+					reject(headers,content);
+				} else {
+					resolve(headers,content);
+				}
+			});
+		}
+		return promise;
 	}
 	
 };

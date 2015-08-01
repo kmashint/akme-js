@@ -9,11 +9,10 @@
 iframe.postMessage { }
 </style>
 </head><body>
-<script src='index.min.js'></script>
+<script src='index.src.js'></script>
 <script>
 akme.onEvent(window, "DOMContentLoaded", function(ev){
-	function setAttributes(elem, map) { for (var key in map) elem.setAttribute(key, map[key]); return elem; }
-	document.body.appendChild(setAttributes(document.createElement("iframe"), {
+	document.body.appendChild(akme.setAttributes(document.createElement("iframe"), {
 		id: "_session", name: "_session", "class": "postMessage", src: "javascript:void(0)"
 	}));
 	window.messageBroker = new akme.core.MessageBroker(window.name, [

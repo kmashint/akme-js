@@ -258,31 +258,36 @@ $(document).ready(function(){
 
 	module(akme.core.Promise.CLASS);
 	test("basics", function() {
-		expect(10);
+		expect(5);
 		var Promise = akme.core.Promise,
-			promise, promise2, promise3;
+			promise, promise2, promise3,
+			executor = function (resolve,reject) {
+				executor.resolve = resolve; executor.reject = reject;
+			};
 		
-		promise = new Promise();
-		ok( typeof promise.resolve === "function", "maker.resolve should be function" );
-		ok( typeof promise.promise().resolve === "undefined", "maker.resolve should be undefined");
+		promise = new Promise(executor);
+		ok( typeof Promise.resolve === "function", "Promise.resolve (class function) should be function" );
+		ok( typeof promise.resolve === "undefined", "promise.resolve (instance function) should be undefined");
 
-		promise.done(function(){ ok(true, "should be done"); });
-		promise.resolve(); 
-		ok( promise.state() === "resolved", "state should be resolved");
+		executor.resolve(function(){ ok(true, "should be resolved"); });
 		
-		promise = new Promise();
-		promise.reject();
-		promise.fail(function(){ ok(true, "should be fail even when fail registered after reject"); });
-		ok( promise.state() === "rejected", "state should be rejected");
+		promise = new Promise(executor);
+		executor.reject();
+		promise["catch"](function(){ ok(true, "should fail after reject"); });
 		
-		promise = new Promise();
+		promise = new Promise(executor);
 		promise.then(function(){
-			ok(true, "then should be resolved");
+			ok(true, "then should be resolved/fulfilled");
 		}, function(){
-			ok(false, "then should be resolved");
+			ok(false, "then should be resolved/fulfilled");
 		});
-		promise.resolve();
+		executor.resolve();
 
+		promise = new Promise(executor);
+		executor.resolve(1);
+		promise.then(function(){ ok( arguments[0] == 1, "should receive arg 1" ); });
+		
+		/*
 		promise = new Promise();
 		promise2 = new Promise(); // Promise.when, jQuery.when
 		promise3 = Promise.when(promise, promise2).done(function(){
@@ -301,25 +306,24 @@ $(document).ready(function(){
 			ok( true, "when should be rejected" );
 		});
 		promise.reject();
-		
-		promise = new Promise();
-		promise.resolve(1);
-		promise.done(function(){ ok( arguments[0] == 1, "should receive arg 1" ); });
+		*/
 		
 	});
 	asyncTest("async", function() {
-		expect(3);
+		expect(4);
 		var promise;
 		
 		promise = akme.xhr.callPromise("GET", location.href);
-		promise.always(function(headers,content){
+		promise.then(always,always);
+		function always(headers,content){
 			ok( !(this instanceof XMLHttpRequest), "this is NOT an XMLHttpRequest" );
+			ok( (this instanceof akme.core.Promise), "this is an "+akme.core.Promise );
 			if (headers) {
 				ok( headers.status === 200 && headers.statusText === "OK", "status is 200 OK" );
 				ok( headers["Content-Type"] == "text/html", "Content-Type: text/html" );
 			}
 			start();
-		});
+		};
 
 	});
 	

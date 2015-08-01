@@ -6,7 +6,7 @@ if (typeof console === "undefined") console = (document.documentMode && document
 	warn : function(text) { console.log("? "+ text); },
 	error : function(text) { console.log("! "+ text); },
 	assert : function(text) { if (!text) console.log("?! "+ text); }
-} : { 
+} : {
 	log : function() {}, info : function() {}, warn : function() {}, error : function() {}, assert : function() {} 
 };
 if (typeof console.logEnabled === "undefined") console.logEnabled = false;
@@ -28,28 +28,6 @@ if ( !Object.getPrototypeOf ) {
 
 if (!this.akme) this.akme = {
 	THIS : this,
-	onEvent : function (elem, /*String*/ type, /*function*/ fnOrHandleEvent) {
-		if (elem.addEventListener) elem.addEventListener(type, fnOrHandleEvent, false);
-		else if (elem.attachEvent) elem.attachEvent("on"+type, fnOrHandleEvent.handleEvent ? akme.fixHandleEvent(fnOrHandleEvent).handleEvent : fnOrHandleEvent);
-	},
-	fixHandleEvent : function (self) {
-		if (!window.addEventListener && typeof self.handleEvent === "function" && !self.handleEvent_Fixed) {
-			var handleEvent = self.handleEvent;
-			self.handleEvent = function(ev) { handleEvent.call(self, ev); };
-			self.handleEvent_Fixed = true;
-		}
-		return self;
-	},
-	getBaseHref : function() {
-		var a = document.getElementsByTagName("base");
-		return a.length != 0 ? a[0]["href"] : "";
-	},
-	parseJSON : function (text) {
-		return JSON.parse(text);
-	},
-	formatJSON : function (obj) {
-		return JSON.stringify(obj);
-	},
 	copy : function (obj, map, /*boolean*/ all) {
 		if (map === null || typeof map === "undefined") return obj;
 		all = !!all;
@@ -98,6 +76,37 @@ if (!this.akme) this.akme = {
 			else obj[fcnName] = function() { old.apply(this, arguments); fcn.apply(this, arguments); };
 		}
 		else obj[fcnName] = fcn;
+	},
+	getAttributes : function(elem, /*optional-to*/map) {
+		map = map || {}, attrs = elem.attributes;
+		for (var i=0; i<attrs.length; i++) map[attrs[i].name] = elem.getAttribute(attrs[i].name); // getAttribute for symmetry
+		return map;
+	},
+	setAttributes : function(elem, /*required-from*/map) {
+		for (var key in map) elem.setAttribute(key, map[key]);
+		return elem;
+	},
+	onEvent : function (elem, /*String*/ type, /*function*/ evCallback) {
+		if (elem.addEventListener) elem.addEventListener(type, evCallback, false);
+		else if (elem.attachEvent) elem.attachEvent("on"+type, evCallback.handleEvent ? akme.fixHandleEvent(evCallback).handleEvent : evCallback);
+	},
+	fixHandleEvent : function (self) {
+		if (!window.addEventListener && typeof self.handleEvent === "function" && !self.handleEvent_Fixed) {
+			var handleEvent = self.handleEvent;
+			self.handleEvent = function(ev) { handleEvent.call(self, ev); };
+			self.handleEvent_Fixed = true;
+		}
+		return self;
+	},
+	getBaseHref : function() {
+		var a = document.getElementsByTagName("base");
+		return a.length != 0 ? a[0]["href"] : "";
+	},
+	parseJSON : function (text) {
+		return JSON.parse(text);
+	},
+	formatJSON : function (obj) {
+		return JSON.stringify(obj);
 	}
 };
 
@@ -198,7 +207,7 @@ if (!akme.core) { akme.core = {}; akme.base = akme.core; }
 		}
 	}
 
-})(fw,"akme.base.EventSource");
+})(akme,"akme.base.EventSource");
 
 
 /**
@@ -388,7 +397,7 @@ if (!akme.core) { akme.core = {}; akme.base = akme.core; }
 		return result;
 	}
 	
-})(fw,"akme.base.Storage");
+})(akme,"akme.base.Storage");
 
 /**
  * akme.localStorage

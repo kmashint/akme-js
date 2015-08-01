@@ -269,7 +269,7 @@ if (!this.akme) this.akme = {
 	 * Instead of (akme.SuperClass,...) you can also use (new akme.SuperClass(someParams),...)
 	 * and extend will check if it was given a function or object as the first parameter.
 	 * If the constructFn is not provided, an empty function(){} constructor will be used, like extending a singleton:
-	 *   e.g. akme.base.MessageBroker = akme.extend({...object literal prototype...});
+	 *   e.g. akme.core.MessageBroker = akme.extend({...object literal prototype...});
 	 * If typeof constructFn is an object, this will assume reversed arguments (constructFn, superPrototype).
 	 * If needed, refer to the parent constructor function in the constructFn as this.constructor.constructor.
 	 * Javascript functions actually have a constructor property, by default an empty Function.
@@ -998,125 +998,25 @@ if (!this.akme) this.akme = {
 })(akme,"akme.core.EventSource");
 
 
-/**
- * akme.core.Promise
- */
-(function($,CLASS){
-	if ($.getProperty($.THIS,CLASS)) return; // One-time.
-	
-	// jQuery.Deferred() is the private/producer scope.
-	// jQuery.Deferred().promise() is the public/consumer scope.
-	// e.g. jQuery.ready.promise creates on first use a private readyList Deferred and returns readyList.promise(startFn).
-
-	//
-	// Private static declarations / closure
-	//
-	var PRIVATES = {}, // Closure guard for privates.
-		SLICE = Array.prototype.slice,
-		STATE = ["pending","resolved","rejected"], // 0,1,2
-		STATE_ARY = ["partAry","doneAry","failAry"], // 0,1,2
-		ACTION = [
-			// action, listener, state
-			[ "resolve", "done", 1 ],
-			[ "reject", "fail", 2 ],
-			[ "notify", "progress", 0 ]
-		];
-	function applyToArray(ary, self, args, once) { // IE8 cannot apply null or undefined args.
-		for (var i=0; i<ary.length; i++) args ? ary[i].apply(self, args) : ary[i].call(self);
-		if (!!once) ary.length = 0;
-	};
+/* OLD akme.core.Promise code
 	function concatFunctionsAndReturn(p, state, self, fcns) {
 		if (p.state === 0) $.concat(p[STATE_ARY[state]], fcns);
 		else if (p.state === state) applyToArray(fcns, p.self, p.args);
 		return self;
 	};
 	
-	//
-	// Initialise constructor or singleton instance and public functions
-	//
-	
-	function Promise(fcn) {
-		if (!(this instanceof Promise)) return $.newApplyArgs(Promise, arguments);
-		var p = { state: 0, self: null, args: null, partAry: [], doneAry: [], failAry: [] }; // private closure
-		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
-		var self = this;
-		var promise = { // promise as closure-linked subset of methods around p and self
-			/** Register the given function(s) to be called on resolution or rejection, success or failure (i.e. finally). */
-			always: function() {
-				return promise.done.apply(this,arguments).fail.apply(this,arguments);
-			},
-			/** Purvey/inject the promise closure on another object and return it or return the promise itself. */
-			promise: function(obj) { 
-				//if (console.logEnabled) console.log("Injecting promise to "+ (obj != null ? "other" : "self"));
-				return obj != null ? $.copyAll(obj, promise) : promise;
-			},
-			/** Return the current state as "pending", "resolved", "rejected". */
-			state: function() {
-				return STATE[p.state];
-			},
-			/** Register functions to be called when done, failed, or partial progress is made. */
-			then: function(/* doneFn, failFn, partFn */) {
-				var fcns = arguments;
-				return new Promise(function( newPromise ) {
-					Array.forEach(ACTION, function( item, i ) {
-						var act = item[0], f = fcns[i];
-						self[item[1]](typeof f === "function" ? function(){ 
-							var r = f.apply(this, arguments);
-							if (r && typeof r.promise === "function") {
-								r.promise().done( newPromise.resolve.bind(newPromise) )
-									.fail( newPromise.reject.bind(newPromise) )
-									.progress( newPromise.notify.bind(newPromise) );
-							} else {
-								newPromise[act+"With"](this === promise ? newPromise.promise() : this, f ? [r] : arguments);
-							}
-						} : newPromise[act]	);
-					});
-					fcns = null; // closure cleanup
-				}).promise();
-			}
-		};
-		Array.forEach(ACTION, function( item, i ){
-			/** done: Register the given function(s) to be called when resolved with success. */
-			/** fail: Register the given function(s) to be called when rejected with failure. */
-			/** progress: Register the given function(s) to be called when partial progress is made. */
-			promise[item[1]] = function(){
-				return concatFunctionsAndReturn(p, item[2], this === self ? promise : this, arguments);
-			};
-		});
-		promise.promise(this);
-		if (typeof fcn === "function") fcn.call(this, this);
-	};
-	$.extend($.copyAll( // class constructor
-		Promise, {CLASS: CLASS, make: make, when: when} 
-	), { // super-static prototype with public functions
-		notify: notify,
-		notifyWith: notifyWith,
-		resolve: resolve,
-		resolveWith: resolveWith,
-		reject: reject,
-		rejectWith: rejectWith
-	});
-	$.setProperty($.THIS, CLASS, Promise);
-	
-	//
-	// Class constructor functions
-	//
-	
-	/**
-	 * Make a promise calling the given function before progress starts.
-	 */
+	Make a promise calling the given function before progress starts.
 	function make(startFn) {
 		return new Promise(startFn);
 	}
 	
-	/**
 	 * Return a Promise based on given object(s) which may in turn be Promise(s).
 	 * This will wait on them all and fail on first reject, notify about all of them,
 	 * and only resolve when all are resolved/done with all of the ([object,...], [arguments,...]) resolved.
 	 * If only one sub is given and it's not a promise it will resolve/done with (undefined, sub).
 	 * If only sub sub is given and it is a promise then it will progress/fail/done as normal.
-	 */
-	function when(sub /*, sub2, ... */) {
+	
+	function when(sub) {  //, sub2, ...
 		var args = $.concat([], arguments);
 		var item, i, len = args.length;
 		var todo = len !== 1 || (sub && typeof sub.promise === "function") ? len : 0;
@@ -1154,63 +1054,125 @@ if (!this.akme) this.akme = {
 		return promise.promise();
 	}
 	
+*/
+/**
+ * akme.core.Promise
+ */
+(function($,CLASS){
+	if ($.getProperty($.THIS,CLASS)) return; // One-time.
+	$.setProperty($.THIS,CLASS,Promise);
+	
+	//
+	// Private static declarations / closure
+	//
+	var PRIVATES = {},  // Closure guard for privates.
+		Util = akme;
+		//STATE_NAMES = ["pending", "fulfilled", "rejected"];  // fulfilled aka resolved
+
+	//
+	// Initialise constructor or singleton instance and public functions
+	//
+    function Promise(/*function(fulfillFcn,rejectFcn)*/ executor) {
+        if (!(this instanceof Promise)) {
+            return new Promise(executor);
+        }
+        // private closure and guard function
+        // callbackAry follows the state:{ 0:"pending", 1:"fulfilled", 2:"rejected" }.
+        var p = { state: 0, self: this, args: null, callbackAry: [[],[],[]] };
+        this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
+
+        // Callback the executor to pass the resolve and reject methods with the creator/producer of the Promise.
+        try {
+            executor.call(p.self, fulfillFcn, rejectFcn);
+        } catch (er) {
+            reject(er);
+        }
+
+        function fulfillFcn() {
+            switch (p.state) {
+            case 0: p.state = 1; p.args = arguments;  // fallthrough
+            case 1: APPLY_ARRAY(p.callbackAry[p.state], p.self, p.args, true); break;
+            case 2: console.warn(String( new RangeError("cannot resolve after reject") ));
+            }
+        };
+        function rejectFcn() {
+            switch (p.state) {
+            case 0: p.state = 2; p.args = arguments;  // fallthrough
+            case 2: APPLY_ARRAY(p.callbackAry[p.state], p.self, p.args, true); break;
+            case 1: console.warn(String( new RangeError("cannot reject after resolve") ));
+            }
+        };
+    };
+    Util.copyAll(Promise, {  // static-constructor function properties
+        CLASS: CLASS,
+        fulfill: fulfill,
+        resolve: fulfill,
+        reject: reject
+    }).prototype = {  // super-prototype object properties
+        then : then,
+        "catch": function (onRejected) {
+            return this.then(undefined, onRejected);
+        }
+    };
+	
 	//
 	// Functions
 	//
 	
-	function notify() {
-		return this.notifyWith(undefined,arguments);
-	}
-	
-	/**
-	 * Notify partial progress callbacks,
-	 * applying the first argument as "this" for the callbacks.
-	 */
-	function notifyWith(self,args) {
-		applyToArray(this.PRIVATES(PRIVATES).partAry, self, args);
-		return this;
-	}
-	
-	/**
-	 * Resolve with success and invoke done callbacks.
-	 */
-	function resolve() {
-		return this.resolveWith(undefined,arguments);
-	}
-	
-	/**
-	 * Resolve with success and invoke done callbacks,
-	 * applying the first argument as "this" for the callbacks.
-	 */
-	function resolveWith(self,args) {
-		var p = this.PRIVATES(PRIVATES);
-		switch (p.state) {
-		case 0: p.state = 1; p.self = self; p.args = args; // fallthrough
-		case 1: applyToArray(p.doneAry, p.self, p.args, true); break;
-		case 2: console.warn(String( new RangeError("cannot resolve after reject") ));
-		}
-		return this;
-	}
-	
-	/**
-	 * Reject with failure and invoke fail callbacks.
-	 */
-	function reject() {
-		return this.rejectWith(undefined,arguments);
-	}
-	
-	/**
-	 * Reject with failure and invoke fail callbacks,
-	 * applying the first argument as "this" for the callbacks.
-	 */
-	function rejectWith(self,args) {
-		var p = this.PRIVATES(PRIVATES);
-		switch (p.state) {
-		case 0: p.state = 2; p.self = self; p.args = args; // fallthrough
-		case 2: applyToArray(p.failAry, p.self, p.args, true); break;
-		case 1: console.warn(String( new RangeError("cannot reject after resolve") ));
-		}
-		return this;
-	}
-	
+    // Apply/call an array of functions with a given this/self and arguments.
+    // If once is true then the array of functions is cleared after being used.
+    function APPLY_ARRAY(ary, self, args, once) {  // IE8 cannot apply null or undefined args.
+        for (var i=0; i<ary.length; i++) args ? ary[i].apply(self, args) : ary[i].call(self);
+        if (!!once) ary.length = 0;
+    };
+
+    function fulfill() {  // fulfill aka resolve
+        var args = arguments;
+        return new Promise(function(fulfillFcn,rejectFcn) {
+            fulfillFcn.apply(this,args);
+        });
+    };
+
+    function reject() {
+        var args = arguments;
+        return new Promise(function(fulfillFcn,rejectFcn) {
+            rejectFcn.apply(this,args);
+        });
+    };
+
+    function then(/*function onFulfilled, function onRejected*/) {  // onPending is non-standard, not implemented
+        // Append fulfillment and rejection handlers to the promise,
+        // and return a new promise resolving to the return value of the called handler.
+        // TODO: what happens if an onFulfilled/onRejected callback returns a new promise/thenable?
+        var p = this.PRIVATES(PRIVATES), callbackArgs = arguments;
+        var result = new Promise(function executor(/*function fulfill, function reject*/) {
+            var newPromise = this, executorArgs = arguments;
+            for (var i=0; i<2; i++) (function (i) {
+                // If a callback is a function, wrap it in a function to be called later with our closures.
+                var f = callbackArgs[i];
+                if (typeof f === "function") callbackArgs[i] = function() {
+                    try {
+                        var r = f.apply(p.self, arguments);
+                        if (typeof r !== "undefined" && typeof r.then === "function") {
+                            r.then.apply(newPromise, executorArgs);
+                        } else {
+                            executorArgs[i].apply(newPromise, typeof r !== "undefined" ? [r] : arguments);
+                        }
+                    } catch (er) { // reject on callback error
+                        if (executorArgs[1]) executorArgs[1](er);
+                    }
+                };
+            })(i);
+        });
+        // Now that a new Promise is prepared and callbackArgs adjusted if necessary,
+        // add to the future callback arrays if the state is 0:pending otherwise call immediately.
+        if (p.state === 0) for (var i=0, n=Math.min(callbackArgs.length, p.callbackAry.length); i<n; i++) {
+            if (callbackArgs[i]) p.callbackAry[i==2 ? 0 : i+1].push(callbackArgs[i]);
+        } else {
+            var callback = callbackArgs[p.state==0 ? 2 : p.state-1];
+            if (callback) callback.apply(p.self, p.args);
+        }
+        return result;
+    };
+
 })(akme,"akme.core.Promise");
