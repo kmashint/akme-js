@@ -19,6 +19,8 @@ done
 echo>"$file.min.js" // ${file##*/}
 java -jar $yuid/yuicompressor/yuicompressor.jar --type js --preserve-semi --verbose \
     2>"${0%.*}.log" 1>>"$file.min.js" "$file.src.js"
+
+# TODO: use node with npm install -g jshint@2.8 and requirejs for minification
 # TODO: remove useless warnings
 # cscript.exe //nologo "%yuid%\%~n0.js" <"%yuid%\%~n0_.log" >"%yuid%\%~n0.log" && del /f /q "%yuid%\%~n0_.log"
 

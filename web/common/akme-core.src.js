@@ -1,4 +1,3 @@
-// akme-core
 // akme-core.js
 // Javascript Types: undefined, null, boolean, number, string, function, or object; Date and Array are typeof object.
 // typeof works for a function or object but note typeof String(1) is string yet typeof new String(1) is object.
@@ -1460,7 +1459,9 @@ akme.copyAll(this.akme, {
 	onContent : function (evCallback) {
 		var self = this, elem = document, type = "DOMContentLoaded";
 		// Includes special handling to emulate DOMContentLoaded in MSIE 8.
-		if (!contentLoaded()) {
+		if (self.onContent.ready) {
+            contentReady();
+        } else if (!contentLoaded()) {
 			if (self.isW3C) {
 				elem.addEventListener(type, contentLoaded, false);
 				window.addEventListener("load", contentLoaded, false);
@@ -1480,7 +1481,7 @@ akme.copyAll(this.akme, {
 			if (self.isW3C) {
 				elem.removeEventListener(type, contentLoaded, false);
 				window.removeEventListener("load", contentLoaded);
-				contentReady(ev);
+				contentReady();
 			} else {
 				elem.detachEvent("onreadystatechange", contentLoaded);
 				window.detachEvent("onload", contentLoaded);
@@ -1497,16 +1498,17 @@ akme.copyAll(this.akme, {
 						try {
 							testDiv.doScroll();
 							clearInterval(intervalId);
-							contentReady(ev);
+							contentReady();
 						} catch (er) {}
 					}, 50);
 				} else {
-					contentReady(ev);
+					contentReady();
 				}
 			}
 		}
-		function contentReady(ev) {
+		function contentReady() {
 			// Handle immediately after the next IO cycle, once the DOM content is ready.
+            if (!self.onContent.ready) self.onContent.ready = true;
 			setTimeout(function(){
 				self.handleEvent(evCallback, {type:type, target:elem});
 			});
