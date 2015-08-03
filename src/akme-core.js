@@ -8,7 +8,8 @@
 // http://www.tuttoaster.com/learning-javascript-and-dom-with-console/
 // http://www.thecssninja.com/javascript/console
 
-/*jslint bitwise:true browser:true forin:true maxlen:120 vars:true white:true */
+/*jshint browser:true */
+/*globals akme */
 
 // Add safe (from side-effects) compatibility to built-in JS constructor functions like Object, Function, Array.
 (function(global){
@@ -51,9 +52,7 @@
             self = this,
             NOOP = function () {},
             bound = function () {
-            return self.apply(this instanceof NOOP
-                                   ? this
-                                   : oThis || window,
+            return self.apply(this instanceof NOOP ? this : oThis || window,
                                  args.concat(slice.call(arguments)));
             };
 
@@ -448,7 +447,7 @@ if (!this.akme) this.akme = {
 	 */
 	getDateByIsoMonday : function(year, doy) {
 		year = Math.floor(year);
-		week = Math.floor(doy);
+		doy = Math.floor(doy);
         var result = new Date(year, 1-1, 4);
         result.setDate(result.getDate() -(result.getDay()+6)%7 + (doy-1));
         return result;
@@ -472,7 +471,7 @@ if (!this.akme) this.akme = {
 	//
 	function Access() {
 		//$.extendDestroy(this, function(){});
-	};
+	}
 	$.extendClass($.copyAll( // class-constructor function
 		Access, {CLASS: CLASS}
 	), { // super-static-prototype object
@@ -527,7 +526,7 @@ if (!this.akme) this.akme = {
 	// Initialise constructor or singleton instance and public functions
 	//
 	// This gives a example of using .prototype directly, not using $.extend.
-	function Data() {};
+	function Data() {}
 	$.copyAll(Data, {CLASS: CLASS}); // class constructor
 	$.copyAll(Data.prototype, { // super-static prototype, public functions
 		toString : toString
@@ -563,7 +562,7 @@ if (!this.akme) this.akme = {
 		var p = { map : {}, ary : [] }; // private closure
 		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
 		this.length = p.ary.length;
-	};
+	}
 	$.extendClass($.copyAll( // class constructor
 		IndexedMap, {CLASS: CLASS} 
 	), { // super-static prototype, public functions
@@ -589,35 +588,35 @@ if (!this.akme) this.akme = {
 	//
 
 	// Public functions that use PRIVATES and in turn the privileged this.privates().
-	function linkMapTo (obj,key) { obj[key] = this.PRIVATES(PRIVATES).map; return this; };
-	function size () { return this.PRIVATES(PRIVATES).ary.length; };
-	function keys () { return this.PRIVATES(PRIVATES).ary.slice(0); };
-	function key (idx) { return this.PRIVATES(PRIVATES).ary[idx]; };
+	function linkMapTo (obj,key) { obj[key] = this.PRIVATES(PRIVATES).map; return this; }
+	function size () { return this.PRIVATES(PRIVATES).ary.length; }
+	function keys () { return this.PRIVATES(PRIVATES).ary.slice(0); }
+	function key (idx) { return this.PRIVATES(PRIVATES).ary[idx]; }
 	function keySlice (start, end) { 
 		return end ? this.PRIVATES(PRIVATES).ary.slice(start, end) : this.PRIVATES(PRIVATES).ary.slice(start);
-	};
-	function value (idx) { var p = this.PRIVATES(PRIVATES); return p.map[p.ary[idx]]; };
+	}
+	function value (idx) { var p = this.PRIVATES(PRIVATES); return p.map[p.ary[idx]]; }
 	function values () {
 		var p = this.PRIVATES(PRIVATES); 
 		var r = new Array(p.ary.length);
 		for (var i = 0; i < p.ary.length; i++) r[i] = p.map[p.ary[i]];
 		return r;
-	};
+	}
 	function valueSlice (start, end) {
 		var p = this.PRIVATES(PRIVATES);
 		if (!(end >= 0)) end = p.ary.length;
 		var r = new Array(end-start);
 		for (var i = start; i < end; i++) r[i-start] = p.map[p.ary[i]];
 		return r;
-	};
-	function get (key) { return this.PRIVATES(PRIVATES).map[key]; };
+	}
+	function get (key) { return this.PRIVATES(PRIVATES).map[key]; }
 	function set (key, val) {
 		var p = this.PRIVATES(PRIVATES); 
 		if (!(key in p.map)) {
 			p.ary[p.ary.length] = key; this.length = p.ary.length; 
 		}
 		p.map[key] = val;
-	};
+	}
 	function remove (key) {
 		var p = this.PRIVATES(PRIVATES); 
 		if (!(key in p.map)) return;
@@ -625,13 +624,13 @@ if (!this.akme) this.akme = {
 			p.ary.splice(i, 1); this.length = p.ary.length; break;
         }
 		delete p.map[key];
-	};
+	}
 	function clear () {
 		var p = this.PRIVATES(PRIVATES); 
 		p.ary.splice(0, p.ary.length);
 		this.length = 0;
 		for (var key in p.map) delete p.map[key];
-	};
+	}
 	
 	/**
 	 * Copy from the given Array of Objects, or Object of Objects by hasOwnProperty/non-prototype properties.
@@ -733,8 +732,8 @@ if (!this.akme) this.akme = {
     	mapBy : mapBy
 	});
 	// Apply read-only non-mutating methods from Array.
-	for (var key in {"concat":1,"every":1,"filter":1,"forEach":1,"indexOf":1,"lastIndexOf":1,"map":1,"reduce":1,"reduceRight":1,"slice":1,"some":1}) {
-		DataTable.prototype[key] = applyArrayMethod(key);
+	for (var k in {"concat":1,"every":1,"filter":1,"forEach":1,"indexOf":1,"lastIndexOf":1,"map":1,"reduce":1,"reduceRight":1,"slice":1,"some":1}) {
+		DataTable.prototype[k] = applyArrayMethod(k);
 	}
 	// Avoid writing, mutating methods: pop, push, reverse, shift, sort, splice, unshift.
 	// Publish the constructor.
@@ -865,7 +864,7 @@ if (!this.akme) this.akme = {
 		return p.body[typeof idx !== "undefined" ? idx : p.idx];
 	}
 	
-	function value(idxOrName/* or row,idxOrName*/) {
+	function value(/*idxOrName or row,idxOrName*/) {
 		var p = this.PRIVATES(PRIVATES);
 		var row = arguments[0], idxOrName = arguments[1];
 		if (arguments.length === 1) { idxOrName = row; row = p.idx; }
@@ -937,7 +936,7 @@ if (!this.akme) this.akme = {
 		this.doEvent = doEvent;
 
 		$.extendDestroy(this, destroy);
-	};
+	}
 	// Example of extend with the Object super-class constructor-function first, then the sub-class constructor.
 	$.extendClass(Object, $.copyAll(EventSource, {CLASS: CLASS}));
 	$.setProperty($.THIS, CLASS, EventSource);
@@ -1085,15 +1084,15 @@ if (!this.akme) this.akme = {
             case 1: APPLY_ARRAY(p.callbackAry[p.state], p.self, p.args, true); break;
             case 2: console.warn(String( new RangeError("cannot resolve after reject") ));
             }
-        };
+        }
         function rejectFcn() {
             switch (p.state) {
             case 0: p.state = 2; p.args = arguments;  // fallthrough
             case 2: APPLY_ARRAY(p.callbackAry[p.state], p.self, p.args, true); break;
             case 1: console.warn(String( new RangeError("cannot reject after resolve") ));
             }
-        };
-    };
+        }
+    }
     Util.copyAll(Promise, {  // static-constructor function properties
         CLASS: CLASS,
         fulfill: fulfill,
@@ -1113,23 +1112,23 @@ if (!this.akme) this.akme = {
     // Apply/call an array of functions with a given this/self and arguments.
     // If once is true then the array of functions is cleared after being used.
     function APPLY_ARRAY(ary, self, args, once) {  // IE8 cannot apply null or undefined args.
-        for (var i=0; i<ary.length; i++) args ? ary[i].apply(self, args) : ary[i].call(self);
+        for (var i=0; i<ary.length; i++) if (args) ary[i].apply(self, args); else ary[i].call(self);
         if (!!once) ary.length = 0;
-    };
+    }
 
     function fulfill() {  // fulfill aka resolve
         var args = arguments;
         return new Promise(function(fulfillFcn,rejectFcn) {
             fulfillFcn.apply(this,args);
         });
-    };
+    }
 
     function reject() {
         var args = arguments;
         return new Promise(function(fulfillFcn,rejectFcn) {
             rejectFcn.apply(this,args);
         });
-    };
+    }
 
     function then(/*function onFulfilled, function onRejected*/) {  // onPending is non-standard, not implemented
         // Append fulfillment and rejection handlers to the promise,
@@ -1158,12 +1157,12 @@ if (!this.akme) this.akme = {
         // Now that a new Promise is prepared and callbackArgs adjusted if necessary,
         // add to the future callback arrays if the state is 0:pending otherwise call immediately.
         if (p.state === 0) for (var i=0, n=Math.min(callbackArgs.length, p.callbackAry.length); i<n; i++) {
-            if (callbackArgs[i]) p.callbackAry[i==2 ? 0 : i+1].push(callbackArgs[i]);
+            if (callbackArgs[i]) p.callbackAry[i===2 ? 0 : i+1].push(callbackArgs[i]);
         } else {
-            var callback = callbackArgs[p.state==0 ? 2 : p.state-1];
+            var callback = callbackArgs[p.state===0 ? 2 : p.state-1];
             if (callback) callback.apply(p.self, p.args);
         }
         return result;
-    };
+    }
 
 })(akme,"akme.core.Promise");

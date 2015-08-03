@@ -9,7 +9,8 @@
 // http://www.tuttoaster.com/learning-javascript-and-dom-with-console/
 // http://www.thecssninja.com/javascript/console
 
-/*jslint bitwise:true browser:true forin:true maxlen:120 vars:true white:true */
+/*jshint browser:true */
+/*globals akme */
 
 // Add safe (from side-effects) compatibility to built-in JS constructor functions like Object, Function, Array.
 (function(global){
@@ -52,9 +53,7 @@
             self = this,
             NOOP = function () {},
             bound = function () {
-            return self.apply(this instanceof NOOP
-                                   ? this
-                                   : oThis || window,
+            return self.apply(this instanceof NOOP ? this : oThis || window,
                                  args.concat(slice.call(arguments)));
             };
 
@@ -449,7 +448,7 @@ if (!this.akme) this.akme = {
 	 */
 	getDateByIsoMonday : function(year, doy) {
 		year = Math.floor(year);
-		week = Math.floor(doy);
+		doy = Math.floor(doy);
         var result = new Date(year, 1-1, 4);
         result.setDate(result.getDate() -(result.getDay()+6)%7 + (doy-1));
         return result;
@@ -473,7 +472,7 @@ if (!this.akme) this.akme = {
 	//
 	function Access() {
 		//$.extendDestroy(this, function(){});
-	};
+	}
 	$.extendClass($.copyAll( // class-constructor function
 		Access, {CLASS: CLASS}
 	), { // super-static-prototype object
@@ -528,7 +527,7 @@ if (!this.akme) this.akme = {
 	// Initialise constructor or singleton instance and public functions
 	//
 	// This gives a example of using .prototype directly, not using $.extend.
-	function Data() {};
+	function Data() {}
 	$.copyAll(Data, {CLASS: CLASS}); // class constructor
 	$.copyAll(Data.prototype, { // super-static prototype, public functions
 		toString : toString
@@ -564,7 +563,7 @@ if (!this.akme) this.akme = {
 		var p = { map : {}, ary : [] }; // private closure
 		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
 		this.length = p.ary.length;
-	};
+	}
 	$.extendClass($.copyAll( // class constructor
 		IndexedMap, {CLASS: CLASS} 
 	), { // super-static prototype, public functions
@@ -590,35 +589,35 @@ if (!this.akme) this.akme = {
 	//
 
 	// Public functions that use PRIVATES and in turn the privileged this.privates().
-	function linkMapTo (obj,key) { obj[key] = this.PRIVATES(PRIVATES).map; return this; };
-	function size () { return this.PRIVATES(PRIVATES).ary.length; };
-	function keys () { return this.PRIVATES(PRIVATES).ary.slice(0); };
-	function key (idx) { return this.PRIVATES(PRIVATES).ary[idx]; };
+	function linkMapTo (obj,key) { obj[key] = this.PRIVATES(PRIVATES).map; return this; }
+	function size () { return this.PRIVATES(PRIVATES).ary.length; }
+	function keys () { return this.PRIVATES(PRIVATES).ary.slice(0); }
+	function key (idx) { return this.PRIVATES(PRIVATES).ary[idx]; }
 	function keySlice (start, end) { 
 		return end ? this.PRIVATES(PRIVATES).ary.slice(start, end) : this.PRIVATES(PRIVATES).ary.slice(start);
-	};
-	function value (idx) { var p = this.PRIVATES(PRIVATES); return p.map[p.ary[idx]]; };
+	}
+	function value (idx) { var p = this.PRIVATES(PRIVATES); return p.map[p.ary[idx]]; }
 	function values () {
 		var p = this.PRIVATES(PRIVATES); 
 		var r = new Array(p.ary.length);
 		for (var i = 0; i < p.ary.length; i++) r[i] = p.map[p.ary[i]];
 		return r;
-	};
+	}
 	function valueSlice (start, end) {
 		var p = this.PRIVATES(PRIVATES);
 		if (!(end >= 0)) end = p.ary.length;
 		var r = new Array(end-start);
 		for (var i = start; i < end; i++) r[i-start] = p.map[p.ary[i]];
 		return r;
-	};
-	function get (key) { return this.PRIVATES(PRIVATES).map[key]; };
+	}
+	function get (key) { return this.PRIVATES(PRIVATES).map[key]; }
 	function set (key, val) {
 		var p = this.PRIVATES(PRIVATES); 
 		if (!(key in p.map)) {
 			p.ary[p.ary.length] = key; this.length = p.ary.length; 
 		}
 		p.map[key] = val;
-	};
+	}
 	function remove (key) {
 		var p = this.PRIVATES(PRIVATES); 
 		if (!(key in p.map)) return;
@@ -626,13 +625,13 @@ if (!this.akme) this.akme = {
 			p.ary.splice(i, 1); this.length = p.ary.length; break;
         }
 		delete p.map[key];
-	};
+	}
 	function clear () {
 		var p = this.PRIVATES(PRIVATES); 
 		p.ary.splice(0, p.ary.length);
 		this.length = 0;
 		for (var key in p.map) delete p.map[key];
-	};
+	}
 	
 	/**
 	 * Copy from the given Array of Objects, or Object of Objects by hasOwnProperty/non-prototype properties.
@@ -734,8 +733,8 @@ if (!this.akme) this.akme = {
     	mapBy : mapBy
 	});
 	// Apply read-only non-mutating methods from Array.
-	for (var key in {"concat":1,"every":1,"filter":1,"forEach":1,"indexOf":1,"lastIndexOf":1,"map":1,"reduce":1,"reduceRight":1,"slice":1,"some":1}) {
-		DataTable.prototype[key] = applyArrayMethod(key);
+	for (var k in {"concat":1,"every":1,"filter":1,"forEach":1,"indexOf":1,"lastIndexOf":1,"map":1,"reduce":1,"reduceRight":1,"slice":1,"some":1}) {
+		DataTable.prototype[k] = applyArrayMethod(k);
 	}
 	// Avoid writing, mutating methods: pop, push, reverse, shift, sort, splice, unshift.
 	// Publish the constructor.
@@ -866,7 +865,7 @@ if (!this.akme) this.akme = {
 		return p.body[typeof idx !== "undefined" ? idx : p.idx];
 	}
 	
-	function value(idxOrName/* or row,idxOrName*/) {
+	function value(/*idxOrName or row,idxOrName*/) {
 		var p = this.PRIVATES(PRIVATES);
 		var row = arguments[0], idxOrName = arguments[1];
 		if (arguments.length === 1) { idxOrName = row; row = p.idx; }
@@ -938,7 +937,7 @@ if (!this.akme) this.akme = {
 		this.doEvent = doEvent;
 
 		$.extendDestroy(this, destroy);
-	};
+	}
 	// Example of extend with the Object super-class constructor-function first, then the sub-class constructor.
 	$.extendClass(Object, $.copyAll(EventSource, {CLASS: CLASS}));
 	$.setProperty($.THIS, CLASS, EventSource);
@@ -1086,15 +1085,15 @@ if (!this.akme) this.akme = {
             case 1: APPLY_ARRAY(p.callbackAry[p.state], p.self, p.args, true); break;
             case 2: console.warn(String( new RangeError("cannot resolve after reject") ));
             }
-        };
+        }
         function rejectFcn() {
             switch (p.state) {
             case 0: p.state = 2; p.args = arguments;  // fallthrough
             case 2: APPLY_ARRAY(p.callbackAry[p.state], p.self, p.args, true); break;
             case 1: console.warn(String( new RangeError("cannot reject after resolve") ));
             }
-        };
-    };
+        }
+    }
     Util.copyAll(Promise, {  // static-constructor function properties
         CLASS: CLASS,
         fulfill: fulfill,
@@ -1114,23 +1113,23 @@ if (!this.akme) this.akme = {
     // Apply/call an array of functions with a given this/self and arguments.
     // If once is true then the array of functions is cleared after being used.
     function APPLY_ARRAY(ary, self, args, once) {  // IE8 cannot apply null or undefined args.
-        for (var i=0; i<ary.length; i++) args ? ary[i].apply(self, args) : ary[i].call(self);
+        for (var i=0; i<ary.length; i++) if (args) ary[i].apply(self, args); else ary[i].call(self);
         if (!!once) ary.length = 0;
-    };
+    }
 
     function fulfill() {  // fulfill aka resolve
         var args = arguments;
         return new Promise(function(fulfillFcn,rejectFcn) {
             fulfillFcn.apply(this,args);
         });
-    };
+    }
 
     function reject() {
         var args = arguments;
         return new Promise(function(fulfillFcn,rejectFcn) {
             rejectFcn.apply(this,args);
         });
-    };
+    }
 
     function then(/*function onFulfilled, function onRejected*/) {  // onPending is non-standard, not implemented
         // Append fulfillment and rejection handlers to the promise,
@@ -1159,13 +1158,13 @@ if (!this.akme) this.akme = {
         // Now that a new Promise is prepared and callbackArgs adjusted if necessary,
         // add to the future callback arrays if the state is 0:pending otherwise call immediately.
         if (p.state === 0) for (var i=0, n=Math.min(callbackArgs.length, p.callbackAry.length); i<n; i++) {
-            if (callbackArgs[i]) p.callbackAry[i==2 ? 0 : i+1].push(callbackArgs[i]);
+            if (callbackArgs[i]) p.callbackAry[i===2 ? 0 : i+1].push(callbackArgs[i]);
         } else {
-            var callback = callbackArgs[p.state==0 ? 2 : p.state-1];
+            var callback = callbackArgs[p.state===0 ? 2 : p.state-1];
             if (callback) callback.apply(p.self, p.args);
         }
         return result;
-    };
+    }
 
 })(akme,"akme.core.Promise");
 // akme.getContext
@@ -1343,7 +1342,7 @@ if (!this.akme) this.akme = {
 	 */
 	function getIdArray() {
 		var a=[], i=0;
-		for (key in this.PRIVATES(PRIVATES).map) a[i++] = key;
+		for (var key in this.PRIVATES(PRIVATES).map) a[i++] = key;
 		return a;
 	}
 
@@ -1390,6 +1389,8 @@ if (!this.akme) this.akme = {
 })(akme, "akme.core.AppContext");
 
 // akme-dom.js
+/*jshint browser: true, devel: true */
+/*globals ActiveXObject, escape, unescape, akme */
 
 (function(self){
 
@@ -1417,10 +1418,10 @@ if (!this.akme) this.akme = {
 	self.DOMParser.prototype.parseFromString = function(text, contentType) {
 		if (this.xmldoc) { // MSIE 8
 			this.xmldoc.loadXML(text);
-			if (this.xmldoc.parseError.errorCode != 0) {
+			if (this.xmldoc.parseError.errorCode !== 0) {
 				var err = this.xmldoc.parseError;
-				throw new SyntaxError("DOMParser error "+ err.errorCode +" at line "+ err.line +" pos "+ err.linepos
-					+": "+ err.reason);
+				throw new SyntaxError("DOMParser error "+ err.errorCode +" at line "+ err.line +" pos "+ err.linepos +
+					": "+ err.reason);
 			}
 			return this.xmldoc;
 		} else {
@@ -1457,7 +1458,6 @@ if (!this.akme) this.akme = {
 akme.copyAll(this.akme, {
 	_html5 : null,
 	onContent : function (evCallback) {
-		console.log("onContent from ", location.href)
 		var self = this, elem = document, type = "DOMContentLoaded";
 		// Includes special handling to emulate DOMContentLoaded in MSIE 8.
 		if (!contentLoaded()) {
@@ -1584,7 +1584,7 @@ akme.copyAll(this.akme, {
 	},
 	getBaseHref : function () {
 		var a = document.getElementsByTagName("base");
-		return a.length != 0 ? a[0]["href"] : "";
+		return a.length !== 0 ? a[0].href : "";
 	},
 	getContextPath : function () {
 		// Java ROOT contextPath is "", not "/", so use "/." to ensure a ROOT reference.
@@ -1655,11 +1655,11 @@ akme.copyAll(this.akme, {
 			var tagClassName = tags[i].className;
 			if (!tagClassName) continue;
 			for (var j=0; j<classAry.length; j++) {
-				var className = classAry[j];
+				className = classAry[j];
 				var pos = tagClassName.indexOf(className);
 				if (pos == -1) continue;
-				if ((pos == 0 || " " == tagClassName.charAt(pos-1)) 
-						&& (pos+className.length == tagClassName.length || " " == tagClassName.charAt(pos+className.length))) {
+				if ((pos == 0 || " " == tagClassName.charAt(pos-1)) &&
+						(pos+className.length == tagClassName.length || " " == tagClassName.charAt(pos+className.length))) {
 					result.push(tags[i]);
 				}				
 			}
@@ -1722,20 +1722,18 @@ akme.copyAll(this.akme, {
 	 * The use of data--href is to avoid the brower trying to load '{href}' as a file before being replaced.  
 	 */
 	replaceNodeData : function (parentNode, dataMap) {
-		var parentAry = [parentNode];
+		var a, parentAry = [parentNode];
 		for (var parent = parentAry.pop(); parent != null; parent = parentAry.pop()) {
 			var attrs = parent.attributes;
 			if (attrs) for (var i=0; i<attrs.length; i++) {
-				var attr = attrs[i];
-				var name = attr.nodeName;
-				var value = attr.nodeValue;
+				var attr = attrs[i], name = attr.nodeName, value = attr.nodeValue;
 				if (name.lastIndexOf("data--",6) == 0) {
 					name = name.substring(6);
 					parent.removeAttribute(attr.nodeName);
-					var a = this.replaceTextDataAsArrayOrNull(value, dataMap);
+					a = this.replaceTextDataAsArrayOrNull(value, dataMap);
 					if (a != null) parent.setAttribute(name, a.join(""));
 				} else {
-					var a = this.replaceTextDataAsArrayOrNull(value, dataMap);
+					a = this.replaceTextDataAsArrayOrNull(value, dataMap);
 					if (a != null) attr.nodeValue = a.join("");
 				}
 			}
@@ -1747,7 +1745,7 @@ akme.copyAll(this.akme, {
 					parentAry[parentAry.length]=(child);
 					// fall through to TextNode as well
 				case 3: case 4: // 3=TextNode, 4=CdataSectionNode
-					var a = this.replaceTextDataAsArrayOrNull(child.nodeValue, dataMap);
+					a = this.replaceTextDataAsArrayOrNull(child.nodeValue, dataMap);
 					if (a != null) child.nodeValue = a.join("");
 					break;
 				}
@@ -1778,9 +1776,9 @@ akme.copyAll(this.akme, {
 		return clone;
 	},	
 	importNode : function(doc, thatChild) {
-		var result;
-		var recbin = document.getElementById("recycleBin");
-		var nodeName = thatChild.nodeName.toLowerCase();
+		var result, firstChild,
+            recbin = document.getElementById("recycleBin"),
+            nodeName = thatChild.nodeName.toLowerCase();
 		if ("importNode" in doc && !("documentMode" in doc && doc.documentMode == 9)) { 
 			// Need to set innerHTML event after appendChild to convert simple XML to more useful (X)HTML.
 			// Safari does not like /* CDATA */ in a script.cloneNode(true).
@@ -1795,7 +1793,7 @@ akme.copyAll(this.akme, {
 			} else {
 				result.appendChild(doc.importNode(thatChild, true));
 			}
-			var firstChild = result.firstChild;
+			firstChild = result.firstChild;
 			result.removeChild(firstChild);
 			if (recbin) recbin.appendChild(result);
 			return firstChild;
@@ -1817,7 +1815,7 @@ akme.copyAll(this.akme, {
 				// Use innerHTML and the IE elem.xml property.
 				result = doc.createElement("div");
 				result.innerHTML = thatChild.xml;
-				var firstChild = result.firstChild;
+				firstChild = result.firstChild;
 				result.removeChild(firstChild);
 				if (recbin) recbin.appendChild(result);
 				return firstChild;
@@ -1920,7 +1918,8 @@ akme.copyAll(this.akme, {
 	},
 	
 	getAttributes : function(elem, /*optional-to*/map) {
-		map = map || {}, attrs = elem.attributes;
+        var attrs = elem.attributes;
+		map = map || {};
 		for (var i=0; i<attrs.length; i++) map[attrs[i].name] = elem.getAttribute(attrs[i].name); // getAttribute for symmetry
 		return map;
 	},
@@ -2047,8 +2046,8 @@ if (!akme.xhr) akme.xhr = {
 			if (Array.indexOf(nameAry, key.toLowerCase()) == -1) continue;
 			var name = this.formatHttpHeaderName(key);
 			if (name != key) {
-				headers[name] = headers[key];
-				delete headers[key];
+				headerMap[name] = headerMap[key];
+				delete headerMap[key];
 			}
 		}
 	},
@@ -2208,7 +2207,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 			frame = document.getElementById(this.id);
 		}
 		var key = this.newCallbackKey();
-		headers["callback"] = this.id+".callbackMap."+key;
+		headers.callback = this.id+".callbackMap."+key;
 		var self = this; // closure
 		self.callbackMap[key] = function(headers, content) {
 			self.deleteCallbackKey(key);
@@ -2226,12 +2225,12 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 		var msg = this.formatMessage(headers, content);
 		var targetOrigin = frame.src.substring(0, frame.src.indexOf("/", 8));
 		frame.contentWindow.postMessage(msg, targetOrigin); // "*" is insecure
-		return headers["callback"];
+		return headers.callback;
 	},
 	submitAsync : function(elem, callbackFnOrOb) {
 		var headers = {call:"SubmitRequest"};
 		var key = this.newCallbackKey();
-		headers["callback"] = this.id+".callbackMap."+key;
+		headers.callback = this.id+".callbackMap."+key;
 		var self = this; // closure
 		self.callbackMap[key] = function(headers, content) {
 			self.deleteCallbackKey(key);
@@ -2239,8 +2238,8 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 			self = key = callbackFnOrOb = null; // closure cleanup
 		};
 		self.callbackTime[key] = new Date().getTime();
-		self[headers["call"]](headers, {type:'submit', target:elem});
-		return headers["callback"];
+		self[headers.call](headers, {type:'submit', target:elem});
+		return headers.callback;
 	},
 	handleEvent : function(ev) { // ev.data, ev.origin, ev.source
 		var deny = true;
@@ -2261,7 +2260,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 	},
 	formatMessage : function(headers, content) {
 		var a = [];
-		a[a.length] = "call: "+ headers["call"];
+		a[a.length] = "call: "+ headers.call;
 		for (var key in headers) if ("call"!=key && typeof headers[key] != "undefined") a[a.length] = key +": "+ headers[key];
 		return a.join("\r\n") + "\r\n\r\n" + (content ? content : "");
 	},
@@ -2283,10 +2282,10 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 		var callback = headers.callback;
 		var source = messageEvent.source;
 		var origin = messageEvent.origin;
-		delete headers["call"];
-		delete headers["callback"];
-		delete headers["method"];
-		delete headers["url"];
+		delete headers.call;
+		delete headers.callback;
+		delete headers.method;
+		delete headers.url;
 		if (headers) for (var key in headers) xhr.setRequestHeader(key, headers[key]);
 		var self = this;
 		xhr.onreadystatechange = function() {
@@ -2295,13 +2294,13 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 			var headers = {
 				call : "XMLHttpResponse",
 				readyState : xhr.readyState, 
-				status : xhr["status"] ? xhr.status : 0,
-				statusText : xhr["statusText"] ? xhr.statusText : ""
+				status : xhr.status ? xhr.status : 0,
+				statusText : xhr.statusText ? xhr.statusText : ""
 			};
 			if (callback) headers.callback = callback;
 			var headerStr = xhr.getAllResponseHeaders();
 			if (headerStr) akme.copyAll(headers, akme.xhr.parseHeaders(headerStr));
-			var content = xhr["responseText"] ? xhr.responseText : "";
+			var content = xhr.responseText ? xhr.responseText : "";
 			if (/xml;|xml$/.test(headers["Content-Type"]) || /html;|html$/.test(headers["Content-Type"])) {
 				// Remove DOCTYPE ... SYSTEM if found since the DTD reference will be invalid after postMessage.
 				var pos1 = content.indexOf("<"+"!DOCTYPE ");
@@ -2320,7 +2319,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 		xhr.send(content || null);
 	},
 	XMLHttpResponse : function(headers, content) {
-		var callbackFnOrOb = akme.getProperty(window, headers["callback"]);
+		var callbackFnOrOb = akme.getProperty(window, headers.callback);
 		if (callbackFnOrOb && (headers.status == 200 || headers.status == 204 || headers.status == 304)) {
 			if (/xml;|xml$/.test(headers["Content-Type"])) {
 				var resx = content;
@@ -2365,7 +2364,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 			content = akme.formatJSON(content);
 		}
 		var reqHeaders = headers;
-		var headers = {
+		headers = {
 			call : "StorageResponse",
 			method : reqHeaders.method,
 			type : reqHeaders.type,
@@ -2379,7 +2378,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 		else source.postMessage(result, origin);
 	},
 	StorageResponse : function(headers, content) {
-		var callbackFnOrOb = akme.getProperty(window, headers["callback"]);
+		var callbackFnOrOb = akme.getProperty(window, headers.callback);
 		if (callbackFnOrOb) {
 			akme.handleEvent(callbackFnOrOb, headers, akme.parseJSON(content));
 			return;
@@ -2393,14 +2392,14 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 		var elemName = elem.nodeName.toLowerCase();
 		if ("form" == elemName) {
 			if (typeof elem.onsubmit === "function" && !elem.onsubmit(ev)) return nullResponse();
-			var callback = elem.elements["callback"];
+			var callback = elem.elements.callback;
 			if (!callback) {
 				callback = elem.ownerDocument.createElement("input");
 				callback.setAttribute("type", "hidden");
 				callback.setAttribute("name", "callback");
 				elem.appendChild(callback);
 			}
-			callback.value = headers["callback"];
+			callback.value = headers.callback;
 			elem.submit();
 			return;
 		} else {
@@ -2408,12 +2407,12 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 			return nullResponse();
 		}
 		function nullResponse() {
-			self.SubmitResponse({call:"SubmitResponse", callback:headers["callback"]}, null);
+			self.SubmitResponse({call:"SubmitResponse", callback:headers.callback}, null);
 			return;
 		}
 	},
 	SubmitResponse : function(headers, content) {
-		var callbackFnOrOb = akme.getProperty(window, headers["callback"]);
+		var callbackFnOrOb = akme.getProperty(window, headers.callback);
 		if (callbackFnOrOb) {
 			if (/json;|json$/.test(headers["Content-Type"]) && content) content = akme.parseJSON(content);
 			akme.handleEvent(callbackFnOrOb, headers, content);
@@ -2422,6 +2421,8 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 	}
 });
 // Add more to the akme object.
+/*jshint browser:true */
+/*globals akme */
 
 akme.copy(akme, {
 
@@ -2439,19 +2440,19 @@ akme.copy(akme, {
 		var tagNameUpper = tagName.toUpperCase();
 		var currentNode = node;
 		var classAry = className.split(" ");
-		while (currentNode 
-				&& currentNode.parentNode
-				&& currentNode != currentNode.parentNode) {
+		while (currentNode &&
+				currentNode.parentNode &&
+				currentNode != currentNode.parentNode) {
 			currentNode = currentNode.parentNode;
 			if(currentNode.nodeName == tagNameUpper) {
 				var tagClassName = currentNode.className;
 				if (!tagClassName) continue;
 				for (var j=0 ; j<classAry.length ; j++) {
-					var className = classAry[j];
+					className = classAry[j];
 					var pos = tagClassName.indexOf(className);
-					if (pos == -1) continue;
-					if ((pos == 0 || " " == tagClassName.charAt(pos-1)) 
-							&& (pos+className.length == tagClassName.length || " " == tagClassName.charAt(pos+className.length))) {
+					if (pos === -1) continue;
+					if ((pos === 0 || " " == tagClassName.charAt(pos-1)) &&
+							(pos+className.length == tagClassName.length || " " == tagClassName.charAt(pos+className.length))) {
 						return currentNode;
 					}
 				}
@@ -2507,7 +2508,7 @@ akme.copy(akme, {
 				}
 			}
 		} else if (dom.nodeType == 3) { // text
-			obj["$"] = dom.nodeValue;
+			obj.$ = dom.nodeValue;
 		}
 		if (dom.hasChildNodes()) { // children
 			var name, a;
@@ -2555,7 +2556,7 @@ akme.copy(akme, {
 			var items = this.items;
 			var a = [];
 			for (var i=0; i<items.length; i++) a.push(
-				(items[i][0] ? items[i][0]+" : " : "") + (i==0 ? items[i][1] : items[i][1]-items[i-1][1])
+				(items[i][0] ? items[i][0]+" : " : "") + (i===0 ? items[i][1] : items[i][1]-items[i-1][1])
 				);
 			elem.appendChild(document.createTextNode("{"+a.join(", ")+"}")); 
 		}
@@ -2651,8 +2652,8 @@ if (!akme.form) akme.form = {
 	},
 	
 	setValue : function (elem, value) {
-		var elem0 = elem instanceof NodeList ? elem[0] : elem;
-		var nodeName = elem0.nodeName.toLowerCase();
+		var elem0 = elem instanceof NodeList ? elem[0] : elem,
+            nodeName = elem0.nodeName.toLowerCase();
 		if ("select"==nodeName) {
 			for (var i=0; i<elem.options.length; i++) {
 				var optn = elem.options[i];
@@ -2788,7 +2789,7 @@ akme.selectHelper = akme.selectHelper || {
 		if (!elem) return false;
 		var uc = evnt.keyCode ? evnt.keyCode : evnt.which;
 		var now = new Date().getTime();
-		if (this.timestamp == 0) {
+		if (this.timestamp === 0) {
 			this.timestamp = now;
 		} else if (this.elem !== elem || now-this.timestamp > this.timeout) {
 			this.text = "";
@@ -2929,11 +2930,11 @@ if (!akme.scriptp) akme.scriptp = akme.copy(akme.clone(akme._callbasep), {_tag:"
 
 if (!akme.hsv2rgb) akme.hsv2rgb = function (hsv) {
     var red, grn, blu, i, f, p, q, t;
-    var hue = hsv[0]%360;
-    if (hsv[2]==0) return [0, 0, 0];
-    var sat = hsv[1]/100;
-    var val = hsv[2]/100;
-    var hue = hue/60;
+    if (hsv[2]===0) return [0, 0, 0];
+    var hue = hsv[0]%360,
+        sat = hsv[1]/100,
+        val = hsv[2]/100;
+    hue = hue/60;
     i = Math.floor(hue);
     f = hue-i;
     p = val*(1-sat);
@@ -2951,10 +2952,10 @@ if (!akme.hsv2rgb) akme.hsv2rgb = function (hsv) {
 };
 
 if (!akme.rgb2hsv) akme.rgb2hsv = function (rgb) {
-    var x, val, f, i, hue, sat, val;
-    var red = rgb[0]/255;
-    var grn = rgb[1]/255;
-    var blu = rgb[2]/255;
+    var x, f, i, hue, sat, val;
+    var red = rgb[0]/255,
+        grn = rgb[1]/255,
+        blu = rgb[2]/255;
     x = Math.min(Math.min(red, grn), blu);
     val = Math.max(Math.max(red, grn), blu);
     if (x==val) return [undefined, 0, val*100];
@@ -2972,12 +2973,14 @@ if (!akme.rgb2hex) akme.rgb2hex = function (rgb) {
 
 if (!akme.toHexByte) akme.toHexByte = function (n) {
 	if (n==null) return "00";
-	n=parseInt(n); if (n==0 || isNaN(n)) return "00";
+	n=parseInt(n); if (n===0 || isNaN(n)) return "00";
 	n=Math.max(0,n); n=Math.min(n,255); n=Math.round(n);
-	return "0123456789ABCDEF".charAt((n-n%16)/16)
-    	+ "0123456789ABCDEF".charAt(n%16);
+	return "0123456789ABCDEF".charAt((n-n%16)/16) +
+    	"0123456789ABCDEF".charAt(n%16);
 };
 // akme-storage.js
+/*jshint browser:true */
+/*globals akme */
 
 /**
  * Improvements over standard sessionStorage and localStorage.
@@ -3015,7 +3018,7 @@ interface Storage {
 	function Storage(storage) {
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		this.getStorage = function() { return storage; };
-	};
+	}
 	$.extendClass($.copyAll( // class constructor
 		Storage, {CLASS: CLASS} 
 	), { // super-static prototype, public functions
@@ -3178,6 +3181,10 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 	removeItem : function(key) { sessionStorage.removeItem(key); this.length = sessionStorage.length; },
 	clear : function() { sessionStorage.clear(); this.length = sessionStorage.length; }
 });
+// akme-couch.js
+/*jshint browser: true */
+/*globals akme */
+
 /*
 		var shiftAccess = new akme.core.CouchAccess("shiftdb", "../proxy/couchdb.jsp?/shiftdb");
 		shiftAccess.key = function(location, date, time) {
@@ -3209,10 +3216,10 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 		if (typeof dataConstructor === "function") this.dataConstructor = dataConstructor;
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		//$.extendDestroy(this, function(){});
-	};
+	}
 	$.extendClass($.copyAll(
 		CouchAccess, {CLASS: CLASS}
-	), $.copyAll(new $.core.Access, {
+	), $.copyAll(new $.core.Access(), {
 		clear : clear, // given Object return undefined/void
 		findOne : findOne, // given Object return Object
 		info : info, // given key return Object
@@ -3241,11 +3248,11 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 		//var self = this;
 		var xhr = null;
 		for (var i=0; i<1; i++) { // take away re-try to implement server-side but leave here as example
-			if (i!=0) {
+			if (i!==0) {
 				//var xhr2 = authorize();
 				//if (xhr2.status >= 400) break;
 			}
-			xhr = akme.xhr.open(method, url, false);
+			xhr = $.xhr.open(method, url, false);
 			for (var key in headers) xhr.setRequestHeader(key, headers[key]);
 			if (typeof content !== "undefined" && content !== null) xhr.send(content);
 			else xhr.send();
@@ -3282,7 +3289,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			var val = xhr.getResponseHeader(name);
 			if (val) headers[name] = val;
 		}
-		if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers["rev"]);
+		if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers.rev);
 		this.doEvent({ type:"info", keyType:this.name, key:key, info:headers });
 		return headers;
 	}
@@ -3302,7 +3309,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			var val = xhr.getResponseHeader(name);
 			if (val) headers[name] = val;
 		}
-		if (console.logEnabled) console.log("COPY "+ url, newKey, xhr.status, xhr.statusText, headers["rev"]);
+		if (console.logEnabled) console.log("COPY "+ url, newKey, xhr.status, xhr.statusText, headers.rev);
 		this.doEvent({ type:"copy", keyType:this.name, key:key, newKey:newKey, info:headers });
 		return headers;
 	}
@@ -3316,7 +3323,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 		var xhr = callWithRetry("GET", url, {"Accept": CONTENT_TYPE_JSON}, null);
 		var type = $.xhr.getResponseContentType(xhr);
 		if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
-		var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
+		var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)===0) ? xhr.responseText : null;
 		if (value) {
 			if (this.cacheMap) this.cacheMap[key] = value;
 			else $.sessionStorage.setItem(self.name, key, value);
@@ -3347,7 +3354,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 				typeof value == "string" ? value : $.formatJSON(value, replacer));
 		var type = $.xhr.getResponseContentType(xhr);
 		if (console.logEnabled) console.log("PUT "+ url, xhr.status, xhr.statusText, type);
-		var result = (type && type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
+		var result = (type && type.indexOf(CONTENT_TYPE_JSON)===0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
 		if (result.ok && result.rev) {
 			value._id = result.id;
 			value._rev = result.rev;
@@ -3375,7 +3382,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 		xhr = callWithRetry("DELETE", url, {"Accept": CONTENT_TYPE_JSON});
 		var type = $.xhr.getResponseContentType(xhr);
 		if (console.logEnabled) console.log("DELETE "+ url, xhr.status, xhr.statusText, type);
-		var result = (type && type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
+		var result = (type && type.indexOf(CONTENT_TYPE_JSON)===0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
 		if (result.ok && result.rev) {
 			if (this.cacheMap) delete this.cacheMap[key];
 			else $.sessionStorage.removeItem(self.name, key);
@@ -3410,10 +3417,10 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 		if (typeof dataConstructor === "function") this.dataConstructor = dataConstructor;
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		//$.extendDestroy(this, function(){});
-	};
+	}
 	$.extendClass($.copyAll(
 		CouchAsyncAccess, {CLASS: CLASS}
-	), $.copyAll(new $.core.Access, {
+	), $.copyAll(new $.core.Access(), {
 		clear : clear, // given Object return undefined/void
 		findOne : findOne, // given Object return Object
 		info : info, // given key return Object
@@ -3495,7 +3502,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			var rev = xhr.getResponseHeader("ETag");
 			var headers = {id: key, rev: (rev ? rev.replace(/^"|"$/g, "") : null)};
 			getResponseHeaders(headers, xhr);
-			if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers["rev"]);
+			if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers.rev);
 			self.doEvent({ type:"info", keyType:self.name, key:key, info:headers });
 			$.handleEvent(callbackFnOrOb, headers, headers);
 			self = xhr = key = callbackFnOrOb = null; // closure cleanup 
@@ -3516,7 +3523,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			var rev = xhr.getResponseHeader("ETag");
 			var headers = {id: key, rev: (rev ? rev.replace(/^"|"$/g, "") : null)};
 			getResponseHeaders(headers, xhr);
-			if (console.logEnabled) console.log("COPY "+ url, newKey, xhr.status, xhr.statusText, headers["rev"]);
+			if (console.logEnabled) console.log("COPY "+ url, newKey, xhr.status, xhr.statusText, headers.rev);
 			self.doEvent({ type:"info", keyType:self.name, key:key, newKey:newKey, info:headers });
 			$.handleEvent(callbackFnOrOb, headers, headers);
 			self = xhr = key = callbackFnOrOb = null; // closure cleanup 
@@ -3537,7 +3544,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			var type = $.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
 			var headers = getResponseHeaders({}, xhr);
-			var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
+			var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)===0) ? xhr.responseText : null;
 			if (value) {
 				if (this.cacheMap) this.cacheMap[key] = value; 
 				else $.sessionStorage.setItem(self.name, key, value);
@@ -3575,7 +3582,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			var type = $.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
 			var headers = getResponseHeaders({}, xhr);
-			var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
+			var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)===0) ? xhr.responseText : null;
 			if (value) {
 				value = $.parseJSON(value);
 				var rows = value ? value.rows : null;
@@ -3598,7 +3605,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			
 			self.doEvent({ type:"readMany", keyType:self.name, keys:keys, value:a, headers:headers });
 			$.handleEvent(callbackFnOrOb, a, headers);
-			self = xhr = key = callbackFnOrOb = null; // closure cleanup
+			self = xhr = keys = callbackFnOrOb = null; // closure cleanup
 		}
 		return xhr;
 	}
@@ -3625,7 +3632,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			var type = $.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("PUT "+ url, xhr.status, xhr.statusText, type);
 			var headers = getResponseHeaders({}, xhr);
-			var result = (type && type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
+			var result = (type && type.indexOf(CONTENT_TYPE_JSON)===0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
 			if (result.ok && result.rev) {
 				value._id = result.id;
 				value._rev = result.rev;
@@ -3635,7 +3642,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			self.doEvent({ type:"write", keyType:self.name, key:key, value:value, headers:headers });
 			$.handleEvent(callbackFnOrOb, result, headers);
 			self = xhr = key = value = callbackFnOrOb = null; // closure cleanup 
-		};
+		}
 		return xhr;
 	}
 	
@@ -3661,17 +3668,17 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			if (rev) rev = rev.replace(/^"|"$/g, "");
 			if (!rev) rev = "";
 			callDELETE();
-		};
+		}
 		function callDELETE() {
 			url = self.url+"/"+encodeURIComponent(key)+"?rev="+encodeURIComponent(rev);
 			callAsyncXHR(xhr, "DELETE", url, {"Accept": CONTENT_TYPE_JSON}, null, handleState);
-		};
+		}
 		function handleState(ev) {
 			xhr = ev.target;
 			var type = $.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("DELETE "+ url, xhr.status, xhr.statusText, type);
 			var headers = getResponseHeaders({}, xhr);
-			var result = (type && type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
+			var result = (type && type.indexOf(CONTENT_TYPE_JSON)===0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
 			if (result.ok && result.rev) {
 				if (this.cacheMap) delete this.cacheMap[key];
 				else $.sessionStorage.removeItem(self.name, key);
@@ -3679,7 +3686,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 			self.doEvent({ type:"remove", keyType:self.name, key:key, headers:headers });
 			$.handleEvent(callbackFnOrOb, result, headers);
 			self = xhr = url = key = rev = callbackFnOrOb = null; // closure cleanup
-		};
+		}
 		return xhr;
 	}
 	

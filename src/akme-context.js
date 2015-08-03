@@ -173,7 +173,7 @@
 	 */
 	function getIdArray() {
 		var a=[], i=0;
-		for (key in this.PRIVATES(PRIVATES).map) a[i++] = key;
+		for (var key in this.PRIVATES(PRIVATES).map) a[i++] = key;
 		return a;
 	}
 

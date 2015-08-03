@@ -1,3 +1,7 @@
+// akme-couch.js
+/*jshint browser: true */
+/*globals akme */
+
 /*
 		var shiftAccess = new akme.core.CouchAccess("shiftdb", "../proxy/couchdb.jsp?/shiftdb");
 		shiftAccess.key = function(location, date, time) {
@@ -29,10 +33,10 @@
 		if (typeof dataConstructor === "function") this.dataConstructor = dataConstructor;
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		//$.extendDestroy(this, function(){});
-	};
+	}
 	$.extendClass($.copyAll(
 		CouchAccess, {CLASS: CLASS}
-	), $.copyAll(new $.core.Access, {
+	), $.copyAll(new $.core.Access(), {
 		clear : clear, // given Object return undefined/void
 		findOne : findOne, // given Object return Object
 		info : info, // given key return Object
@@ -61,11 +65,11 @@
 		//var self = this;
 		var xhr = null;
 		for (var i=0; i<1; i++) { // take away re-try to implement server-side but leave here as example
-			if (i!=0) {
+			if (i!==0) {
 				//var xhr2 = authorize();
 				//if (xhr2.status >= 400) break;
 			}
-			xhr = akme.xhr.open(method, url, false);
+			xhr = $.xhr.open(method, url, false);
 			for (var key in headers) xhr.setRequestHeader(key, headers[key]);
 			if (typeof content !== "undefined" && content !== null) xhr.send(content);
 			else xhr.send();
@@ -102,7 +106,7 @@
 			var val = xhr.getResponseHeader(name);
 			if (val) headers[name] = val;
 		}
-		if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers["rev"]);
+		if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers.rev);
 		this.doEvent({ type:"info", keyType:this.name, key:key, info:headers });
 		return headers;
 	}
@@ -122,7 +126,7 @@
 			var val = xhr.getResponseHeader(name);
 			if (val) headers[name] = val;
 		}
-		if (console.logEnabled) console.log("COPY "+ url, newKey, xhr.status, xhr.statusText, headers["rev"]);
+		if (console.logEnabled) console.log("COPY "+ url, newKey, xhr.status, xhr.statusText, headers.rev);
 		this.doEvent({ type:"copy", keyType:this.name, key:key, newKey:newKey, info:headers });
 		return headers;
 	}
@@ -136,7 +140,7 @@
 		var xhr = callWithRetry("GET", url, {"Accept": CONTENT_TYPE_JSON}, null);
 		var type = $.xhr.getResponseContentType(xhr);
 		if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
-		var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
+		var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)===0) ? xhr.responseText : null;
 		if (value) {
 			if (this.cacheMap) this.cacheMap[key] = value;
 			else $.sessionStorage.setItem(self.name, key, value);
@@ -167,7 +171,7 @@
 				typeof value == "string" ? value : $.formatJSON(value, replacer));
 		var type = $.xhr.getResponseContentType(xhr);
 		if (console.logEnabled) console.log("PUT "+ url, xhr.status, xhr.statusText, type);
-		var result = (type && type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
+		var result = (type && type.indexOf(CONTENT_TYPE_JSON)===0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
 		if (result.ok && result.rev) {
 			value._id = result.id;
 			value._rev = result.rev;
@@ -195,7 +199,7 @@
 		xhr = callWithRetry("DELETE", url, {"Accept": CONTENT_TYPE_JSON});
 		var type = $.xhr.getResponseContentType(xhr);
 		if (console.logEnabled) console.log("DELETE "+ url, xhr.status, xhr.statusText, type);
-		var result = (type && type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
+		var result = (type && type.indexOf(CONTENT_TYPE_JSON)===0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
 		if (result.ok && result.rev) {
 			if (this.cacheMap) delete this.cacheMap[key];
 			else $.sessionStorage.removeItem(self.name, key);
@@ -230,10 +234,10 @@
 		if (typeof dataConstructor === "function") this.dataConstructor = dataConstructor;
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		//$.extendDestroy(this, function(){});
-	};
+	}
 	$.extendClass($.copyAll(
 		CouchAsyncAccess, {CLASS: CLASS}
-	), $.copyAll(new $.core.Access, {
+	), $.copyAll(new $.core.Access(), {
 		clear : clear, // given Object return undefined/void
 		findOne : findOne, // given Object return Object
 		info : info, // given key return Object
@@ -315,7 +319,7 @@
 			var rev = xhr.getResponseHeader("ETag");
 			var headers = {id: key, rev: (rev ? rev.replace(/^"|"$/g, "") : null)};
 			getResponseHeaders(headers, xhr);
-			if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers["rev"]);
+			if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers.rev);
 			self.doEvent({ type:"info", keyType:self.name, key:key, info:headers });
 			$.handleEvent(callbackFnOrOb, headers, headers);
 			self = xhr = key = callbackFnOrOb = null; // closure cleanup 
@@ -336,7 +340,7 @@
 			var rev = xhr.getResponseHeader("ETag");
 			var headers = {id: key, rev: (rev ? rev.replace(/^"|"$/g, "") : null)};
 			getResponseHeaders(headers, xhr);
-			if (console.logEnabled) console.log("COPY "+ url, newKey, xhr.status, xhr.statusText, headers["rev"]);
+			if (console.logEnabled) console.log("COPY "+ url, newKey, xhr.status, xhr.statusText, headers.rev);
 			self.doEvent({ type:"info", keyType:self.name, key:key, newKey:newKey, info:headers });
 			$.handleEvent(callbackFnOrOb, headers, headers);
 			self = xhr = key = callbackFnOrOb = null; // closure cleanup 
@@ -357,7 +361,7 @@
 			var type = $.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
 			var headers = getResponseHeaders({}, xhr);
-			var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
+			var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)===0) ? xhr.responseText : null;
 			if (value) {
 				if (this.cacheMap) this.cacheMap[key] = value; 
 				else $.sessionStorage.setItem(self.name, key, value);
@@ -395,7 +399,7 @@
 			var type = $.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
 			var headers = getResponseHeaders({}, xhr);
-			var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)==0) ? xhr.responseText : null;
+			var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)===0) ? xhr.responseText : null;
 			if (value) {
 				value = $.parseJSON(value);
 				var rows = value ? value.rows : null;
@@ -418,7 +422,7 @@
 			
 			self.doEvent({ type:"readMany", keyType:self.name, keys:keys, value:a, headers:headers });
 			$.handleEvent(callbackFnOrOb, a, headers);
-			self = xhr = key = callbackFnOrOb = null; // closure cleanup
+			self = xhr = keys = callbackFnOrOb = null; // closure cleanup
 		}
 		return xhr;
 	}
@@ -445,7 +449,7 @@
 			var type = $.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("PUT "+ url, xhr.status, xhr.statusText, type);
 			var headers = getResponseHeaders({}, xhr);
-			var result = (type && type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
+			var result = (type && type.indexOf(CONTENT_TYPE_JSON)===0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
 			if (result.ok && result.rev) {
 				value._id = result.id;
 				value._rev = result.rev;
@@ -455,7 +459,7 @@
 			self.doEvent({ type:"write", keyType:self.name, key:key, value:value, headers:headers });
 			$.handleEvent(callbackFnOrOb, result, headers);
 			self = xhr = key = value = callbackFnOrOb = null; // closure cleanup 
-		};
+		}
 		return xhr;
 	}
 	
@@ -481,17 +485,17 @@
 			if (rev) rev = rev.replace(/^"|"$/g, "");
 			if (!rev) rev = "";
 			callDELETE();
-		};
+		}
 		function callDELETE() {
 			url = self.url+"/"+encodeURIComponent(key)+"?rev="+encodeURIComponent(rev);
 			callAsyncXHR(xhr, "DELETE", url, {"Accept": CONTENT_TYPE_JSON}, null, handleState);
-		};
+		}
 		function handleState(ev) {
 			xhr = ev.target;
 			var type = $.xhr.getResponseContentType(xhr);
 			if (console.logEnabled) console.log("DELETE "+ url, xhr.status, xhr.statusText, type);
 			var headers = getResponseHeaders({}, xhr);
-			var result = (type && type.indexOf(CONTENT_TYPE_JSON)==0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
+			var result = (type && type.indexOf(CONTENT_TYPE_JSON)===0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
 			if (result.ok && result.rev) {
 				if (this.cacheMap) delete this.cacheMap[key];
 				else $.sessionStorage.removeItem(self.name, key);
@@ -499,7 +503,7 @@
 			self.doEvent({ type:"remove", keyType:self.name, key:key, headers:headers });
 			$.handleEvent(callbackFnOrOb, result, headers);
 			self = xhr = url = key = rev = callbackFnOrOb = null; // closure cleanup
-		};
+		}
 		return xhr;
 	}
 	

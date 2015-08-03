@@ -1,4 +1,6 @@
 // Add more to the akme object.
+/*jshint browser:true */
+/*globals akme */
 
 akme.copy(akme, {
 
@@ -16,19 +18,19 @@ akme.copy(akme, {
 		var tagNameUpper = tagName.toUpperCase();
 		var currentNode = node;
 		var classAry = className.split(" ");
-		while (currentNode 
-				&& currentNode.parentNode
-				&& currentNode != currentNode.parentNode) {
+		while (currentNode &&
+				currentNode.parentNode &&
+				currentNode != currentNode.parentNode) {
 			currentNode = currentNode.parentNode;
 			if(currentNode.nodeName == tagNameUpper) {
 				var tagClassName = currentNode.className;
 				if (!tagClassName) continue;
 				for (var j=0 ; j<classAry.length ; j++) {
-					var className = classAry[j];
+					className = classAry[j];
 					var pos = tagClassName.indexOf(className);
-					if (pos == -1) continue;
-					if ((pos == 0 || " " == tagClassName.charAt(pos-1)) 
-							&& (pos+className.length == tagClassName.length || " " == tagClassName.charAt(pos+className.length))) {
+					if (pos === -1) continue;
+					if ((pos === 0 || " " == tagClassName.charAt(pos-1)) &&
+							(pos+className.length == tagClassName.length || " " == tagClassName.charAt(pos+className.length))) {
 						return currentNode;
 					}
 				}
@@ -84,7 +86,7 @@ akme.copy(akme, {
 				}
 			}
 		} else if (dom.nodeType == 3) { // text
-			obj["$"] = dom.nodeValue;
+			obj.$ = dom.nodeValue;
 		}
 		if (dom.hasChildNodes()) { // children
 			var name, a;
@@ -132,7 +134,7 @@ akme.copy(akme, {
 			var items = this.items;
 			var a = [];
 			for (var i=0; i<items.length; i++) a.push(
-				(items[i][0] ? items[i][0]+" : " : "") + (i==0 ? items[i][1] : items[i][1]-items[i-1][1])
+				(items[i][0] ? items[i][0]+" : " : "") + (i===0 ? items[i][1] : items[i][1]-items[i-1][1])
 				);
 			elem.appendChild(document.createTextNode("{"+a.join(", ")+"}")); 
 		}
@@ -228,8 +230,8 @@ if (!akme.form) akme.form = {
 	},
 	
 	setValue : function (elem, value) {
-		var elem0 = elem instanceof NodeList ? elem[0] : elem;
-		var nodeName = elem0.nodeName.toLowerCase();
+		var elem0 = elem instanceof NodeList ? elem[0] : elem,
+            nodeName = elem0.nodeName.toLowerCase();
 		if ("select"==nodeName) {
 			for (var i=0; i<elem.options.length; i++) {
 				var optn = elem.options[i];
@@ -365,7 +367,7 @@ akme.selectHelper = akme.selectHelper || {
 		if (!elem) return false;
 		var uc = evnt.keyCode ? evnt.keyCode : evnt.which;
 		var now = new Date().getTime();
-		if (this.timestamp == 0) {
+		if (this.timestamp === 0) {
 			this.timestamp = now;
 		} else if (this.elem !== elem || now-this.timestamp > this.timeout) {
 			this.text = "";
@@ -506,11 +508,11 @@ if (!akme.scriptp) akme.scriptp = akme.copy(akme.clone(akme._callbasep), {_tag:"
 
 if (!akme.hsv2rgb) akme.hsv2rgb = function (hsv) {
     var red, grn, blu, i, f, p, q, t;
-    var hue = hsv[0]%360;
-    if (hsv[2]==0) return [0, 0, 0];
-    var sat = hsv[1]/100;
-    var val = hsv[2]/100;
-    var hue = hue/60;
+    if (hsv[2]===0) return [0, 0, 0];
+    var hue = hsv[0]%360,
+        sat = hsv[1]/100,
+        val = hsv[2]/100;
+    hue = hue/60;
     i = Math.floor(hue);
     f = hue-i;
     p = val*(1-sat);
@@ -528,10 +530,10 @@ if (!akme.hsv2rgb) akme.hsv2rgb = function (hsv) {
 };
 
 if (!akme.rgb2hsv) akme.rgb2hsv = function (rgb) {
-    var x, val, f, i, hue, sat, val;
-    var red = rgb[0]/255;
-    var grn = rgb[1]/255;
-    var blu = rgb[2]/255;
+    var x, f, i, hue, sat, val;
+    var red = rgb[0]/255,
+        grn = rgb[1]/255,
+        blu = rgb[2]/255;
     x = Math.min(Math.min(red, grn), blu);
     val = Math.max(Math.max(red, grn), blu);
     if (x==val) return [undefined, 0, val*100];
@@ -549,8 +551,8 @@ if (!akme.rgb2hex) akme.rgb2hex = function (rgb) {
 
 if (!akme.toHexByte) akme.toHexByte = function (n) {
 	if (n==null) return "00";
-	n=parseInt(n); if (n==0 || isNaN(n)) return "00";
+	n=parseInt(n); if (n===0 || isNaN(n)) return "00";
 	n=Math.max(0,n); n=Math.min(n,255); n=Math.round(n);
-	return "0123456789ABCDEF".charAt((n-n%16)/16)
-    	+ "0123456789ABCDEF".charAt(n%16);
+	return "0123456789ABCDEF".charAt((n-n%16)/16) +
+    	"0123456789ABCDEF".charAt(n%16);
 };

@@ -1,4 +1,6 @@
 // akme-dom.js
+/*jshint browser: true, devel: true */
+/*globals ActiveXObject, escape, unescape, akme */
 
 (function(self){
 
@@ -26,10 +28,10 @@
 	self.DOMParser.prototype.parseFromString = function(text, contentType) {
 		if (this.xmldoc) { // MSIE 8
 			this.xmldoc.loadXML(text);
-			if (this.xmldoc.parseError.errorCode != 0) {
+			if (this.xmldoc.parseError.errorCode !== 0) {
 				var err = this.xmldoc.parseError;
-				throw new SyntaxError("DOMParser error "+ err.errorCode +" at line "+ err.line +" pos "+ err.linepos
-					+": "+ err.reason);
+				throw new SyntaxError("DOMParser error "+ err.errorCode +" at line "+ err.line +" pos "+ err.linepos +
+					": "+ err.reason);
 			}
 			return this.xmldoc;
 		} else {
@@ -66,7 +68,6 @@
 akme.copyAll(this.akme, {
 	_html5 : null,
 	onContent : function (evCallback) {
-		console.log("onContent from ", location.href)
 		var self = this, elem = document, type = "DOMContentLoaded";
 		// Includes special handling to emulate DOMContentLoaded in MSIE 8.
 		if (!contentLoaded()) {
@@ -193,7 +194,7 @@ akme.copyAll(this.akme, {
 	},
 	getBaseHref : function () {
 		var a = document.getElementsByTagName("base");
-		return a.length != 0 ? a[0]["href"] : "";
+		return a.length !== 0 ? a[0].href : "";
 	},
 	getContextPath : function () {
 		// Java ROOT contextPath is "", not "/", so use "/." to ensure a ROOT reference.
@@ -264,11 +265,11 @@ akme.copyAll(this.akme, {
 			var tagClassName = tags[i].className;
 			if (!tagClassName) continue;
 			for (var j=0; j<classAry.length; j++) {
-				var className = classAry[j];
+				className = classAry[j];
 				var pos = tagClassName.indexOf(className);
 				if (pos == -1) continue;
-				if ((pos == 0 || " " == tagClassName.charAt(pos-1)) 
-						&& (pos+className.length == tagClassName.length || " " == tagClassName.charAt(pos+className.length))) {
+				if ((pos == 0 || " " == tagClassName.charAt(pos-1)) &&
+						(pos+className.length == tagClassName.length || " " == tagClassName.charAt(pos+className.length))) {
 					result.push(tags[i]);
 				}				
 			}
@@ -331,20 +332,18 @@ akme.copyAll(this.akme, {
 	 * The use of data--href is to avoid the brower trying to load '{href}' as a file before being replaced.  
 	 */
 	replaceNodeData : function (parentNode, dataMap) {
-		var parentAry = [parentNode];
+		var a, parentAry = [parentNode];
 		for (var parent = parentAry.pop(); parent != null; parent = parentAry.pop()) {
 			var attrs = parent.attributes;
 			if (attrs) for (var i=0; i<attrs.length; i++) {
-				var attr = attrs[i];
-				var name = attr.nodeName;
-				var value = attr.nodeValue;
+				var attr = attrs[i], name = attr.nodeName, value = attr.nodeValue;
 				if (name.lastIndexOf("data--",6) == 0) {
 					name = name.substring(6);
 					parent.removeAttribute(attr.nodeName);
-					var a = this.replaceTextDataAsArrayOrNull(value, dataMap);
+					a = this.replaceTextDataAsArrayOrNull(value, dataMap);
 					if (a != null) parent.setAttribute(name, a.join(""));
 				} else {
-					var a = this.replaceTextDataAsArrayOrNull(value, dataMap);
+					a = this.replaceTextDataAsArrayOrNull(value, dataMap);
 					if (a != null) attr.nodeValue = a.join("");
 				}
 			}
@@ -356,7 +355,7 @@ akme.copyAll(this.akme, {
 					parentAry[parentAry.length]=(child);
 					// fall through to TextNode as well
 				case 3: case 4: // 3=TextNode, 4=CdataSectionNode
-					var a = this.replaceTextDataAsArrayOrNull(child.nodeValue, dataMap);
+					a = this.replaceTextDataAsArrayOrNull(child.nodeValue, dataMap);
 					if (a != null) child.nodeValue = a.join("");
 					break;
 				}
@@ -387,9 +386,9 @@ akme.copyAll(this.akme, {
 		return clone;
 	},	
 	importNode : function(doc, thatChild) {
-		var result;
-		var recbin = document.getElementById("recycleBin");
-		var nodeName = thatChild.nodeName.toLowerCase();
+		var result, firstChild,
+            recbin = document.getElementById("recycleBin"),
+            nodeName = thatChild.nodeName.toLowerCase();
 		if ("importNode" in doc && !("documentMode" in doc && doc.documentMode == 9)) { 
 			// Need to set innerHTML event after appendChild to convert simple XML to more useful (X)HTML.
 			// Safari does not like /* CDATA */ in a script.cloneNode(true).
@@ -404,7 +403,7 @@ akme.copyAll(this.akme, {
 			} else {
 				result.appendChild(doc.importNode(thatChild, true));
 			}
-			var firstChild = result.firstChild;
+			firstChild = result.firstChild;
 			result.removeChild(firstChild);
 			if (recbin) recbin.appendChild(result);
 			return firstChild;
@@ -426,7 +425,7 @@ akme.copyAll(this.akme, {
 				// Use innerHTML and the IE elem.xml property.
 				result = doc.createElement("div");
 				result.innerHTML = thatChild.xml;
-				var firstChild = result.firstChild;
+				firstChild = result.firstChild;
 				result.removeChild(firstChild);
 				if (recbin) recbin.appendChild(result);
 				return firstChild;
@@ -529,7 +528,8 @@ akme.copyAll(this.akme, {
 	},
 	
 	getAttributes : function(elem, /*optional-to*/map) {
-		map = map || {}, attrs = elem.attributes;
+        var attrs = elem.attributes;
+		map = map || {};
 		for (var i=0; i<attrs.length; i++) map[attrs[i].name] = elem.getAttribute(attrs[i].name); // getAttribute for symmetry
 		return map;
 	},
@@ -656,8 +656,8 @@ if (!akme.xhr) akme.xhr = {
 			if (Array.indexOf(nameAry, key.toLowerCase()) == -1) continue;
 			var name = this.formatHttpHeaderName(key);
 			if (name != key) {
-				headers[name] = headers[key];
-				delete headers[key];
+				headerMap[name] = headerMap[key];
+				delete headerMap[key];
 			}
 		}
 	},
@@ -817,7 +817,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 			frame = document.getElementById(this.id);
 		}
 		var key = this.newCallbackKey();
-		headers["callback"] = this.id+".callbackMap."+key;
+		headers.callback = this.id+".callbackMap."+key;
 		var self = this; // closure
 		self.callbackMap[key] = function(headers, content) {
 			self.deleteCallbackKey(key);
@@ -835,12 +835,12 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 		var msg = this.formatMessage(headers, content);
 		var targetOrigin = frame.src.substring(0, frame.src.indexOf("/", 8));
 		frame.contentWindow.postMessage(msg, targetOrigin); // "*" is insecure
-		return headers["callback"];
+		return headers.callback;
 	},
 	submitAsync : function(elem, callbackFnOrOb) {
 		var headers = {call:"SubmitRequest"};
 		var key = this.newCallbackKey();
-		headers["callback"] = this.id+".callbackMap."+key;
+		headers.callback = this.id+".callbackMap."+key;
 		var self = this; // closure
 		self.callbackMap[key] = function(headers, content) {
 			self.deleteCallbackKey(key);
@@ -848,8 +848,8 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 			self = key = callbackFnOrOb = null; // closure cleanup
 		};
 		self.callbackTime[key] = new Date().getTime();
-		self[headers["call"]](headers, {type:'submit', target:elem});
-		return headers["callback"];
+		self[headers.call](headers, {type:'submit', target:elem});
+		return headers.callback;
 	},
 	handleEvent : function(ev) { // ev.data, ev.origin, ev.source
 		var deny = true;
@@ -870,7 +870,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 	},
 	formatMessage : function(headers, content) {
 		var a = [];
-		a[a.length] = "call: "+ headers["call"];
+		a[a.length] = "call: "+ headers.call;
 		for (var key in headers) if ("call"!=key && typeof headers[key] != "undefined") a[a.length] = key +": "+ headers[key];
 		return a.join("\r\n") + "\r\n\r\n" + (content ? content : "");
 	},
@@ -892,10 +892,10 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 		var callback = headers.callback;
 		var source = messageEvent.source;
 		var origin = messageEvent.origin;
-		delete headers["call"];
-		delete headers["callback"];
-		delete headers["method"];
-		delete headers["url"];
+		delete headers.call;
+		delete headers.callback;
+		delete headers.method;
+		delete headers.url;
 		if (headers) for (var key in headers) xhr.setRequestHeader(key, headers[key]);
 		var self = this;
 		xhr.onreadystatechange = function() {
@@ -904,13 +904,13 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 			var headers = {
 				call : "XMLHttpResponse",
 				readyState : xhr.readyState, 
-				status : xhr["status"] ? xhr.status : 0,
-				statusText : xhr["statusText"] ? xhr.statusText : ""
+				status : xhr.status ? xhr.status : 0,
+				statusText : xhr.statusText ? xhr.statusText : ""
 			};
 			if (callback) headers.callback = callback;
 			var headerStr = xhr.getAllResponseHeaders();
 			if (headerStr) akme.copyAll(headers, akme.xhr.parseHeaders(headerStr));
-			var content = xhr["responseText"] ? xhr.responseText : "";
+			var content = xhr.responseText ? xhr.responseText : "";
 			if (/xml;|xml$/.test(headers["Content-Type"]) || /html;|html$/.test(headers["Content-Type"])) {
 				// Remove DOCTYPE ... SYSTEM if found since the DTD reference will be invalid after postMessage.
 				var pos1 = content.indexOf("<"+"!DOCTYPE ");
@@ -929,7 +929,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 		xhr.send(content || null);
 	},
 	XMLHttpResponse : function(headers, content) {
-		var callbackFnOrOb = akme.getProperty(window, headers["callback"]);
+		var callbackFnOrOb = akme.getProperty(window, headers.callback);
 		if (callbackFnOrOb && (headers.status == 200 || headers.status == 204 || headers.status == 304)) {
 			if (/xml;|xml$/.test(headers["Content-Type"])) {
 				var resx = content;
@@ -974,7 +974,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 			content = akme.formatJSON(content);
 		}
 		var reqHeaders = headers;
-		var headers = {
+		headers = {
 			call : "StorageResponse",
 			method : reqHeaders.method,
 			type : reqHeaders.type,
@@ -988,7 +988,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 		else source.postMessage(result, origin);
 	},
 	StorageResponse : function(headers, content) {
-		var callbackFnOrOb = akme.getProperty(window, headers["callback"]);
+		var callbackFnOrOb = akme.getProperty(window, headers.callback);
 		if (callbackFnOrOb) {
 			akme.handleEvent(callbackFnOrOb, headers, akme.parseJSON(content));
 			return;
@@ -1002,14 +1002,14 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 		var elemName = elem.nodeName.toLowerCase();
 		if ("form" == elemName) {
 			if (typeof elem.onsubmit === "function" && !elem.onsubmit(ev)) return nullResponse();
-			var callback = elem.elements["callback"];
+			var callback = elem.elements.callback;
 			if (!callback) {
 				callback = elem.ownerDocument.createElement("input");
 				callback.setAttribute("type", "hidden");
 				callback.setAttribute("name", "callback");
 				elem.appendChild(callback);
 			}
-			callback.value = headers["callback"];
+			callback.value = headers.callback;
 			elem.submit();
 			return;
 		} else {
@@ -1017,12 +1017,12 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 			return nullResponse();
 		}
 		function nullResponse() {
-			self.SubmitResponse({call:"SubmitResponse", callback:headers["callback"]}, null);
+			self.SubmitResponse({call:"SubmitResponse", callback:headers.callback}, null);
 			return;
 		}
 	},
 	SubmitResponse : function(headers, content) {
-		var callbackFnOrOb = akme.getProperty(window, headers["callback"]);
+		var callbackFnOrOb = akme.getProperty(window, headers.callback);
 		if (callbackFnOrOb) {
 			if (/json;|json$/.test(headers["Content-Type"]) && content) content = akme.parseJSON(content);
 			akme.handleEvent(callbackFnOrOb, headers, content);

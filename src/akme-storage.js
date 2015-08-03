@@ -1,4 +1,6 @@
 // akme-storage.js
+/*jshint browser:true */
+/*globals akme */
 
 /**
  * Improvements over standard sessionStorage and localStorage.
@@ -36,7 +38,7 @@ interface Storage {
 	function Storage(storage) {
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		this.getStorage = function() { return storage; };
-	};
+	}
 	$.extendClass($.copyAll( // class constructor
 		Storage, {CLASS: CLASS} 
 	), { // super-static prototype, public functions
