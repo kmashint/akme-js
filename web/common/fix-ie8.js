@@ -13,15 +13,13 @@ if ((document.documentMode && document.documentMode < 8) || !document.documentMo
 	alert("Only IE8 and HTML5 browsers are supported.  Please upgrade your browser.");
 }
 
-if ( document.documentMode && document.documentMode == 8 ) (function(){
+if (document.documentMode && document.documentMode == 8) (function() {
 	
-	// reroute properties to W3C standards
-	defineProperty( Element, "innerText", "textContent", true, true );
-	defineProperty( Event, "srcElement", "target", true, false );
+	defineProperty(Element, "innerText", "textContent", true, true);
+	defineProperty(Event, "srcElement", "target", true, false);
 
-	// attach functions to W3C standards
-	defineFunction( Event, "preventDefault", function () { this.returnValue = false; } );
-	defineFunction( Event, "stopPropagation", function () { this.cancelBubble = true; } );
+	defineFunction(Event, "preventDefault", function() { this.returnValue = false; });
+	defineFunction(Event, "stopPropagation", function() { this.cancelBubble = true; });
 	
 	/**
 	 * Helper for :target in IE8, will not work in IE7 or below.
@@ -46,16 +44,16 @@ if ( document.documentMode && document.documentMode == 8 ) (function(){
 	function defineProperty( domConstructor, originalName, attachName, useGetter, useSetter ) {
 	    useGetter = !!useGetter;
 	    useSetter = !!useSetter;
-		var prpd = Object.getOwnPropertyDescriptor( domConstructor.prototype, originalName );
+		var prpd = Object.getOwnPropertyDescriptor(domConstructor.prototype, originalName);
 		var prpSetGet = {};
-		if ( useGetter ) prpSetGet.get = function () { return prpd.get.call( this ); };
-		if ( useSetter ) prpSetGet.set = function ( x ) { return prpd.set.call( this, x ); };
+		if (useGetter) prpSetGet.get = function () { return prpd.get.call(this); };
+		if (useSetter) prpSetGet.set = function (x) { return prpd.set.call(this, x); };
 		Object.defineProperty( domConstructor.prototype, attachName, prpSetGet );
-	}
+	};
 	
 	function defineFunction( domConstructor, name, delegate ) {
 		domConstructor.prototype[name] = delegate;
-	}
+	};
 
 })();
 

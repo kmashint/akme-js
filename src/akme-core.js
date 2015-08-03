@@ -70,6 +70,39 @@
 		for (var i=0; i<k.length; i++) v.push(obj[k[i]]);
 		return v;
 	};
+	
+	/**
+     * Object.forEach() that defers to an instance level implementation or Array.forEach() where available.
+     * This calls the given fcn for each index of an Array, or each hasOwnProperty of an Object.
+     * This does not handle arguments so those to an Array first.
+	 */
+	if (!Object.forEach) Object.forEach = function(obj, /* function(val, key, obj) */ fcn, thisArg) {
+		if (typeof obj.forEach === "function") {
+			obj.forEach(fcn, thisArg);
+		}
+		else if (obj instanceof Array || (typeof NodeList !== "undefined" && obj instanceof NodeList)
+				) for (var key=0; key<obj.length; key++) {
+			fcn.call(thisArg || obj, obj[key], key, obj);
+		}
+		else for (var key in obj) if (obj.hasOwnProperty(key)) {
+			fcn.call(thisArg || obj, obj[key], key, obj);
+		}
+	};
+
+	/**
+     * Convert an array-like object into an actual Array, with optional map function to convert values.
+     * This is similar to Array.from() in ES6 but does not support iterables.
+     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
+	 */
+	if (!Array.from) Array.from = function (obj, /* optional function(val, key, obj) */ mapFcn, /* optional */ thisArg) {
+		var i, len = obj.length || 0, ary = new Array(len);
+		if (typeof mapFcn === "function") {
+			for (i=0; i<len; i++) ary[i] = mapFcn.call(thisArg, obj[i], i, obj);
+		} else {
+			for (i=0; i<len; i++) ary[i] = obj[i];
+		}
+		return ary;
+	};
 
 	/**
 	 * Perform a binary search of an array for an object assuming the array is already sorted.
@@ -109,9 +142,10 @@ if (!this.akme) this.akme = {
 	slice : Array.prototype.slice,
 
 	/**
-	 * Check if the object is not undefined (primitive) and not null (object).
+	 * Check if the object is not undefined (primitive) and not null (object). 
+	 * Or just use x != null that equates undefined to null.
 	 */
-	isDefinedNotNull : function(x) { return typeof x !== "undefined" && x !== null; },
+	isDefinedNotNull : function(x) { return x !== undefined && x !== null; },
 	/**
 	 * Check if the object is instanceof Array (object, there is no typeof array primitive).
 	 */
@@ -999,7 +1033,7 @@ if (!this.akme) this.akme = {
 		else if (p.state === state) applyToArray(fcns, p.self, p.args);
 		return self;
 	};
-	
+
 	 * Return a Promise based on given object(s) which may in turn be Promise(s).
 	 * This will wait on them all and fail on first reject, notify about all of them,
 	 * and only resolve when all are resolved/done with all of the ([object,...], [arguments,...]) resolved.

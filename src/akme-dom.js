@@ -139,7 +139,7 @@ akme.copyAll(this.akme, {
 	 * Ensures internally to be applied only once by setting _ie8fix on the object.
 	 */
 	fixHandleEvent : function (self) {
-		if (document.documentMode && document.documentMode < 9 && typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
+		if (this.isIE8 && typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
 			var handleEvent = self.handleEvent;
 			self.handleEvent = function() { handleEvent.apply(self, arguments); };
 			self.handleEvent._ie8fix = function() { return handleEvent; };
@@ -609,7 +609,7 @@ if (!akme.xhr) akme.xhr = {
 		// Handle IE XDomainRequest in addition to W3C standard.
 		return xhr.contentType ? (xhr.contentType || "") : (xhr.getResponseHeader("Content-Type") || "");
 	},
-	getStatus : function(/*XMLHttpRequest*/ xhr) { 
+	getStatus : function(/*XMLHttpRequest*/ xhr) {
 		// IE8 returns internal 1223 for HTTP 204 NO CONTENT and strips headers.  Can't recover headers.
 		return (xhr.status && xhr.status == 1223) ? 204 : xhr.status;
 	},
@@ -859,6 +859,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 	   			(!hasDomain && ev.origin.substring(ev.origin.indexOf('/')) ==
 	   				location.href.substring(location.href.indexOf('/'), location.href.indexOf('/', 8))
 	   			)) deny = false; // allow self both http and https
+	    for (var i=0; i<this.allowOrigins.length; i++) if (this.allowOrigins[i]==ev.origin) deny = false;
 		var data = this.parseMessage(ev.data);
 		if (deny) { console.error(this.id+" at "+ location.href +" DENY "+ data.call +" from "+ ev.origin); return; }
 		var callback = data.headers.callback;
