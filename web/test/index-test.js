@@ -75,7 +75,7 @@ $(document).ready(function(){
 	});
 
 	
-	module("akme extend and PRIVATES");
+	module("akme extendClass and PRIVATES");
 	test("private-scoped variables bound to each/this instance", function(){
 		(function($,CLASS){
 
@@ -98,7 +98,7 @@ $(document).ready(function(){
 		equal(x.get("x"), 1, "x should be 1");
 		
 	});
-	test("JS inheritance with akme.extend and PRIVATES", function() {
+	test("JS inheritance with akme.extendClass and PRIVATES", function() {
 		(function($,CLASS){
 			$.setProperty($.THIS, "my.Vehicle", function Vehicle(){});
 			// function scope for a module
@@ -114,7 +114,7 @@ $(document).ready(function(){
 			    }
 			    this.PRIVATES = function(self){ return self === PRIVATES ? p : undefined; };
 			};
-			$.extend(
+			$.extendClass(
 				$.copyAll(Car, { // constructor function
 					CLASS : CLASS, PRIVATES: PRIVATES // expose PRIVATES to allow subclass access
 				}), 
@@ -141,7 +141,7 @@ $(document).ready(function(){
 			    var p = {y: 2};
 			    this.constructor.constructor.call(this, p);
 			};
-			$.extend(
+			$.extendClass(
 				$.copyAll(Mini, {CLASS : CLASS}), // constructor function
 				$.copyAll(new my.Car, { // super-static prototype
 					getY: function(){ return this.PRIVATES(PRIVATES).y; }

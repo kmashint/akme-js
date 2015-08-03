@@ -31,7 +31,7 @@
 		});
 		this.refresh();
 	}
-	$.extend($.copyAll( // class-constructor function
+	$.extendClass($.copyAll( // class-constructor function
 		Context, {CLASS: CLASS, getRoot: getRoot}
 	),{ // super-static prototype object
 		has: has,
@@ -202,7 +202,7 @@
 			refresh(ev);
 		});
 	}
-	$.extend($.copyAll( // class-constructor function
+	$.extendClass($.copyAll( // class-constructor function
 		AppContext, {CLASS: CLASS, getRoot: Super.getRoot}
 	), $.copyAll(Object.create( Super.prototype ), { // super-static prototype object
 		

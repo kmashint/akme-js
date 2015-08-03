@@ -1,16 +1,18 @@
-// ..\web\common\akme-core
+// akme-core
 // akme-core.js
 // Javascript Types: undefined, null, boolean, number, string, function, or object; Date and Array are typeof object.
-// Javascript typeof works for a function or object but note typeof String(1) is string yet typeof new String(1) is object.
-// instanceof is better, but will not work between frames/windows/js-security-contexts due to different underlying prototypes.
+// typeof works for a function or object but note typeof String(1) is string yet typeof new String(1) is object.
+// instanceof uses inheritance but will not work between windows/js-security-contexts due to different underlying prototypes.
 // This limitation of instanceof is another reason to use postMessage between frames.
 
 // Simple ability to ensure console.log and allow for use of if (console.logEnabled).
 // http://www.tuttoaster.com/learning-javascript-and-dom-with-console/
 // http://www.thecssninja.com/javascript/console
 
+/*jslint bitwise:true browser:true forin:true maxlen:120 vars:true white:true */
+
 // Add safe (from side-effects) compatibility to built-in JS constructor functions like Object, Function, Array.
-(function(){
+(function(global){
 	'use strict';
 	
 	var NOOP = function(){},
@@ -39,27 +41,27 @@
 	 * Extension to provide a function whose context is bound to a specific object, part of ECMAScript 5.
 	 * https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
 	 */
-	if (!Function.prototype.bind) Function.prototype.bind = function (oThis) {  
-	      if (typeof this !== "function") {  
-	        // closest thing possible to the ECMAScript 5 internal IsCallable function  
-	        throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");  
-	      }  
-	    
-	      var fSlice = Array.prototype.slice,  
-	          aArgs = fSlice.call(arguments, 1),   
-	          fToBind = this,   
-	          fNOP = function () {},  
-	          fBound = function () {  
-	            return fToBind.apply(this instanceof fNOP  
-	                                   ? this  
-	                                   : oThis || window,  
-	                                 aArgs.concat(fSlice.call(arguments)));  
-	          };  
-	    
-	      fNOP.prototype = this.prototype;  
-	      fBound.prototype = new fNOP();  
-	    
-	      return fBound;  
+	if (!Function.prototype.bind) Function.prototype.bind = function (oThis) {
+        if (typeof this !== "function") {
+            // closest thing possible to the ECMAScript 5 internal IsCallable function
+            throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
+        }
+
+        var slice = Array.prototype.slice,
+            args = slice.call(arguments, 1),
+            self = this,
+            NOOP = function () {},
+            bound = function () {
+            return self.apply(this instanceof NOOP
+                                   ? this
+                                   : oThis || window,
+                                 args.concat(slice.call(arguments)));
+            };
+
+        NOOP.prototype = this.prototype;
+        bound.prototype = new NOOP();
+
+        return bound;
 	};
 
 	/**
@@ -92,7 +94,7 @@
 		})(key);
 	}
 
-})();
+})(this);
 
 
 //
@@ -104,7 +106,7 @@ if (!this.akme) this.akme = {
 	PRINTABLE_EXCLUDE_REGEXP : /[^\x20-\x7e\xc0-\xff]/g,
 	MILLIS_IN_HOUR : 60*60000,
 	MILLIS_IN_DAY : 24*60*60000,
-	
+
 	noop: function(){},
 	slice : Array.prototype.slice,
 
@@ -265,25 +267,19 @@ if (!this.akme) this.akme = {
 	},
 
 	/**
-	 * Helper to allow instanceof to work for single-inheritance constructor functions.
-	 * e.g. akme.SubClass = akme.extend(akme.SuperClass, function() { akme.SuperClass.call(this); ... });
-	 * Instead of (akme.SuperClass,...) you can also use (new akme.SuperClass(someParams),...)
-	 * and extend will check if it was given a function or object as the first parameter.
-	 * If the constructFn is not provided, an empty function(){} constructor will be used, like extending a singleton:
-	 *   e.g. akme.core.MessageBroker = akme.extend({...object literal prototype...});
-	 * If typeof constructFn is an object, this will assume reversed arguments (constructFn, superPrototype).
-	 * If needed, refer to the parent constructor function in the constructFn as this.constructor.constructor.
-	 * Javascript functions actually have a constructor property, by default an empty Function.
+	 * Extends a given contructFcn() to be an instanceof superClass.
+	 * The superClass may be a function or an object, the latter if it is intended to be the constructFcn.prototype.
+	 * This also creates a relationship such that this.constructor.constructor is the superClass constructor.
+	 * So given  var car = new akme.extendClass(Car, Vehicle);  then  car.constructor.constructor === Vehicle  .
 	 */
-	extend : function (superNew, constructFn) {
-		if (typeof constructFn === "object") {
-			var x = superNew; superNew = constructFn; constructFn = x;
+	extendClass : function (ctorFcn, superClass) {
+		if (superClass) {
+			if (typeof superClass === "function") ctorFcn.prototype = Object.create(superClass.prototype);
+			else ctorFcn.prototype = superClass;
 		}
-		else if (!constructFn) constructFn = function(){};
-		constructFn.prototype = typeof superNew === "function" ? Object.create(superNew.prototype) : superNew;
-		constructFn.constructor = constructFn.prototype.constructor;
-		constructFn.prototype.constructor = constructFn;
-		return constructFn;
+		ctorFcn.constructor = ctorFcn.prototype.constructor;
+		ctorFcn.prototype.constructor = ctorFcn;
+		return ctorFcn;
 	},
 	/**
 	 * Helper for single-inheritance AND injector/mixin destructor functions.
@@ -478,7 +474,7 @@ if (!this.akme) this.akme = {
 	function Access() {
 		//$.extendDestroy(this, function(){});
 	};
-	$.extend($.copyAll( // class-constructor function
+	$.extendClass($.copyAll( // class-constructor function
 		Access, {CLASS: CLASS}
 	), { // super-static-prototype object
 		clear : null, // any use as related to JPA EntityManager?
@@ -569,7 +565,7 @@ if (!this.akme) this.akme = {
 		this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
 		this.length = p.ary.length;
 	};
-	$.extend($.copyAll( // class constructor
+	$.extendClass($.copyAll( // class constructor
 		IndexedMap, {CLASS: CLASS} 
 	), { // super-static prototype, public functions
     	size : size,
@@ -715,7 +711,7 @@ if (!this.akme) this.akme = {
 		this.width = p.head.length;
 		this.keyMap = {};
 	}
-	$.extend($.copyAll( // class constructor
+	$.extendClass($.copyAll( // class constructor
 		DataTable, {CLASS: CLASS, KEY_SEP: KEY_SEP} 
 	), { // super-static prototype, public functions
     	head : head,
@@ -944,7 +940,7 @@ if (!this.akme) this.akme = {
 		$.extendDestroy(this, destroy);
 	};
 	// Example of extend with the Object super-class constructor-function first, then the sub-class constructor.
-	$.extend(Object, $.copyAll(EventSource, {CLASS: CLASS}));
+	$.extendClass(Object, $.copyAll(EventSource, {CLASS: CLASS}));
 	$.setProperty($.THIS, CLASS, EventSource);
 	
 	//
@@ -1005,11 +1001,6 @@ if (!this.akme) this.akme = {
 		else if (p.state === state) applyToArray(fcns, p.self, p.args);
 		return self;
 	};
-	
-	Make a promise calling the given function before progress starts.
-	function make(startFn) {
-		return new Promise(startFn);
-	}
 	
 	 * Return a Promise based on given object(s) which may in turn be Promise(s).
 	 * This will wait on them all and fail on first reject, notify about all of them,
@@ -1210,7 +1201,7 @@ if (!this.akme) this.akme = {
 		});
 		this.refresh();
 	}
-	$.extend($.copyAll( // class-constructor function
+	$.extendClass($.copyAll( // class-constructor function
 		Context, {CLASS: CLASS, getRoot: getRoot}
 	),{ // super-static prototype object
 		has: has,
@@ -1381,7 +1372,7 @@ if (!this.akme) this.akme = {
 			refresh(ev);
 		});
 	}
-	$.extend($.copyAll( // class-constructor function
+	$.extendClass($.copyAll( // class-constructor function
 		AppContext, {CLASS: CLASS, getRoot: Super.getRoot}
 	), $.copyAll(Object.create( Super.prototype ), { // super-static prototype object
 		
@@ -2186,7 +2177,7 @@ akme.cookieStorage = akme.cookieStorage || {
  * Use:
  *   window.messageBroker = new akme.core.MessageBroker({id:"window.messageBroker", allowOrigins:[...]});
  */
-if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll(function(cfg){
+if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.copyAll(function(cfg){
 	this.id = cfg.id;
 	this.allowOrigins = cfg.allowOrigins;
 	this.callbackKey = 0;
@@ -3025,7 +3016,7 @@ interface Storage {
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		this.getStorage = function() { return storage; };
 	};
-	$.extend($.copyAll( // class constructor
+	$.extendClass($.copyAll( // class constructor
 		Storage, {CLASS: CLASS} 
 	), { // super-static prototype, public functions
 		getItem : getItem,
@@ -3219,7 +3210,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		//$.extendDestroy(this, function(){});
 	};
-	$.extend($.copyAll(
+	$.extendClass($.copyAll(
 		CouchAccess, {CLASS: CLASS}
 	), $.copyAll(new $.core.Access, {
 		clear : clear, // given Object return undefined/void
@@ -3420,7 +3411,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		//$.extendDestroy(this, function(){});
 	};
-	$.extend($.copyAll(
+	$.extendClass($.copyAll(
 		CouchAsyncAccess, {CLASS: CLASS}
 	), $.copyAll(new $.core.Access, {
 		clear : clear, // given Object return undefined/void

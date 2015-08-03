@@ -30,7 +30,7 @@
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		//$.extendDestroy(this, function(){});
 	};
-	$.extend($.copyAll(
+	$.extendClass($.copyAll(
 		CouchAccess, {CLASS: CLASS}
 	), $.copyAll(new $.core.Access, {
 		clear : clear, // given Object return undefined/void
@@ -231,7 +231,7 @@
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		//$.extendDestroy(this, function(){});
 	};
-	$.extend($.copyAll(
+	$.extendClass($.copyAll(
 		CouchAsyncAccess, {CLASS: CLASS}
 	), $.copyAll(new $.core.Access, {
 		clear : clear, // given Object return undefined/void

@@ -786,7 +786,7 @@ akme.cookieStorage = akme.cookieStorage || {
  * Use:
  *   window.messageBroker = new akme.core.MessageBroker({id:"window.messageBroker", allowOrigins:[...]});
  */
-if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extend(akme.copyAll(function(cfg){
+if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.copyAll(function(cfg){
 	this.id = cfg.id;
 	this.allowOrigins = cfg.allowOrigins;
 	this.callbackKey = 0;

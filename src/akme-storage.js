@@ -37,7 +37,7 @@ interface Storage {
 		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
 		this.getStorage = function() { return storage; };
 	};
-	$.extend($.copyAll( // class constructor
+	$.extendClass($.copyAll( // class constructor
 		Storage, {CLASS: CLASS} 
 	), { // super-static prototype, public functions
 		getItem : getItem,
