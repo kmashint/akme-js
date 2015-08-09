@@ -92,12 +92,12 @@ akme.copy(akme, {
 			var name, a;
 			for (var i = 0; i < dom.childNodes.length; i++) {
 				name = dom.childNodes[i].nodeName;
-				if (typeof(obj[name]) == 'undefined') {
+				if (obj[name] === undefined) {
 					obj[name] = this.xml2js(dom.childNodes[i]);
 				} else {
 					a = obj[name];
-					if (typeof(a.length) == 'undefined') a = [a];
-					if (typeof(a) == 'object') a[a.length]=(this.xml2js(dom.childNodes[i]));
+					if (a.length === undefined) a = [a];
+					if (typeof a == 'object') a[a.length]=(this.xml2js(dom.childNodes[i]));
 					obj[name] = a;
 				}
 			}

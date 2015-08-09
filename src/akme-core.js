@@ -144,8 +144,9 @@ if (!this.akme) this.akme = {
 	/**
 	 * Check if the object is not undefined (primitive) and not null (object). 
 	 * Or just use x != null that equates undefined to null.
+     * If x may be undeclared you need to check if (typeof x === "undefined").
 	 */
-	isDefinedNotNull : function(x) { return x !== undefined && x !== null; },
+	isDefinedNotNull : function(x) { return x != null; },
 	/**
 	 * Check if the object is instanceof Array (object, there is no typeof array primitive).
 	 */
@@ -191,7 +192,7 @@ if (!this.akme) this.akme = {
 	 * Uses Object.create(Object.getPrototypeOf(obj)) and then copies hasOwnProperty/non-prototype properties by key.
 	 */
 	clone : function (obj) {
-		if (obj === undefined || obj === null) return obj;
+		if (obj == null) return obj;
 		if (typeof obj.clone === "function") return obj.clone();
 		var clone = Object.create(Object.getPrototypeOf(obj));
 		for (var key in obj) if (obj.hasOwnProperty(key)) clone[key] = obj[key];
@@ -201,7 +202,7 @@ if (!this.akme) this.akme = {
 	 * Copy hasOwnProperty/non-prototype key/values from the map to the obj, returning the same obj.
 	 */
 	copy : function (obj, map, /*boolean*/ all) {
-		if (map === undefined || map === null) return obj;
+		if (map == null) return obj;
 		all = !!all;
 		for (var key in map) if (all || map.hasOwnProperty(key)) obj[key] = map[key];
 		return obj;
@@ -214,7 +215,7 @@ if (!this.akme) this.akme = {
 	 * Copy hasOwnProperty/non-prototype values from the map to the obj for existing keys in the obj, returning the same obj.
 	 */
 	copyExisting : function (obj, map, /*boolean*/ all, /*boolean*/ negate) {
-		if (map === undefined || map === null) return obj;
+		if (map == null) return obj;
 		all = !!all; negate = !!negate;
 		for (var key in map) if (((key in obj) !== negate) && (all || map.hasOwnProperty(key))) obj[key] = map[key];
 		return obj;
@@ -236,7 +237,7 @@ if (!this.akme) this.akme = {
 	 * If valName is undefined or null then the entire array values it used.
 	 */
 	copyArrayToObject : function (obj, ary, keyName, valName) {
-		if (typeof valName != 'undefined') for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i][valName];
+		if (valName !== undefined) for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i][valName];
 		else for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i];
 		return obj;
 	},
@@ -473,7 +474,7 @@ if (!this.akme) this.akme = {
 		var isoYear = thuDate.getFullYear();
         var isoWeek0 = Math.round(( thuDate.getTime()-new Date(thuDate.getFullYear(),0,1).getTime() )/this.MILLIS_IN_DAY-1)/7;
 		return isoYear*1000 + isoWeek0*7 + 3-thuOffset;
-	}, 
+	},
 	
 	/**
 	 * Return a Date given a year and day of year based on ISO weeks (ISO-8601) that start the Monday of the week with 4-Jan in it.
@@ -485,7 +486,7 @@ if (!this.akme) this.akme = {
         var result = new Date(year, 1-1, 4);
         result.setDate(result.getDate() -(result.getDay()+6)%7 + (doy-1));
         return result;
-	} 
+	}
 
 };
 
@@ -530,7 +531,7 @@ if (!this.akme) this.akme = {
 	
 	function readMany(keys) {
 		var a = [];
-		if (typeof keys === "undefined" || keys === null) return a;
+		if (keys == null) return a;
 		if (typeof keys === "function") {
 			a[a.length] = this.read(keys());
 		} else if (keys instanceof Array) for (var i=0; i<keys.length; i++) {
@@ -694,9 +695,8 @@ if (!this.akme) this.akme = {
 	 * the default of taking the entire sub-Object as the value.
 	 */
 	function copyAllFrom (aryOrObj, keyName, valName) {
-		var hasValName = typeof valName !== 'undefined';
 		for (var key in aryOrObj) {
-			this.set(aryOrObj[key][keyName], hasValName ? aryOrObj[key][valName] : aryOrObj[key]);
+			this.set(aryOrObj[key][keyName], valName !== undefined ? aryOrObj[key][valName] : aryOrObj[key]);
 		}
 		return this;
 	}
@@ -895,7 +895,7 @@ if (!this.akme) this.akme = {
 	 */
 	function row(idx) {
 		var p = this.PRIVATES(PRIVATES);
-		return p.body[typeof idx !== "undefined" ? idx : p.idx];
+		return p.body[idx !== undefined ? idx : p.idx];
 	}
 	
 	function value(/*idxOrName or row,idxOrName*/) {
@@ -1177,10 +1177,10 @@ if (!this.akme) this.akme = {
                 if (typeof f === "function") callbackArgs[i] = function() {
                     try {
                         var r = f.apply(p.self, arguments);
-                        if (typeof r !== "undefined" && typeof r.then === "function") {
+                        if (r != null && typeof r.then === "function") {
                             r.then.apply(newPromise, executorArgs);
                         } else {
-                            executorArgs[i].apply(newPromise, typeof r !== "undefined" ? [r] : arguments);
+                            executorArgs[i].apply(newPromise, r !== undefined ? [r] : arguments);
                         }
                     } catch (er) { // reject on callback error
                         if (executorArgs[1]) executorArgs[1](er);

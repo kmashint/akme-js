@@ -4,10 +4,29 @@
 /*jshint browser:true, jquery:true, qunit:true */
 /*globals Raphael, akme, my */
 $(document).ready(function(){
+    
+    if (location.protocol === "file:") {
+        window.alert("Warning: Some tests may fail when trying to run from a file: protocol instead of https:/https.");
+    }
 
 	console.logEnabled = true;
 
 	module("JS standards");
+	test("undefined and null checks", function() {
+        raises(function() {
+            if (undefinedVar) ;
+        }, ReferenceError, "if (undefinedVar) should throw ReferenceError");
+        ok(typeof undefinedVar !== undefined, "typeof undefinedVar !== undefined, careful!");
+        ok(typeof undefinedVar === 'undefined', "typeof undefinedVar === 'undefined'");
+        ok(typeof null === 'object', "typeof null === 'object'");
+        ok(null !== undefined, "null !== undefined");
+        ok(null == undefined, "null == undefined, i.e. undefined, and only it, upcasts to null object");
+        ok(!undefined, "undefined should cast to boolean false");
+        ok(!null, "null should cast to boolean false");
+        ok(!0, "0 should cast to boolean false");
+        ok(!'', "'' (empty string) should cast to boolean false");
+        ok(-1, "-1 should cast to boolean true");
+    });
 	test("JS inheritance directly", function() {
 		if (!window.my) window.my = {};
 		

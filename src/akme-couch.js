@@ -75,7 +75,7 @@
 			var xhr=this; 
 			if (xhr.readyState==4) $.handleEvent(callbackFnOrOb, {type:"readystatechange", target:xhr}); 
 		};
-		if (typeof content !== "undefined") xhr.send(content);
+		if (content !== undefined) xhr.send(content);
 		else xhr.send();
 		return;
 	}

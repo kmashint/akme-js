@@ -580,7 +580,7 @@ if (!akme.xhr) akme.xhr = {
 	
 	decodeUrlEncoded : function(data) {
 		var map = {};
-		if (typeof data === "undefined" || data === null) return map;
+		if (data == null) return map;
 		var ary = String(data).split("&");
 		for (var i=0; i<ary.length; i++) {
 			var val = ary[i].split("=");
@@ -728,7 +728,7 @@ if (!akme.xhr) akme.xhr = {
 			akme.handleEvent(callbackFnOrOb, headers, content);
 			self = xhr = callbackFnOrOb = null; // closure cleanup
 		};
-		if (typeof content !== 'undefined') xhr.send(content);
+		if (content !== undefined) xhr.send(content);
 		else xhr.send();
 		return;
 	},
@@ -876,7 +876,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 	formatMessage : function(headers, content) {
 		var a = [];
 		a[a.length] = "call: "+ headers.call;
-		for (var key in headers) if ("call"!=key && typeof headers[key] != "undefined") a[a.length] = key +": "+ headers[key];
+		for (var key in headers) if ("call"!=key && headers[key] !== undefined) a[a.length] = key +": "+ headers[key];
 		return a.join("\r\n") + "\r\n\r\n" + (content ? content : "");
 	},
 	parseMessage : function(text) {
