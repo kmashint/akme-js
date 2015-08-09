@@ -1,32 +1,47 @@
 // build.js
 // Build script based on node.js with the following dependencies:
-//      npm -g install uglify-js@2.4
-// Remember to have your NODE_PATH environment variable set appropriately.
-// e.g. NODE_PATH on Windows is typically the expansion of %AppData%\npm\node_modules.
+//      npm install -g uglify-js@2.4
+// Ensure your NODE_PATH environment variable is set appropriately.
+// Use  npm root -g  to show the default NODE_PATH.
+// Use  npm list -g --depth=0  to list the modules installed to the global node path.
 // http://stackoverflow.com/questions/7970793/how-do-i-import-global-modules-in-node-i-get-error-cannot-find-module-module
 //
 /*jshint node:true */
 
 var fsys = require('fs'),
     UglifyJS = require("uglify-js"),
-    include = ["akme-core","akme-context","akme-dom","akme-more","akme-storage","akme-couch"],
     srcPath = "../src",
-    srcFile = "../web/common/akme-core.src.js",
-    minFile = srcFile.replace(/\.src\.js$/, ".min.js");
+    dstPath = "../web/common";
 
 console.log(new Date());
 //console.log(process.argv, __dirname);
 
-console.log("Append "+ srcFile);
-fsys.writeFileSync(srcFile, "");
-for (var i=0; i<include.length; i++) {
-    fsys.appendFileSync(srcFile, fsys.readFileSync(srcPath+"/"+include[i]+".js"));
-}
-console.log("Compress "+ minFile);
-fsys.writeFileSync(minFile, UglifyJS.minify(srcFile));
+compress("akme-core.src.js",
+        ["akme-core","akme-context","akme-dom","akme-more","akme-storage","akme-couch"]);
 
 console.log("Done.");
 console.log(new Date());
+
+function compress(srcName, includeAry) {
+    var minName = srcName.replace(/\.src\.js$/, ".min.js"),
+        mapName = minName.replace(/$/, ".map"),
+        srcFile = dstPath+"/"+srcName,
+        minFile = dstPath+"/"+minName,
+        mapFile = dstPath+"/"+mapName;
+    
+    console.log("Append "+ srcFile);
+    fsys.writeFileSync(srcFile, "");
+    for (var i=0; i<includeAry.length; i++) {
+        fsys.appendFileSync(srcFile, fsys.readFileSync(srcPath+"/"+includeAry[i]+".js"));
+    }
+    console.log("Compress "+ minFile);
+    var compressed = UglifyJS.minify(srcFile, {
+        compress:true, warnings:true, outSourceMap: mapFile
+    });
+    fsys.writeFileSync(minFile, compressed.code);
+    if (mapFile) fsys.writeFileSync(mapFile, compressed.map);
+    else if (fsys.existsSync(mapFile)) fsys.unlinkSync(mapFile);
+}
 
 /*
 // RequireJS is too narcissistic.  It's too hard to use to compress something not using it.

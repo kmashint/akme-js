@@ -271,7 +271,7 @@ akme.copyAll(this.akme, {
 				className = classAry[j];
 				var pos = tagClassName.indexOf(className);
 				if (pos == -1) continue;
-				if ((pos == 0 || " " == tagClassName.charAt(pos-1)) &&
+				if ((pos === 0 || " " == tagClassName.charAt(pos-1)) &&
 						(pos+className.length == tagClassName.length || " " == tagClassName.charAt(pos+className.length))) {
 					result.push(tags[i]);
 				}				
@@ -340,7 +340,7 @@ akme.copyAll(this.akme, {
 			var attrs = parent.attributes;
 			if (attrs) for (var i=0; i<attrs.length; i++) {
 				var attr = attrs[i], name = attr.nodeName, value = attr.nodeValue;
-				if (name.lastIndexOf("data--",6) == 0) {
+				if (name.lastIndexOf("data--",6) === 0) {
 					name = name.substring(6);
 					parent.removeAttribute(attr.nodeName);
 					a = this.replaceTextDataAsArrayOrNull(value, dataMap);
@@ -742,10 +742,11 @@ if (!akme.xhr) akme.xhr = {
 		var self = this, promise = new akme.core.Promise(executor);
 		function executor(resolve, reject) {
 			self.callAsyncXHR(xhr, method, url, headers, content, function(headers,content){
+                if (content !== undefined) headers.content = content;
 				if (headers.status >= 400) {
-					reject(headers,content);
+					reject(headers);
 				} else {
-					resolve(headers,content);
+					resolve(headers);
 				}
 			});
 		}

@@ -337,17 +337,17 @@ if (!this.akme) this.akme = {
 	},
 	
 	/**
-	 * Helper to apply an Array of arguments to a new fn(...) constructor.
+	 * Helper to apply an Array of arguments to a new fcn(...) constructor.
 	 */
-	newApplyArgs : function (fn, args) {
-		if (!args || args.length === 0) return new fn();
+	newApplyArgs : function (fcn, args) {
+		if (!args || args.length === 0) return new fcn();
 		switch (args.length) {
-		case 1: return new fn(args[0]);
-		case 2: return new fn(args[0],args[1]);
-		case 3: return new fn(args[0],args[1],args[2]);
-		case 4: return new fn(args[0],args[1],args[2],args[3]);
-		case 5: return new fn(args[0],args[1],args[2],args[3],args[4]);
-		default: 
+		case 1: return new fcn(args[0]);
+		case 2: return new fcn(args[0],args[1]);
+		case 3: return new fcn(args[0],args[1],args[2]);
+		case 4: return new fcn(args[0],args[1],args[2],args[3]);
+		case 5: return new fcn(args[0],args[1],args[2],args[3],args[4]);
+		default:
 			var buf = new Array(args.length);
 			for (var i=0; i<args.length; i++) buf[i] = "a["+ i +"]";
 			return (new Function("f","a","return new f("+ buf.join(",") +");"))(fn,args);
@@ -365,13 +365,13 @@ if (!this.akme) this.akme = {
 	},
 	/** 
 	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.
-	 * Ensures internally to be applied only once by setting _ie8fix on the object.
+	 * Ensures internally to be applied only once by setting _original on the object which hold the original handleEvent object.
 	 */
 	fixHandleEvent : function (self) {
-		if (document.documentMode && document.documentMode < 9 && typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
+		if (document.documentMode && document.documentMode < 9 && typeof self.handleEvent === "function" && !self.handleEvent._original) {
 			var handleEvent = self.handleEvent;
 			self.handleEvent = function(ev) { handleEvent.call(self, ev); };
-			self.handleEvent._ie8fix = function(){ return handleEvent; }; // closure the old handleEvent
+			self.handleEvent._original = function(){ return handleEvent; }; // closure the old handleEvent
 		}
 		return self;
 	},
@@ -906,16 +906,16 @@ if (!this.akme) this.akme = {
 	}
 	
 	/**
-	 * Return a map/object with keys returned by the given keyFn,
+	 * Return a map/object with keys returned by the given keyFcn,
 	 * the values in the map being the arrays of rows with the same key.
 	 * e.g. 
-	 * 	dt.byCity = dt.mapBy(function keyFn(row){ return row["city"]; });
+	 * 	dt.byCity = dt.mapBy(function keyFcn(row){ return row["city"]; });
 	 *  for (var name in dt.byCity) dt.byCity[name].forEach(function(row){ console.log(name,row); }); 
 	 */
-	function mapBy(keyFn /*, thisArg */) {
+	function mapBy(keyFcn /*, thisArg */) {
 		var map = {}, thisArg = arguments.length >= 2 ? arguments[1] : undefined;
 		this.forEach(function(row,idx){
-			var key = keyFn.call(thisArg,row,idx,this), ary;
+			var key = keyFcn.call(thisArg,row,idx,this), ary;
 			if (key != null) {
 				ary = map[key] || [];
 				ary[ary.length] = row;
@@ -987,27 +987,27 @@ if (!this.akme) this.akme = {
 	
 	/**
 	 * Append the given function to the event handlers for the named event.
-	 * The fnOrHandleEventObject can be a function(ev){...} or { handleEvent:function(ev){...} }.
+	 * The fcnOrHandleEventObj can be a function(ev){...} or { handleEvent:function(ev){...} }.
 	 */
-	function onEvent(type, fnOrHandleEventOb, once) {
-		if (!(typeof fnOrHandleEventOb === "function" || typeof fnOrHandleEventOb.handleEvent === "function")) {
+	function onEvent(type, fcnOrHandleEventObj, once) {
+		if (!(typeof fcnOrHandleEventObj === "function" || typeof fcnOrHandleEventObj.handleEvent === "function")) {
 			throw new TypeError(this.constructor.CLASS+".onEvent given neither function(ev){...} nor { handleEvent:function(ev){...} }");
 		}
 		var p = this.EVENTS(PRIVATES), a = p.eventMap[type];
 		if (!a) { a = []; p.eventMap[type] = a; }
-		var handler = $.fixHandleEvent(fnOrHandleEventOb);
+		var handler = $.fixHandleEvent(fcnOrHandleEventObj);
 		a.push({handler:handler, once:!!once});
 	}
 	
 	/**
 	 * Remove the given function from the event handlers for the named event.
-	 * The fnOrHandleEventObject can be a function(ev){...} or { handleEvent:function(ev){...} }.
+	 * The fcnOrHandleEventObj can be a function(ev){...} or { handleEvent:function(ev){...} }.
 	 */
-	function unEvent(type, fnOrHandleEventOb) {
+	function unEvent(type, fcnOrHandleEventObj) {
 		var p = this.EVENTS(PRIVATES);
 		var a = p.eventMap[type];
 		if (!a) return;
-		for (var i=0; i<a.length; i++) if (a[i].handler === fnOrHandleEventOb) { a.splice(i,1); }
+		for (var i=0; i<a.length; i++) if (a[i].handler === fcnOrHandleEventObj) { a.splice(i,1); }
 	}
 
 	/**

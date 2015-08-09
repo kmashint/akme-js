@@ -21,6 +21,20 @@ if (document.documentMode && document.documentMode == 8) (function() {
 	defineFunction(Event, "preventDefault", function() { this.returnValue = false; });
 	defineFunction(Event, "stopPropagation", function() { this.cancelBubble = true; });
 	
+	function defineProperty( domConstructor, originalName, attachName, useGetter, useSetter ) {
+	    useGetter = !!useGetter;
+	    useSetter = !!useSetter;
+		var prpd = Object.getOwnPropertyDescriptor(domConstructor.prototype, originalName);
+		var prpSetGet = {};
+		if (useGetter) prpSetGet.get = function () { return prpd.get.call(this); };
+		if (useSetter) prpSetGet.set = function (x) { return prpd.set.call(this, x); };
+		Object.defineProperty( domConstructor.prototype, attachName, prpSetGet );
+	};
+	
+	function defineFunction( domConstructor, name, delegate ) {
+		domConstructor.prototype[name] = delegate;
+	};
+
 	/**
 	 * Helper for :target in IE8, will not work in IE7 or below.
 	 * Duplicate the :target {} CSS rule as .-target {} and this will toggle that class upon hashchange.
@@ -41,20 +55,6 @@ if (document.documentMode && document.documentMode == 8) (function() {
 		//alert("#"+ el.id +".("+ el.className +")")
 	});
 	
-	function defineProperty( domConstructor, originalName, attachName, useGetter, useSetter ) {
-	    useGetter = !!useGetter;
-	    useSetter = !!useSetter;
-		var prpd = Object.getOwnPropertyDescriptor(domConstructor.prototype, originalName);
-		var prpSetGet = {};
-		if (useGetter) prpSetGet.get = function () { return prpd.get.call(this); };
-		if (useSetter) prpSetGet.set = function (x) { return prpd.set.call(this, x); };
-		Object.defineProperty( domConstructor.prototype, attachName, prpSetGet );
-	};
-	
-	function defineFunction( domConstructor, name, delegate ) {
-		domConstructor.prototype[name] = delegate;
-	};
-
 })();
 
 
@@ -64,31 +64,29 @@ if (document.documentMode && document.documentMode == 8) (function() {
  * https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
  */
 if (!Function.prototype.bind) Function.prototype.bind = function (oThis) {
-    if (typeof this !== "function") {  
-    	// closest thing possible to the ECMAScript 5 internal IsCallable function  
-        throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");  
-    }  
-    
-    var fSlice = Array.prototype.slice,  
-        aArgs = fSlice.call(arguments, 1),   
-        fToBind = this,   
-        fNOP = function () {},  
-        fBound = function () {  
-            return fToBind.apply(this instanceof fNOP  
-                                 ? this  
-                                 : oThis || window,  
-                                 aArgs.concat(fSlice.call(arguments)));  
-        };  
-    
-    fNOP.prototype = this.prototype;  
-    fBound.prototype = new fNOP();  
-    
-    return fBound;  
+    if (typeof this !== "function") {
+        // closest thing possible to the ECMAScript 5 internal IsCallable function
+        throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
+    }
+
+    var slice = Array.prototype.slice,
+        args = slice.call(arguments, 1),
+        self = this,
+        NOOP = function () {},
+        bound = function () {
+        return self.apply(this instanceof NOOP ? this : oThis || window,
+                             args.concat(slice.call(arguments)));
+        };
+
+    NOOP.prototype = this.prototype;
+    bound.prototype = new NOOP();
+
+    return bound;
 };
 
 
 /**
- * Add Object.create(prototype) if not available that creates an Object with the given prototype 
+ * Add Object.create(prototype) if not available (IE8) that creates an Object with the given prototype 
  * without calling the typical constructor function for that prototype.
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
  */
@@ -96,10 +94,12 @@ if (!Object.create) Object.create = (function(){
     function F(){};
     return function(o){
         if (arguments.length != 1) {
-            throw new Error('Object.create implementation only accepts one parameter.');
+            throw new Error('Object.create() implementation only accepts one parameter.');
         }
         F.prototype = o;
-        return new F();
+        var r = new F();
+        F.prototype = null;  // Cleanup reference.
+        return r;
     };
 })();
 /**
@@ -107,7 +107,7 @@ if (!Object.create) Object.create = (function(){
  * This will only work in IE8 if the object.constructor and constructor.prototype have not been changed.
  * https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/getPrototypeOf
  */
-if ( !Object.getPrototypeOf ) {
+if (!Object.getPrototypeOf) {
 	// Before Object.getPrototypeOf, there was the non-standard __proto__ but not in IE8.
 	// For IE8, this must fall back to obj.constructor.prototype although that's mutable (but please don't mutate it).
 	if ({}.hasOwnProperty("__proto__")) Object.getPrototypeOf = function(obj){ return obj.__proto__; };

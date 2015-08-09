@@ -70,6 +70,39 @@
 		for (var i=0; i<k.length; i++) v.push(obj[k[i]]);
 		return v;
 	};
+	
+	/**
+     * Object.forEach() that defers to an instance level implementation or Array.forEach() where available.
+     * This calls the given fcn for each index of an Array, or each hasOwnProperty of an Object.
+     * This does not handle arguments so those to an Array first.
+	 */
+	if (!Object.forEach) Object.forEach = function(obj, /* function(val, key, obj) */ fcn, thisArg) {
+		if (typeof obj.forEach === "function") {
+			obj.forEach(fcn, thisArg);
+		}
+		else if (obj instanceof Array || (typeof NodeList !== "undefined" && obj instanceof NodeList)
+				) for (var key=0; key<obj.length; key++) {
+			fcn.call(thisArg || obj, obj[key], key, obj);
+		}
+		else for (var key in obj) if (obj.hasOwnProperty(key)) {
+			fcn.call(thisArg || obj, obj[key], key, obj);
+		}
+	};
+
+	/**
+     * Convert an array-like object into an actual Array, with optional map function to convert values.
+     * This is similar to Array.from() in ES6 but does not support iterables.
+     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
+	 */
+	if (!Array.from) Array.from = function (obj, /* optional function(val, key, obj) */ mapFcn, /* optional */ thisArg) {
+		var i, len = obj.length || 0, ary = new Array(len);
+		if (typeof mapFcn === "function") {
+			for (i=0; i<len; i++) ary[i] = mapFcn.call(thisArg, obj[i], i, obj);
+		} else {
+			for (i=0; i<len; i++) ary[i] = obj[i];
+		}
+		return ary;
+	};
 
 	/**
 	 * Perform a binary search of an array for an object assuming the array is already sorted.
@@ -109,9 +142,10 @@ if (!this.akme) this.akme = {
 	slice : Array.prototype.slice,
 
 	/**
-	 * Check if the object is not undefined (primitive) and not null (object).
+	 * Check if the object is not undefined (primitive) and not null (object). 
+	 * Or just use x != null that equates undefined to null.
 	 */
-	isDefinedNotNull : function(x) { return typeof x !== "undefined" && x !== null; },
+	isDefinedNotNull : function(x) { return x !== undefined && x !== null; },
 	/**
 	 * Check if the object is instanceof Array (object, there is no typeof array primitive).
 	 */
@@ -303,17 +337,17 @@ if (!this.akme) this.akme = {
 	},
 	
 	/**
-	 * Helper to apply an Array of arguments to a new fn(...) constructor.
+	 * Helper to apply an Array of arguments to a new fcn(...) constructor.
 	 */
-	newApplyArgs : function (fn, args) {
-		if (!args || args.length === 0) return new fn();
+	newApplyArgs : function (fcn, args) {
+		if (!args || args.length === 0) return new fcn();
 		switch (args.length) {
-		case 1: return new fn(args[0]);
-		case 2: return new fn(args[0],args[1]);
-		case 3: return new fn(args[0],args[1],args[2]);
-		case 4: return new fn(args[0],args[1],args[2],args[3]);
-		case 5: return new fn(args[0],args[1],args[2],args[3],args[4]);
-		default: 
+		case 1: return new fcn(args[0]);
+		case 2: return new fcn(args[0],args[1]);
+		case 3: return new fcn(args[0],args[1],args[2]);
+		case 4: return new fcn(args[0],args[1],args[2],args[3]);
+		case 5: return new fcn(args[0],args[1],args[2],args[3],args[4]);
+		default:
 			var buf = new Array(args.length);
 			for (var i=0; i<args.length; i++) buf[i] = "a["+ i +"]";
 			return (new Function("f","a","return new f("+ buf.join(",") +");"))(fn,args);
@@ -331,13 +365,13 @@ if (!this.akme) this.akme = {
 	},
 	/** 
 	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.
-	 * Ensures internally to be applied only once by setting _ie8fix on the object.
+	 * Ensures internally to be applied only once by setting _original on the object which hold the original handleEvent object.
 	 */
 	fixHandleEvent : function (self) {
-		if (document.documentMode && document.documentMode < 9 && typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
+		if (document.documentMode && document.documentMode < 9 && typeof self.handleEvent === "function" && !self.handleEvent._original) {
 			var handleEvent = self.handleEvent;
 			self.handleEvent = function(ev) { handleEvent.call(self, ev); };
-			self.handleEvent._ie8fix = function(){ return handleEvent; }; // closure the old handleEvent
+			self.handleEvent._original = function(){ return handleEvent; }; // closure the old handleEvent
 		}
 		return self;
 	},
@@ -872,16 +906,16 @@ if (!this.akme) this.akme = {
 	}
 	
 	/**
-	 * Return a map/object with keys returned by the given keyFn,
+	 * Return a map/object with keys returned by the given keyFcn,
 	 * the values in the map being the arrays of rows with the same key.
 	 * e.g. 
-	 * 	dt.byCity = dt.mapBy(function keyFn(row){ return row["city"]; });
+	 * 	dt.byCity = dt.mapBy(function keyFcn(row){ return row["city"]; });
 	 *  for (var name in dt.byCity) dt.byCity[name].forEach(function(row){ console.log(name,row); }); 
 	 */
-	function mapBy(keyFn /*, thisArg */) {
+	function mapBy(keyFcn /*, thisArg */) {
 		var map = {}, thisArg = arguments.length >= 2 ? arguments[1] : undefined;
 		this.forEach(function(row,idx){
-			var key = keyFn.call(thisArg,row,idx,this), ary;
+			var key = keyFcn.call(thisArg,row,idx,this), ary;
 			if (key != null) {
 				ary = map[key] || [];
 				ary[ary.length] = row;
@@ -953,27 +987,27 @@ if (!this.akme) this.akme = {
 	
 	/**
 	 * Append the given function to the event handlers for the named event.
-	 * The fnOrHandleEventObject can be a function(ev){...} or { handleEvent:function(ev){...} }.
+	 * The fcnOrHandleEventObj can be a function(ev){...} or { handleEvent:function(ev){...} }.
 	 */
-	function onEvent(type, fnOrHandleEventOb, once) {
-		if (!(typeof fnOrHandleEventOb === "function" || typeof fnOrHandleEventOb.handleEvent === "function")) {
+	function onEvent(type, fcnOrHandleEventObj, once) {
+		if (!(typeof fcnOrHandleEventObj === "function" || typeof fcnOrHandleEventObj.handleEvent === "function")) {
 			throw new TypeError(this.constructor.CLASS+".onEvent given neither function(ev){...} nor { handleEvent:function(ev){...} }");
 		}
 		var p = this.EVENTS(PRIVATES), a = p.eventMap[type];
 		if (!a) { a = []; p.eventMap[type] = a; }
-		var handler = $.fixHandleEvent(fnOrHandleEventOb);
+		var handler = $.fixHandleEvent(fcnOrHandleEventObj);
 		a.push({handler:handler, once:!!once});
 	}
 	
 	/**
 	 * Remove the given function from the event handlers for the named event.
-	 * The fnOrHandleEventObject can be a function(ev){...} or { handleEvent:function(ev){...} }.
+	 * The fcnOrHandleEventObj can be a function(ev){...} or { handleEvent:function(ev){...} }.
 	 */
-	function unEvent(type, fnOrHandleEventOb) {
+	function unEvent(type, fcnOrHandleEventObj) {
 		var p = this.EVENTS(PRIVATES);
 		var a = p.eventMap[type];
 		if (!a) return;
-		for (var i=0; i<a.length; i++) if (a[i].handler === fnOrHandleEventOb) { a.splice(i,1); }
+		for (var i=0; i<a.length; i++) if (a[i].handler === fcnOrHandleEventObj) { a.splice(i,1); }
 	}
 
 	/**
@@ -999,7 +1033,7 @@ if (!this.akme) this.akme = {
 		else if (p.state === state) applyToArray(fcns, p.self, p.args);
 		return self;
 	};
-	
+
 	 * Return a Promise based on given object(s) which may in turn be Promise(s).
 	 * This will wait on them all and fail on first reject, notify about all of them,
 	 * and only resolve when all are resolved/done with all of the ([object,...], [arguments,...]) resolved.
@@ -1531,7 +1565,7 @@ akme.copyAll(this.akme, {
 	 * Ensures internally to be applied only once by setting _ie8fix on the object.
 	 */
 	fixHandleEvent : function (self) {
-		if (document.documentMode && document.documentMode < 9 && typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
+		if (this.isIE8 && typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
 			var handleEvent = self.handleEvent;
 			self.handleEvent = function() { handleEvent.apply(self, arguments); };
 			self.handleEvent._ie8fix = function() { return handleEvent; };
@@ -1660,7 +1694,7 @@ akme.copyAll(this.akme, {
 				className = classAry[j];
 				var pos = tagClassName.indexOf(className);
 				if (pos == -1) continue;
-				if ((pos == 0 || " " == tagClassName.charAt(pos-1)) &&
+				if ((pos === 0 || " " == tagClassName.charAt(pos-1)) &&
 						(pos+className.length == tagClassName.length || " " == tagClassName.charAt(pos+className.length))) {
 					result.push(tags[i]);
 				}				
@@ -1729,7 +1763,7 @@ akme.copyAll(this.akme, {
 			var attrs = parent.attributes;
 			if (attrs) for (var i=0; i<attrs.length; i++) {
 				var attr = attrs[i], name = attr.nodeName, value = attr.nodeValue;
-				if (name.lastIndexOf("data--",6) == 0) {
+				if (name.lastIndexOf("data--",6) === 0) {
 					name = name.substring(6);
 					parent.removeAttribute(attr.nodeName);
 					a = this.replaceTextDataAsArrayOrNull(value, dataMap);
@@ -2001,7 +2035,7 @@ if (!akme.xhr) akme.xhr = {
 		// Handle IE XDomainRequest in addition to W3C standard.
 		return xhr.contentType ? (xhr.contentType || "") : (xhr.getResponseHeader("Content-Type") || "");
 	},
-	getStatus : function(/*XMLHttpRequest*/ xhr) { 
+	getStatus : function(/*XMLHttpRequest*/ xhr) {
 		// IE8 returns internal 1223 for HTTP 204 NO CONTENT and strips headers.  Can't recover headers.
 		return (xhr.status && xhr.status == 1223) ? 204 : xhr.status;
 	},
@@ -2131,10 +2165,11 @@ if (!akme.xhr) akme.xhr = {
 		var self = this, promise = new akme.core.Promise(executor);
 		function executor(resolve, reject) {
 			self.callAsyncXHR(xhr, method, url, headers, content, function(headers,content){
+                if (content !== undefined) headers.content = content;
 				if (headers.status >= 400) {
-					reject(headers,content);
+					reject(headers);
 				} else {
-					resolve(headers,content);
+					resolve(headers);
 				}
 			});
 		}
@@ -2251,6 +2286,7 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 	   			(!hasDomain && ev.origin.substring(ev.origin.indexOf('/')) ==
 	   				location.href.substring(location.href.indexOf('/'), location.href.indexOf('/', 8))
 	   			)) deny = false; // allow self both http and https
+	    for (var i=0; i<this.allowOrigins.length; i++) if (this.allowOrigins[i]==ev.origin) deny = false;
 		var data = this.parseMessage(ev.data);
 		if (deny) { console.error(this.id+" at "+ location.href +" DENY "+ data.call +" from "+ ev.origin); return; }
 		var callback = data.headers.callback;
@@ -3188,213 +3224,12 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 /*globals akme */
 
 /*
-		var shiftAccess = new akme.core.CouchAccess("shiftdb", "../proxy/couchdb.jsp?/shiftdb");
+		var shiftAccess = new akme.core.CouchAsyncAccess("shiftdb", "../proxy/couchdb.jsp?/shiftdb");
 		shiftAccess.key = function(location, date, time) {
 			return location+"_"+date+"_"+time;
 		};
 		cx.set('shiftAccess', shiftAccess);
  */
-
-/**
- * akme.core.CouchAccess
- */
-(function($,CLASS){
-	if ($.getProperty($.THIS,CLASS)) return; // One-time.
-	
-	//
-	// Private static declarations / closure
-	//
-	var CONTENT_TYPE_JSON = "application/json";
-		//CONTENT_TYPE_URLE = "application/x-www-form-urlencoded";
-	
-	//
-	// Initialise constructor or singleton instance and public functions
-	//
-	function CouchAccess(name, url) {
-		this.name = name;
-		this.url = url;
-		this.cacheMap = {};
-		var dataConstructor = $.getProperty($.THIS, name);
-		if (typeof dataConstructor === "function") this.dataConstructor = dataConstructor;
-		$.core.EventSource.apply(this); // Apply/inject/mix EventSource functionality into this.
-		//$.extendDestroy(this, function(){});
-	}
-	$.extendClass($.copyAll(
-		CouchAccess, {CLASS: CLASS}
-	), $.copyAll(new $.core.Access(), {
-		clear : clear, // given Object return undefined/void
-		findOne : findOne, // given Object return Object
-		info : info, // given key return Object
-		copy : copy, // given oldKey, newKey return Object
-		read : read, // given key return Object
-		write : write, // given key, Object return Object
-		remove : remove // given key return Object
-	}));
-	$.setProperty($.THIS, CLASS, CouchAccess);
-	
-	//
-	// Functions
-	//
-	
-	function reviver(key, value) {
-		if ("jsonReviver" in this.constructor) return this.constructor.jsonReviver.call(this, key, value);
-		else return value;
-	}
-	
-	function replacer(key, value) {
-		if ("jsonReplacer" in this.constructor) return this.constructor.jsonReplacer.call(this, key, value);
-		else return value;
-	}
-	
-	function callWithRetry(method, url, headers, content) {
-		//var self = this;
-		var xhr = null;
-		for (var i=0; i<1; i++) { // take away re-try to implement server-side but leave here as example
-			if (i!==0) {
-				//var xhr2 = authorize();
-				//if (xhr2.status >= 400) break;
-			}
-			xhr = $.xhr.open(method, url, false);
-			for (var key in headers) xhr.setRequestHeader(key, headers[key]);
-			if (typeof content !== "undefined" && content !== null) xhr.send(content);
-			else xhr.send();
-			if (xhr.status != 401) break;
-		}
-		return xhr;
-	}
-	
-	/**
-	 * Clear the cacheMap or sessionStorage cache of any of these objects.
-	 */
-	function clear() {
-		if (this.cacheMap) this.cacheMap = {};
-		else $.sessionStorage.removeAll(this.name);
-	}
-
-	function findOne(map) {
-		var ary = this.find(map);
-		return ary.length === 0 ? ary[0] : null;
-	}
-	
-	/**
-	 * Just get an Object/Map of the HEAD/header info related to the key including the ETag or rev (ETag less the quotes).
-	 */
-	function info(key) {
-		var self = this;
-		var url = self.url+"/"+encodeURIComponent(key);
-		var xhr = callWithRetry("HEAD", url, {"Accept": CONTENT_TYPE_JSON}, null);
-		var rev = xhr.getResponseHeader("ETag");
-		var headers = {id: key, rev: (rev ? rev.replace(/^"|"$/g, "") : null), 
-				status: xhr.status, statusText: xhr.statusText};
-		for (var name in {"Cache-Control":1,"Content-Encoding":1,"Content-Length":1,"Content-Type":1,
-				"Date":1,"ETag":1,"Expires":1,"Last-Modified":1,"Pragma":1,"Server":1,"Vary":1,"Warning":1}) {
-			var val = xhr.getResponseHeader(name);
-			if (val) headers[name] = val;
-		}
-		if (console.logEnabled) console.log("HEAD "+ url, xhr.status, xhr.statusText, headers.rev);
-		this.doEvent({ type:"info", keyType:this.name, key:key, info:headers });
-		return headers;
-	}
-	
-	/**
-	 * Copy the existing key to the newKey, supply newKey?rev=... to overwrite an existing newKey.
-	 */
-	function copy(key, newKey) {
-		var self = this;
-		var url = self.url+"/"+encodeURIComponent(key);
-		var xhr = callWithRetry("COPY", url, {"Accept": CONTENT_TYPE_JSON, "Destination": newKey}, null);
-		var rev = xhr.getResponseHeader("ETag");
-		var headers = {id: key, rev: (rev ? rev.replace(/^"|"$/g, "") : null), 
-				status: xhr.status, statusText: xhr.statusText};
-		for (var name in {"Cache-Control":1,"Content-Encoding":1,"Content-Length":1,"Content-Type":1,
-				"Date":1,"ETag":1,"Expires":1,"Last-Modified":1,"Pragma":1,"Server":1,"Vary":1,"Warning":1}) {
-			var val = xhr.getResponseHeader(name);
-			if (val) headers[name] = val;
-		}
-		if (console.logEnabled) console.log("COPY "+ url, newKey, xhr.status, xhr.statusText, headers.rev);
-		this.doEvent({ type:"copy", keyType:this.name, key:key, newKey:newKey, info:headers });
-		return headers;
-	}
-	
-	/**
-	 * This maintains a copy of the key/value in cacheMap or sessionStorage.
-	 */
-	function read(key) { //if (console.logEnabled) console.log(this.name +".read("+ key +")");
-		var self = this;
-		var url = self.url+"/"+encodeURIComponent(key);
-		var xhr = callWithRetry("GET", url, {"Accept": CONTENT_TYPE_JSON}, null);
-		var type = $.xhr.getResponseContentType(xhr);
-		if (console.logEnabled) console.log("GET "+ url, xhr.status, xhr.statusText, type);
-		var value = (xhr.status < 400 && type && type.indexOf(CONTENT_TYPE_JSON)===0) ? xhr.responseText : null;
-		if (value) {
-			if (this.cacheMap) this.cacheMap[key] = value;
-			else $.sessionStorage.setItem(self.name, key, value);
-			value = $.parseJSON(value, reviver);
-		} else {
-			if (this.cacheMap) delete this.cacheMap[key];
-			else $.sessionStorage.removeItem(self.name, key);
-		}
-		if (this.dataConstructor && value) value = new this.dataConstructor(value);
-		this.doEvent({ type:"read", keyType:this.name, key:key, value:value });
-		return value;
-	}
-
-	/**
-	 * This maintains a copy of the key/value in cacheMap or sessionStorage.
-	 * This is so the caller doesn't have to manage the _id and _rev directly that are required to PUT in CouchDB.
-	 */
-	function write(key, value) { //if (console.logEnabled) console.log(this.name +".write("+ key +",...)");
-		var self = this;
-		var valueMap = this.cacheMap ? this.cacheMap[key] : $.sessionStorage.getItemJSON(self.name, key);
-		if (valueMap && valueMap._id) {
-			value._id = valueMap._id;
-			value._rev = valueMap._rev;
-		}
-		var url = self.url+"/"+encodeURIComponent(key);
-		var xhr = callWithRetry("PUT", url, 
-				{"Accept": CONTENT_TYPE_JSON, "Content-Type": CONTENT_TYPE_JSON}, 
-				typeof value == "string" ? value : $.formatJSON(value, replacer));
-		var type = $.xhr.getResponseContentType(xhr);
-		if (console.logEnabled) console.log("PUT "+ url, xhr.status, xhr.statusText, type);
-		var result = (type && type.indexOf(CONTENT_TYPE_JSON)===0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
-		if (result.ok && result.rev) {
-			value._id = result.id;
-			value._rev = result.rev;
-			if (this.cacheMap) this.cacheMap[key] = value;
-			else $.sessionStorage.setItem(self.name, key, $.formatJSON(value, replacer));
-		}
-		this.doEvent({ type:"write", keyType:this.name, key:key, value:value });
-		return result;
-	}
-	
-	/**
-	 * Remove the given revision or the latest if no rev is given.
-	 */
-	function remove(key, rev) { //if (console.logEnabled) console.log(this.name +".remove("+ key +")");
-		// Save-empty rather than delete would reduce the 404 responses, but then there are blank records, normally a bad thing.
-		var self = this, url, xhr;
-		if (!rev) {
-			url = self.url+"/"+encodeURIComponent(key);
-			xhr = callWithRetry("HEAD", url, {"Accept": CONTENT_TYPE_JSON});
-			rev = xhr.getResponseHeader("ETag");
-			if (rev) rev = rev.replace(/^"|"$/g, "");
-			if (!rev) rev = "";
-		}
-		url = self.url+"/"+encodeURIComponent(key)+"?rev="+encodeURIComponent(rev);
-		xhr = callWithRetry("DELETE", url, {"Accept": CONTENT_TYPE_JSON});
-		var type = $.xhr.getResponseContentType(xhr);
-		if (console.logEnabled) console.log("DELETE "+ url, xhr.status, xhr.statusText, type);
-		var result = (type && type.indexOf(CONTENT_TYPE_JSON)===0) ? $.parseJSON(xhr.responseText) : xhr.responseText;
-		if (result.ok && result.rev) {
-			if (this.cacheMap) delete this.cacheMap[key];
-			else $.sessionStorage.removeItem(self.name, key);
-		}
-		this.doEvent({ type:"remove", keyType:this.name, key:key });
-		return result;
-	}
-	
-})(akme,"akme.core.CouchAccess");
-
 
 /**
  * akme.core.CouchAsyncAccess
