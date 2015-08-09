@@ -15,7 +15,7 @@ $(document).ready(function(){
 	test("undefined and null checks", function() {
         raises(function() {
             if (undefinedVar) ;
-        }, ReferenceError, "if (undefinedVar) should throw ReferenceError");
+        }, Error, "if (undefinedVar) should throw Error, typically ReferenceError but TypeError on IE8");
         ok(typeof undefinedVar !== undefined, "typeof undefinedVar !== undefined, careful!");
         ok(typeof undefinedVar === 'undefined', "typeof undefinedVar === 'undefined'");
         ok(typeof null === 'object', "typeof null === 'object'");
