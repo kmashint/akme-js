@@ -26,6 +26,10 @@ $(document).ready(function(){
         ok(!0, "0 should cast to boolean false");
         ok(!'', "'' (empty string) should cast to boolean false");
         ok(-1, "-1 should cast to boolean true");
+        ok(!Number.NaN, "Number.NaN should cast to boolean false");
+        ok(Number.NaN != undefined, "Number.NaN != undefined, NaN is a typeof number");
+        ok(Number.NaN != null, "Number.NaN != null, NaN is a typeof number");
+        ok(typeof Number.NaN === "number", "Number.NaN is a typeof number");
     });
 	test("JS inheritance directly", function() {
 		if (!window.my) window.my = {};
