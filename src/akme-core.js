@@ -356,25 +356,13 @@ if (!this.akme) this.akme = {
 	},
 
 	/**
-	 * Helper to invoke a callback function or {handleEvent:function(ev){...}}.
+	 * Helper to invoke the given callback function or {handleEvent:function(ev){...}} object.
 	 */
 	handleEvent : function (evHandler) {
 		if (!evHandler) return;
 		var args = this.slice.call(arguments, 1);
 		if (typeof evHandler === "function") evHandler.apply(undefined, args);
 		else evHandler.handleEvent.apply(evHandler, args);
-	},
-	/** 
-	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.
-	 * Ensures internally to be applied only once by setting _original on the object which hold the original handleEvent object.
-	 */
-	fixHandleEvent : function (self) {
-		if (document.documentMode && document.documentMode < 9 && typeof self.handleEvent === "function" && !self.handleEvent._original) {
-			var handleEvent = self.handleEvent;
-			self.handleEvent = function(ev) { handleEvent.call(self, ev); };
-			self.handleEvent._original = function(){ return handleEvent; }; // closure the old handleEvent
-		}
-		return self;
 	},
 	
 	trim : function (str) {

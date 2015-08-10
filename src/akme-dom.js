@@ -139,13 +139,13 @@ akme.copyAll(this.akme, {
 	},
 	/** 
 	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.
-	 * Ensures internally to be applied only once by setting _ie8fix on the object.
+	 * Ensures internally to be applied only once by setting _original on the object which holds the original handleEvent object.
 	 */
 	fixHandleEvent : function (self) {
-		if (this.isIE8 && typeof self.handleEvent === "function" && !self.handleEvent._ie8fix) {
+		if (this.isIE8 && typeof self.handleEvent === "function" && !self.handleEvent._original) {
 			var handleEvent = self.handleEvent;
 			self.handleEvent = function() { handleEvent.apply(self, arguments); };
-			self.handleEvent._ie8fix = function() { return handleEvent; };
+			self.handleEvent._original = function() { return handleEvent; };
 		}
 		return self;
 	},
