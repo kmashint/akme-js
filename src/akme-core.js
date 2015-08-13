@@ -364,7 +364,20 @@ if (!this.akme) this.akme = {
 		if (typeof evHandler === "function") evHandler.apply(undefined, args);
 		else evHandler.handleEvent.apply(evHandler, args);
 	},
-	
+    
+    /** 
+	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.
+	 * Ensures internally to be applied only once by setting _original on the object which holds the original handleEvent object.
+	 */
+	fixHandleEvent : function (self) {
+		if (this.isIE8 && typeof self.handleEvent === "function" && !self.handleEvent._original) {
+			var handleEvent = self.handleEvent;
+			self.handleEvent = function() { handleEvent.apply(self, arguments); };
+			self.handleEvent._original = function() { return handleEvent; };
+		}
+		return self;
+	},
+    
 	trim : function (str) {
 		return str.replace(this.WHITESPACE_TRIM_REGEXP, "");
 	},
@@ -938,6 +951,7 @@ if (!this.akme) this.akme = {
  */
 (function($,CLASS){
 	if ($.getProperty($.THIS,CLASS)) return; // One-time.
+	$.setProperty($.THIS, CLASS, EventSource);
 
 	//
 	// Private static declarations / closure
@@ -960,8 +974,7 @@ if (!this.akme) this.akme = {
 		$.extendDestroy(this, destroy);
 	}
 	// Example of extend with the Object super-class constructor-function first, then the sub-class constructor.
-	$.extendClass(Object, $.copyAll(EventSource, {CLASS: CLASS}));
-	$.setProperty($.THIS, CLASS, EventSource);
+	$.extendClass($.copyAll(EventSource, {CLASS: CLASS}), Object);
 	
 	//
 	// Functions
@@ -1121,9 +1134,12 @@ if (!this.akme) this.akme = {
         resolve: fulfill,
         reject: reject
     }).prototype = {  // super-prototype object properties
-        then : then,
+        then: then,
         "catch": function (onRejected) {
             return this.then(undefined, onRejected);
+        },
+        always: function (onAny) {
+            return this.then(onAny, onAny);
         }
     };
 	

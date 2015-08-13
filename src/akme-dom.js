@@ -65,7 +65,7 @@
 })(this);
 
 
-akme.copyAll(this.akme, {
+akme.copyAll(akme, {
 	_html5 : null,
 	onContent : function (evCallback) {
 		var self = this, elem = document, type = "DOMContentLoaded";
@@ -136,18 +136,6 @@ akme.copyAll(this.akme, {
 		if ("click" === evnt && window.Touch && this.unEventTouch) this.unEventTouch(elem, evCallback);
 		else if (this.isW3C) elem.removeEventListener(evnt, evCallback, false);
 		else elem.detachEvent("on"+evnt, typeof evCallback.handleEvent === "function" ? evCallback.handleEvent : evCallback);
-	},
-	/** 
-	 * Fix for IE8 that does not directly support { handleEvent : function (ev) { ... } }.
-	 * Ensures internally to be applied only once by setting _original on the object which holds the original handleEvent object.
-	 */
-	fixHandleEvent : function (self) {
-		if (this.isIE8 && typeof self.handleEvent === "function" && !self.handleEvent._original) {
-			var handleEvent = self.handleEvent;
-			self.handleEvent = function() { handleEvent.apply(self, arguments); };
-			self.handleEvent._original = function() { return handleEvent; };
-		}
-		return self;
 	},
 	/**
 	 * Return the element of the Event.target, using the target.parentNode if the target is not an element.
@@ -901,6 +889,8 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 		delete headers.callback;
 		delete headers.method;
 		delete headers.url;
+        // Note the true Origin of the message in the headers.
+        headers["X-Message-Origin"] = messageEvent.origin;
 		if (headers) for (var key in headers) xhr.setRequestHeader(key, headers[key]);
 		var self = this;
 		xhr.onreadystatechange = function() {
@@ -933,7 +923,9 @@ if (!akme.core.MessageBroker) akme.core.MessageBroker = akme.extendClass(akme.co
 		};
 		xhr.send(content || null);
 	},
-	XMLHttpResponse : function(headers, content) {
+	XMLHttpResponse : function(headers, content, messageEvent) {
+        // Note the true Origin of the message in the headers.
+        headers["X-Message-Origin"] = messageEvent.origin;
 		var callbackFnOrOb = akme.getProperty(window, headers.callback);
 		if (callbackFnOrOb && (headers.status == 200 || headers.status == 204 || headers.status == 304)) {
 			if (/xml;|xml$/.test(headers["Content-Type"])) {

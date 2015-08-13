@@ -4,6 +4,7 @@
 //
 (function($,CLASS) {
 	if ($.getProperty($.THIS,CLASS)) return; // One-time.
+	$.setProperty($.THIS, CLASS, Context);
 	
 	//
 	// Private static declarations / closure
@@ -47,7 +48,6 @@
 		getParent: getParent,
 		getRefreshDate: getRefreshDate
 	});
-	$.setProperty($.THIS, CLASS, Context);
 	
 	CONTEXT = new Context();
 

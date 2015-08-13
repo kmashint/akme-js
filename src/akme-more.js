@@ -2,7 +2,7 @@
 /*jshint browser:true */
 /*globals akme */
 
-akme.copy(akme, {
+akme.copyAll(akme, {
 
 	/**
 	 * Find parent elements by tagName and className.
@@ -403,7 +403,7 @@ akme.selectHelper = akme.selectHelper || {
 };
 
 
-akme.copy(akme.xhr, {
+akme.copyAll(akme.xhr, {
 	getXmlHttpResponse : function (url, returnBody, headerMap, paramMap) {
 	  var xhr = new XMLHttpRequest();
 	  var ary = [0, ""];
