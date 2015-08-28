@@ -1,14 +1,33 @@
-<!DOCTYPE html ><html>
+<!DOCTYPE html>
+<html>
 <head>
-<title>test</title>
-<http-equiv name='X-UA-Compatible' content='IE=edge'/>
+<title>MSIETest</title>
+<meta http-equiv="X-UA-Compatible" content="IE=9" />
 </head>
 <body>
+<h1>MSIETest
+</h1>
 <div style='width:100px; height: 100px; background-color: yellowgreen;'>
 	<div style='width:50px; height: 50px; background-color: goldenrod;'>&nbsp;</div>
 </div>
+See console logs.
 <script src='../common/fix-ie8.js'></script>
+<script src='../common/fix-ie9.js'></script>
 <script>
+
+var xhr = new XDomainRequest(),
+	isXDR = typeof XDomainRequest && xhr instanceof XDomainRequest;
+console.log(isXDR ? "XDomainRequest" : "XMLHttpResponse")
+xhr.open("GET", "http://localhost/akme-js/test/MSIETest.lua", true);
+xhr[isXDR ? "onload" : "onreadystatechange"] = function(ev) {
+	console.log("readyState", xhr.readyState, "ev", String(ev.type));
+	if (ev.type == "load") xhr.readyState = 4;
+	if (xhr.readyState === 4) {
+		console.log("contentType", xhr.contentType || xhr.getResponseHeader("Content-Type"));
+	}
+};
+xhr.send();
+
 if (document.documentMode && document.documentMode == 8) {
 
 	if (!this.akme) this.akme = {};
@@ -52,6 +71,7 @@ if (document.documentMode && document.documentMode == 8) {
 	});
 
 }
+
 </script>
 </body>
 </html>
