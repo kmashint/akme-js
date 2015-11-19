@@ -1,3 +1,4 @@
+// ..\web\common\akme-core
 // akme-core.js
 // Javascript Types: undefined, null, boolean, number, string, function, or object; Date and Array are typeof object.
 // typeof works for a function or object but note typeof String(1) is string yet typeof new String(1) is object.
@@ -1173,25 +1174,27 @@ if (!this.akme) this.akme = {
         // and return a new promise resolving to the return value of the called handler.
         // TODO: what happens if an onFulfilled/onRejected callback returns a new promise/thenable?
         var p = this.PRIVATES(PRIVATES), callbackArgs = arguments;
-        var result = new Promise(function executor(/*function fulfill, function reject*/) {
+        var result = new Promise(executor);
+		function executor(/*function fulfill, function reject*/) {
             var newPromise = this, executorArgs = arguments;
-            for (var i=0; i<2; i++) (function (i) {
+            for (var i=0; i<2; i++) pass0fail1(i);
+            function pass0fail1(i) {
                 // If a callback is a function, wrap it in a function to be called later with our closures.
                 var f = callbackArgs[i];
                 if (typeof f === "function") callbackArgs[i] = function() {
                     try {
                         var r = f.apply(p.self, arguments);
                         if (r != null && typeof r.then === "function") {
-                            r.then.apply(newPromise, executorArgs);
+                            r.then.apply(r, executorArgs);
                         } else {
                             executorArgs[i].apply(newPromise, r !== undefined ? [r] : arguments);
                         }
                     } catch (er) { // reject on callback error
                         if (executorArgs[1]) executorArgs[1](er);
                     }
-                };
-            })(i);
-        });
+                }
+            }
+        }
         // Now that a new Promise is prepared and callbackArgs adjusted if necessary,
         // add to the future callback arrays if the state is 0:pending otherwise call immediately.
         if (p.state === 0) for (var i=0, n=Math.min(callbackArgs.length, p.callbackAry.length); i<n; i++) {

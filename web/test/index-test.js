@@ -334,6 +334,37 @@ $(document).ready(function(){
 		*/
 		
 	});
+	asyncTest("asyncPromise", function() {
+		expect(2);
+		var Promise = akme.core.Promise,
+			promise, promise2,
+			executor = function (resolve,reject) {
+				executor.resolve = resolve; executor.reject = reject;
+			};
+	
+		var executor2 = function (resolve,reject) {
+				executor2.resolve = resolve, executor2.reject = reject;
+			};
+        promise = new Promise(executor);
+        promise.then(function(result) {
+            console.log("promise1", result);
+			equal( result, 1, "promise1 should be 1" );
+            var promise2 = new Promise(executor2);
+            setTimeout(function(){ console.log("executor2.resolve(2)"); executor2.resolve(2); }, 25);
+            console.log("return promise2", promise2);
+            return promise2;
+        }, function(error) {
+            ok(false, "promise should fulfill");
+        }).then(function(result) {
+            console.log("promise2", result);
+			equal( result, 2, "promise2 should be 2" );
+			start();
+        }, function (error) {
+            ok(false, "promise2 should fulfill");
+        });
+        setTimeout(function(){ console.log("executor.resolve(1)"); executor.resolve(1); }, 25);
+
+	});
 	if (false) asyncTest("async", function() {
 		expect(4);
 		var promise;
