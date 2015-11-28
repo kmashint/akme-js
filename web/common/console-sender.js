@@ -107,16 +107,16 @@
 				));
 	}
 	function setRemoteRegExp(re) {
-		if (re==null || re=="") removeSelfAndStore("remoteRegExp");
-		else try { setSelfAndStore("remoteRegExp", re instanceof RegExp ? re : new RegExp(re.replace(/^\/|\/$/g,""))); }
-		catch (er) { setSelfAndStore("remoteRegExp", null); }
+		if (re==null || re=="") removeAndStore("remoteRegExp");
+		else try { setAndStore("remoteRegExp", re instanceof RegExp ? re : new RegExp(re.replace(/^\/|\/$/g,""))); }
+		catch (er) { setAndStore("remoteRegExp", null); }
 	}
 	
-	function setSelfAndStore(key, val) {
+	function setAndStore(key, val) {
 		self[key] = val;
 		storage.setItem(itemType, key, val);
 	}
-	function removeSelfAndStore(key) {
+	function removeAndStore(key) {
 		delete self[key];
 		storage.removeItem(itemType, key);
 	}
@@ -196,8 +196,8 @@
 					typeof getTimeIfGreaterThanMillis(self.checkTimeout) == "number") {
 				headers["Authorization"] = "Basic "+ btoa(user+":"+pass);
 			}
-			setSelfAndStore("remoteAttemptDate", new Date().getTime());
-			removeSelfAndStore("remoteSuccessDate");
+			setAndStore("remoteAttemptDate", new Date().getTime());
+			removeAndStore("remoteSuccessDate");
 			//method, url, headers, content, /*function(headers,content)*/ callbackFnOrOb
 			var xhr = $.xhr.callAsync("POST", url, headers, a, tryReceive);
 			setTimeout(function(){ if (xhr) xhr.abort(); }, self.recvTimeout);
@@ -213,20 +213,20 @@
 					if (tryCount==1 && headers.status == 401) trySend(); // Retry one time with Authorization.
 					return;
 				}
-				setSelfAndStore("remoteSuccessDate", new Date().getTime());
+				setAndStore("remoteSuccessDate", new Date().getTime());
 				var logLevel = headers["X-Log-Local-Level"];
 				if (logLevel && LOG_EVENTS[logLevel] >= LOG_EVENTS["log"]) {
-					setSelfAndStore("localLevel", logLevel);
+					setAndStore("localLevel", logLevel);
 				}
 				logLevel = headers["X-Log-Level"];
 				if (logLevel && LOG_EVENTS[logLevel] >= LOG_EVENTS["log"]) {
-					setSelfAndStore("remoteLevel", logLevel);
+					setAndStore("remoteLevel", logLevel);
 				}
 				var logRegExp = headers["X-Log-RegExp"];
 				if (logRegExp != null) setRemoteRegExp(logRegExp);
 				console.logLocal("POST "+ url +" response ", 
-					isIE?"\n"+$.formatJSON(headers):headers, 
-					isIE?"\n"+$.formatJSON(content):content);
+					isIE ? "\n"+$.formatJSON(headers) : headers, 
+					isIE ? "\n"+$.formatJSON(content) : content);
 			};
 			
 		}

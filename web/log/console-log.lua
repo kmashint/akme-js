@@ -1,7 +1,8 @@
 -- console-log.lua
 
---package.cpath = package.cpath .. "D:/_Project/akme-js/web/log/?.dll;"
-package.path = package.path .. "C:/AKME/akme-js/web/log/?.lua;"
+--package.cpath = package.cpath .. "C:/Apache/Lua51/clibs/?.dll;"
+package.path = package.path .. "D:/_Project/akme-js/web/log/?.lua;"
+--package.path = package.path .. "C:/AKME/akme-js/web/log/?.lua;"
 
 require "apache2"
 require "io"

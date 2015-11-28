@@ -14,21 +14,21 @@ $(document).ready(function(){
 	module("JS standards");
 	test("undefined and null checks", function() {
         raises(function() {
-            if (undefinedVar) ;
+            if (undefinedVar) ;  //jshint ignore:line
         }, Error, "if (undefinedVar) should throw Error, typically ReferenceError but TypeError on IE8");
         ok(typeof undefinedVar !== undefined, "typeof undefinedVar !== undefined, careful!");
         ok(typeof undefinedVar === 'undefined', "typeof undefinedVar === 'undefined'");
         ok(typeof null === 'object', "typeof null === 'object'");
         ok(null !== undefined, "null !== undefined");
-        ok(null == undefined, "null == undefined, i.e. undefined, and only it, upcasts to null object");
+        ok(null == undefined, "null == undefined, i.e. undefined, and only it, upcasts to null object");  //jshint ignore:line
         ok(!undefined, "undefined should cast to boolean false");
         ok(!null, "null should cast to boolean false");
         ok(!0, "0 should cast to boolean false");
         ok(!'', "'' (empty string) should cast to boolean false");
         ok(-1, "-1 should cast to boolean true");
         ok(!Number.NaN, "Number.NaN should cast to boolean false");
-        ok(Number.NaN != undefined, "Number.NaN != undefined, NaN is a typeof number");
-        ok(Number.NaN != null, "Number.NaN != null, NaN is a typeof number");
+        ok(Number.NaN != undefined, "Number.NaN != undefined, NaN is a typeof number");  //jshint ignore:line
+        ok(Number.NaN != null, "Number.NaN != null, NaN is a typeof number");  //jshint ignore:line
         ok(typeof Number.NaN === "number", "Number.NaN is a typeof number");
     });
 	test("JS inheritance directly", function() {
@@ -42,7 +42,7 @@ $(document).ready(function(){
 			  function Car() { 
 			    // nested function scope for constructor
 			    console.log(this.constructor.CLASS +".constructor() with wheels="+this.wheels);
-			  };
+			  }
 			  Car.CLASS = CLASS;
 			  Car.constructor = my.Vehicle; // super constructor
 			  Car.prototype = new Car.constructor(); // super-static prototype
@@ -78,6 +78,13 @@ $(document).ready(function(){
 		akme.copyMissing(x, y);
 		equal( x.a, 1, "copyMissing should leave a=1" );
 		equal( x.b, 2, "copyMissing should set a=2" );
+        
+        y = {a:1, b:2};
+        x = akme.some(x, function(val, key) {
+            if (val === 1 && key === "a") return true;
+            if (val === 2) ok(false, "some should stop at a:1");
+        });
+        equal(x, true, "some should return true" );
 
 	});
 	test("akme date utils", function(){
@@ -109,7 +116,7 @@ $(document).ready(function(){
 			function X(){
 				var p = {x:1};
 				this.PRIVATES = function(self) { return (self === PRIVATES) ? p : undefined; };
-			};
+			}
 			X.prototype = {get:get};
 			$.setProperty($.THIS, CLASS, X);
 			
@@ -138,7 +145,7 @@ $(document).ready(function(){
 			    	if (privates) p = $.copyMissing(privates, p);
 			    }
 			    this.PRIVATES = function(self){ return self === PRIVATES ? p : undefined; };
-			};
+			}
 			$.extendClass(
 				$.copyAll(Car, { // constructor function
 					CLASS : CLASS, PRIVATES: PRIVATES // expose PRIVATES to allow subclass access
@@ -165,7 +172,7 @@ $(document).ready(function(){
 			    console.log(this.constructor.CLASS +".constructor() with wheels="+this.wheels);
 			    var p = {y: 2};
 			    this.constructor.constructor.call(this, p);
-			};
+			}
 			$.extendClass(
 				$.copyAll(Mini, {CLASS : CLASS}), // constructor function
 				$.copyAll(new my.Car(), { // super-static prototype
@@ -243,7 +250,7 @@ $(document).ready(function(){
 			equal( byEvenOdd["0"].length, 1, "even 0 should have length 1" );
 			equal( byEvenOdd["1"].length, 2, "odd 1 should have length 2" );
 			
-			var rowProto = new Array();
+			var rowProto = [];
 			var propName = "x";
 			Object.defineProperty(rowProto, propName, {
 				get: function() { return this[0]+"z"; },
@@ -339,11 +346,13 @@ $(document).ready(function(){
 		var Promise = akme.core.Promise,
 			promise, promise2,
 			executor = function (resolve,reject) {
-				executor.resolve = resolve; executor.reject = reject;
+				executor.resolve = resolve;
+                executor.reject = reject;
 			};
 	
 		var executor2 = function (resolve,reject) {
-				executor2.resolve = resolve, executor2.reject = reject;
+                executor2.resolve = resolve;
+                executor2.reject = reject;
 			};
         promise = new Promise(executor);
         promise.then(function(result) {
@@ -379,7 +388,7 @@ $(document).ready(function(){
 				ok( headers["Content-Type"] == "text/html", "Content-Type: text/html" );
 			}
 			start();
-		};
+		}
 
 	});
 	
@@ -527,7 +536,7 @@ $(document).ready(function(){
 			{ "margin-top": "100px", "margin-left": "500px" } : 
 			{ "margin-top": "0px", "margin-left": "0px" } ;
 		$img2.animate( attr, 700, "easeOutBounce" ); // swing does not need UI; easeOutQuad and easeOutBounce require UI
-	};
+	}
 	$img2.click(goJQuery);
 	setTimeout(function() { goJQuery(); }, 700);
 	
@@ -544,7 +553,7 @@ $(document).ready(function(){
 	function goRaphael() {
 		var attr = img.attrs.x == 15 ? {y: 100, x: 500} : {y: 15, x: 15};
 		img.animate(attr, 700, "bounce"); // easeOut, backOut, bounce, elastic
-	};
+	}
 	img.click(goRaphael);
 	setTimeout(function() { goRaphael(); }, 700);
 

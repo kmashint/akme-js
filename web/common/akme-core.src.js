@@ -1,4 +1,3 @@
-// ..\web\common\akme-core
 // akme-core.js
 // Javascript Types: undefined, null, boolean, number, string, function, or object; Date and Array are typeof object.
 // typeof works for a function or object but note typeof String(1) is string yet typeof new String(1) is object.
@@ -145,7 +144,7 @@ if (!this.akme) this.akme = {
 	/**
 	 * Check if the object is not undefined (primitive) and not null (object). 
 	 * Or just use x != null that equates undefined to null.
-     * If x may be undeclared you need to check if (typeof x === "undefined").
+     * If x may be undeclared you need to check if (x === undefined).
 	 */
 	isDefinedNotNull : function(x) { return x != null; },
 	/**
@@ -264,10 +263,27 @@ if (!this.akme) this.akme = {
 		return ary;
 	},
 	/**
-	 * Get all of the keys in the map as an array.
+	 * Get all of the keys in the map as an array, 
+     * similar to Object.keys() but without the hasOwnProperty check.
 	 */
 	getMapKeys : function(map) {
 		return this.concatMapKeys([], map);
+	},
+	/**
+	 * Similar to Array.prototype.some but handles objects without the overhead of Object.keys().some().
+	 * Easier to use than Array.prototype.every since the callback only needs to return something to stop.
+	 */
+	some : function (obj, callback, /* optional */ thisArg) {
+		if (obj == null) return;  //jshint ignore:line
+		if (this.isArray(obj)) return obj.some(callback, thisArg);
+		if (thisArg === undefined) thisArg = obj;
+		var key, result;
+		for (key in obj) {
+			if (!obj.hasOwnProperty(key)) continue;
+			result = callback.call(thisArg, obj[key], key, obj);
+			if (result) return result;
+		}
+		return result;
 	},
 	
 	/**
