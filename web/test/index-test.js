@@ -62,29 +62,43 @@ $(document).ready(function(){
 
 	
 	module("akme utility functions");
-	test("akme.copy and friends", function(){
+	test("akme.copy() and friends", function(){
 		var x = {a:1}, y = {a:2, b:2};
 		
 		akme.copy(x, y);
-		equal( x.a, 2, "copy should set a=2" );
-		equal( x.b, 2, "copy should set b=2" );
+		equal( x.a, 2, "copy() should set a=2" );
+		equal( x.b, 2, "copy() should set b=2" );
 		
 		x = {a:1};
 		akme.copyExisting(x, y);
-		equal( x.a, 2, "copyExisting should set a=2" );
-		equal( typeof x.b, "undefined", "copyExisting should leave b undefined" );
+		equal( x.a, 2, "copyExisting() should set a=2" );
+		equal( typeof x.b, "undefined", "copyExisting() should leave b undefined" );
 		
 		x = {a:1};
 		akme.copyMissing(x, y);
-		equal( x.a, 1, "copyMissing should leave a=1" );
-		equal( x.b, 2, "copyMissing should set a=2" );
+		equal( x.a, 1, "copyMissing() should leave a=1" );
+		equal( x.b, 2, "copyMissing() should set a=2" );
+
+        y = [1,2];
+        x = y.some(function (val, key) {
+            if (val === 1 && key === 0) return val;
+            if (val === 2) ok(false, "some() should stop at 0:1");
+        });
+        ok(x === true, "some() should return true" );
+        
+        y = [1,2];
+        x = akme.some(y, function (val, key) {
+            if (val === 1 && key === 0) return val;
+            if (val === 2) ok(false, "some() should stop at 0:1");
+        });
+        ok(x === true, "some() should return true" );
         
         y = {a:1, b:2};
-        x = akme.some(x, function(val, key) {
-            if (val === 1 && key === "a") return true;
-            if (val === 2) ok(false, "some should stop at a:1");
+        x = akme.some(y, function(val, key) {
+            if (val === 1 && key === "a") return val;
+            if (val === 2) ok(false, "some() should stop at a:1");
         });
-        equal(x, true, "some should return true" );
+        ok(x === true, "some() should return true" );
 
 	});
 	test("akme date utils", function(){

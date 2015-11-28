@@ -277,7 +277,7 @@ if (!this.akme) this.akme = {
 	 * Easier to use than Array.prototype.every since the callback only needs to return something to stop.
 	 */
 	some : function (obj, callback, /* optional */ thisArg) {
-		if (obj == null) return;  //jshint ignore:line
+		if (obj == null) return false;  //jshint ignore:line
 		if (this.isArray(obj)) return obj.some(callback, thisArg);
 		if (thisArg === undefined) thisArg = obj;
 		for (var key in obj) {
