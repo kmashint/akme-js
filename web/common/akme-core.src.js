@@ -77,14 +77,15 @@
      * This does not handle arguments so those to an Array first.
 	 */
 	if (!Object.forEach) Object.forEach = function(obj, /* function(val, key, obj) */ fcn, thisArg) {
-		if (typeof obj.forEach === "function") {
+		var key;
+        if (typeof obj.forEach === "function") {
 			obj.forEach(fcn, thisArg);
 		}
 		else if (obj instanceof Array || (typeof NodeList !== "undefined" && obj instanceof NodeList)
-				) for (var key=0; key<obj.length; key++) {
+				) for (key=0; key<obj.length; key++) {
 			fcn.call(thisArg || obj, obj[key], key, obj);
 		}
-		else for (var key in obj) if (obj.hasOwnProperty(key)) {
+		else for (key in obj) if (obj.hasOwnProperty(key)) {
 			fcn.call(thisArg || obj, obj[key], key, obj);
 		}
 	};
@@ -120,10 +121,11 @@
 	// Cross-reference JS 1.5 Array methods against the JS 1.3 Array constructor for backwards compatibility.
 	//
 	for (var key in {"indexOf":1,"lastIndexOf":1,"every":1,"filter":1,"forEach":1,"map":1,"some":1,"reduce":1,"reduceRight":1}){
-		(function(key) {
-			if (!Array[key]) Array[key] = function(ary) { return ARRAY[key].apply(ary, SLICE.call(arguments,1)); }; 
-		})(key);
+		copyToArray(key);
 	}
+    function copyToArray(key) {
+        if (!Array[key]) Array[key] = function(ary) { return ARRAY[key].apply(ary, SLICE.call(arguments,1)); }; 
+    }
 
 })(this);
 
@@ -146,7 +148,7 @@ if (!this.akme) this.akme = {
 	 * Or just use x != null that equates undefined to null.
      * If x may be undeclared you need to check if (x === undefined).
 	 */
-	isDefinedNotNull : function(x) { return x != null; },
+	isDefinedNotNull : function(x) { return x != null; },  //jshint ignore:line
 	/**
 	 * Check if the object is instanceof Array (object, there is no typeof array primitive).
 	 */
@@ -192,7 +194,7 @@ if (!this.akme) this.akme = {
 	 * Uses Object.create(Object.getPrototypeOf(obj)) and then copies hasOwnProperty/non-prototype properties by key.
 	 */
 	clone : function (obj) {
-		if (obj == null) return obj;
+		if (obj == null) return obj;  //jshint ignore:line
 		if (typeof obj.clone === "function") return obj.clone();
 		var clone = Object.create(Object.getPrototypeOf(obj));
 		for (var key in obj) if (obj.hasOwnProperty(key)) clone[key] = obj[key];
@@ -202,7 +204,7 @@ if (!this.akme) this.akme = {
 	 * Copy hasOwnProperty/non-prototype key/values from the map to the obj, returning the same obj.
 	 */
 	copy : function (obj, map, /*boolean*/ all) {
-		if (map == null) return obj;
+		if (map == null) return obj;  //jshint ignore:line
 		all = !!all;
 		for (var key in map) if (all || map.hasOwnProperty(key)) obj[key] = map[key];
 		return obj;
@@ -215,7 +217,7 @@ if (!this.akme) this.akme = {
 	 * Copy hasOwnProperty/non-prototype values from the map to the obj for existing keys in the obj, returning the same obj.
 	 */
 	copyExisting : function (obj, map, /*boolean*/ all, /*boolean*/ negate) {
-		if (map == null) return obj;
+		if (map == null) return obj;  //jshint ignore:line
 		all = !!all; negate = !!negate;
 		for (var key in map) if (((key in obj) !== negate) && (all || map.hasOwnProperty(key))) obj[key] = map[key];
 		return obj;
@@ -237,8 +239,9 @@ if (!this.akme) this.akme = {
 	 * If valName is undefined or null then the entire array values it used.
 	 */
 	copyArrayToObject : function (obj, ary, keyName, valName) {
-		if (valName !== undefined) for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i][valName];
-		else for (var i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i];
+        var i;
+		if (valName !== undefined) for (i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i][valName];
+		else for (i=0; i<ary.length; i++) obj[ary[i][keyName]] = ary[i];
 		return obj;
 	},
 	/**
@@ -277,13 +280,11 @@ if (!this.akme) this.akme = {
 		if (obj == null) return;  //jshint ignore:line
 		if (this.isArray(obj)) return obj.some(callback, thisArg);
 		if (thisArg === undefined) thisArg = obj;
-		var key, result;
-		for (key in obj) {
+		for (var key in obj) {
 			if (!obj.hasOwnProperty(key)) continue;
-			result = callback.call(thisArg, obj[key], key, obj);
-			if (result) return result;
+			if (callback.call(thisArg, obj[key], key, obj)) return true;
 		}
-		return result;
+		return false;
 	},
 	
 	/**
@@ -368,7 +369,7 @@ if (!this.akme) this.akme = {
 		default:
 			var buf = new Array(args.length);
 			for (var i=0; i<args.length; i++) buf[i] = "a["+ i +"]";
-			return (new Function("f","a","return new f("+ buf.join(",") +");"))(fn,args);
+			return (new Function("f","a","return new f("+ buf.join(",") +");"))(fn,args);  //jshint ignore:line
 		}
 	},
 
@@ -549,7 +550,7 @@ if (!this.akme) this.akme = {
 	
 	function readMany(keys) {
 		var a = [];
-		if (keys == null) return a;
+		if (keys == null) return a;  //jshint ignore:line
 		if (typeof keys === "function") {
 			a[a.length] = this.read(keys());
 		} else if (keys instanceof Array) for (var i=0; i<keys.length; i++) {
@@ -657,7 +658,7 @@ if (!this.akme) this.akme = {
 	}
 	function valueSlice (start, end) {
 		var p = this.PRIVATES(PRIVATES);
-		if (!(end >= 0)) end = p.ary.length;
+		if (!(end >= 0)) end = p.ary.length;  //jshint ignore:line
 		var r = new Array(end-start);
 		for (var i = start; i < end; i++) r[i-start] = p.map[p.ary[i]];
 		return r;
@@ -823,11 +824,12 @@ if (!this.akme) this.akme = {
 //				get: function() { return this[p.map[name]]; },
 //				set: function(v) { this[p.map[name]] = v; }
 //			}; } )(name) );
-			if (p.rowMap)  p.rowMap[name] = (function(name) { return {
-				get: function() { return this[p.map[name]]; },
-				set: function(v) { this[p.map[name]] = v; }
-			}; } )(name);
+			if (p.rowMap) p.rowMap[name] = getAccessor(name);
 		}
+        function getAccessor(name) { return {
+            get: function() { return this[p.map[name]]; },
+			set: function(v) { this[p.map[name]] = v; }
+        }; }
 	}
 	
 	function key(intStrAry) {
@@ -893,7 +895,7 @@ if (!this.akme) this.akme = {
 	 */
 	function rowIndex(idx) {
 		var p = this.PRIVATES(PRIVATES);
-		if (!(idx >= 0)) return this.PRIVATES(PRIVATES).idx; 
+		if (!(idx >= 0)) return this.PRIVATES(PRIVATES).idx;  //jshint ignore:line
 		if ($.isNumber(idx) && idx >= 0 || idx < p.body.length) p.idx = idx;
 		else p.idx = -1;
 	}
@@ -934,7 +936,7 @@ if (!this.akme) this.akme = {
 		var map = {}, thisArg = arguments.length >= 2 ? arguments[1] : undefined;
 		this.forEach(function(row,idx){
 			var key = keyFcn.call(thisArg,row,idx,this), ary;
-			if (key != null) {
+			if (key != null) {  //jshint ignore:line
 				ary = map[key] || [];
 				ary[ary.length] = row;
 				if (ary.length === 1) map[key] = ary;
@@ -1131,15 +1133,15 @@ if (!this.akme) this.akme = {
         }
 
         function fulfillFcn() {
-            switch (p.state) {
-            case 0: p.state = 1; p.args = arguments;  // fallthrough
+            switch (p.state) {  // case 0 has intended fallthrough
+            case 0: p.state = 1; p.args = arguments;  //jshint ignore:line
             case 1: APPLY_ARRAY(p.callbackAry[p.state], p.self, p.args, true); break;
             case 2: console.warn(String( new RangeError("cannot resolve after reject") ));
             }
         }
         function rejectFcn() {
-            switch (p.state) {
-            case 0: p.state = 2; p.args = arguments;  // fallthrough
+            switch (p.state) {  // case 0 has intended fallthrough
+            case 0: p.state = 2; p.args = arguments;  //jshint ignore:line
             case 2: APPLY_ARRAY(p.callbackAry[p.state], p.self, p.args, true); break;
             case 1: console.warn(String( new RangeError("cannot reject after resolve") ));
             }
@@ -1200,7 +1202,7 @@ if (!this.akme) this.akme = {
                 if (typeof f === "function") callbackArgs[i] = function() {
                     try {
                         var r = f.apply(p.self, arguments);
-                        if (r != null && typeof r.then === "function") {
+                        if (r != null && typeof r.then === "function") {  //jshint ignore:line
                             r.then.apply(r, executorArgs);
                         } else {
                             executorArgs[i].apply(newPromise, r !== undefined ? [r] : arguments);
@@ -1208,7 +1210,7 @@ if (!this.akme) this.akme = {
                     } catch (er) { // reject on callback error
                         if (executorArgs[1]) executorArgs[1](er);
                     }
-                }
+                };
             }
         }
         // Now that a new Promise is prepared and callbackArgs adjusted if necessary,
@@ -1414,8 +1416,7 @@ if (!this.akme) this.akme = {
 	//
 	// Private static declarations / closure
 	//
-	var PRIVATES = {}, // Closure scope guard for this.PRIVATES.
-		Super = akme.core.Context; 
+	var Super = akme.core.Context; 
 
 	//
 	// Initialise instance and public functions
@@ -3278,6 +3279,7 @@ if (!akme.sessionStorage) akme.sessionStorage = new akme.dom.Storage({
 		info : info, // given key return Object
 		copy : copy, // given key,newKey return Object
 		read : read, // given key return Object
+		readMany : readMany, // given Array or Object of keys return Array of Objects
 		write : write, // given key, Object return Object
 		remove : remove // given key return Object
 	}));

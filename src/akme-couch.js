@@ -42,6 +42,7 @@
 		info : info, // given key return Object
 		copy : copy, // given key,newKey return Object
 		read : read, // given key return Object
+		readMany : readMany, // given Array or Object of keys return Array of Objects
 		write : write, // given key, Object return Object
 		remove : remove // given key return Object
 	}));

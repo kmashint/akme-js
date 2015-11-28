@@ -189,8 +189,7 @@
 	//
 	// Private static declarations / closure
 	//
-	var PRIVATES = {}, // Closure scope guard for this.PRIVATES.
-		Super = akme.core.Context; 
+	var Super = akme.core.Context; 
 
 	//
 	// Initialise instance and public functions
