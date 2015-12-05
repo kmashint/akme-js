@@ -1190,7 +1190,6 @@ if (!this.akme) this.akme = {
     function then(/*function onFulfilled, function onRejected*/) {  // onPending is non-standard, not implemented
         // Append fulfillment and rejection handlers to the promise,
         // and return a new promise resolving to the return value of the called handler.
-        // TODO: what happens if an onFulfilled/onRejected callback returns a new promise/thenable?
         var p = this.PRIVATES(PRIVATES), callbackArgs = arguments;
         var result = new Promise(executor);
 		function executor(/*function fulfill, function reject*/) {
