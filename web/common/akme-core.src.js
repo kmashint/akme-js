@@ -1096,6 +1096,15 @@ if (!this.akme) this.akme = {
 */
 /**
  * akme.core.Promise
+ * EcmaScript 6 compatible Promise.
+ * This will extend an existing ES6 Promise if available.
+ * It follows the ES6 Promise nature of calling then()ables in the next JS event loop.
+ * Since the executor function really should act as an extension of the constructor,
+ * it sets the promise object as "this" within the executor, e.g. the line below should log true.
+ *   new Promise(function executor(fulfill,reject){ console.log(this instanceof Promise); });
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
+ * http://www.html5rocks.com/en/tutorials/es6/promises/
+ * http://bugs.jquery.com/ticket/14510 - jQuery in 1.12+, 2.2+ better supports ES6 then-able
  */
 (function($,CLASS){
     // If the standard ES6 promise is available, extend it support  self = this  in the constructor.
@@ -1185,11 +1194,13 @@ if (!this.akme) this.akme = {
 	// Functions
 	//
 	
-    // Apply/call an array of functions with a given this/self and arguments.
+    // Apply/call an array of functions in the next JS event loop with a given this/self and arguments.
     // If once is true then the array of functions is cleared after being used.
     function APPLY_ARRAY(ary, self, args, once) {  // IE8 cannot apply null or undefined args.
-        for (var i=0; i<ary.length; i++) if (args) ary[i].apply(self, args); else ary[i].call(self);
-        if (!!once) ary.length = 0;
+		setTimeout(function() {
+			for (var i=0; i<ary.length; i++) if (args) ary[i].apply(self, args); else ary[i].call(self);
+			if (!!once) ary.length = 0;
+		}, 0);
     }
 
     function resolve() {  // fulfill aka resolve
@@ -1224,19 +1235,19 @@ if (!this.akme) this.akme = {
                         } else {
                             executorArgs[i].apply(newPromise, r !== undefined ? [r] : arguments);
                         }
-                    } catch (er) { // reject on callback error
+                    } catch (er) {  // reject on callback error
                         if (executorArgs[1]) executorArgs[1](er);
                     }
                 };
             }
         });
         // Now that a new Promise is prepared and callbackArgs adjusted if necessary,
-        // add to the future callback arrays if the state is 0:pending otherwise call immediately.
+        // add to the future callback arrays if the state is 0:pending otherwise call in the next JS event loop.
         if (p.state === 0) for (var i=0, n=Math.min(callbackArgs.length, p.callbackAry.length); i<n; i++) {
             if (callbackArgs[i]) p.callbackAry[i===2 ? 0 : i+1].push(callbackArgs[i]);
         } else {
             var callback = callbackArgs[p.state===0 ? 2 : p.state-1];
-            if (callback) callback.apply(p.self, p.args);
+            if (callback) setTimeout(function(){ callback.apply(p.self, p.args); }, 0);
         }
         return result;
     }
