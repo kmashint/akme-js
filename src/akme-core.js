@@ -292,7 +292,7 @@ if (!this.akme) this.akme = {
 	 * This supports a nested path by Array ["a","b","c"] or dot-delimited String "a.b.c".
 	 */
 	getProperty : function ( /*object*/ obj, /*Array or String*/ path, def ) {
-		if ( typeof path === 'string' || path instanceof String ) { path = path.split('.'); }
+		if (this.isString(path)) { path = path.split('.'); }
 		var prop = obj;
 		var n = path.length;
 		for (var i=0; i<n; i++) {
@@ -305,16 +305,17 @@ if (!this.akme) this.akme = {
 	 * Set a nested value from a parent object and a property path string or array, creating missing {}/Objects in the path.
 	 * This supports a nested path by Array ["a","b","c"] or dot-delimited String "a.b.c".
 	 */
-	setProperty : function ( /*object*/ obj, /*Array or String*/ path, val ) {
-		if ( typeof path === 'string' || path instanceof String ) { path = path.split('.'); }
+	setProperty : function ( /*object*/ obj, /*Array or String*/ path, val, onlyIfUnset ) {
+		if (this.isString(path)) { path = path.split('.'); }
 		var prop = obj;
 		var n = path.length-1;
 		for (var i=0; i<n; i++) {
 			if (path[i] in prop) prop = prop[path[i]];
 			else prop = prop[path[i]] = {};
 		}
-		prop[path[n]] = val;
-		return prop;
+		var old = prop[path[n]];
+		if (!onlyIfUnset || (onlyIfUnset && old === undefined)) prop[path[n]] = val;
+		return old;
 	},
 
 	/**
@@ -514,7 +515,7 @@ if (!this.akme) this.akme = {
  * akme.core.Access
  */
 (function($,CLASS){
-	if ($.getProperty($.THIS,CLASS)) return; // One-time.
+	if ($.setProperty($.THIS,CLASS,Access,true)) return; // One-time.
 	
 	//
 	// Private static declarations / closure
@@ -542,7 +543,6 @@ if (!this.akme) this.akme = {
 		write : null, // given Object return Object
 		remove : null // given Object return Object
 	});
-	$.setProperty($.THIS, CLASS, Access);
 	
 	//
 	// Functions
@@ -570,7 +570,7 @@ if (!this.akme) this.akme = {
  * akme.core.Data
  */
 (function($,CLASS){
-	if ($.getProperty($.THIS,CLASS)) return; // One-time.
+	if ($.setProperty($.THIS,CLASS,Data,true)) return; // One-time.
 
 	//
 	// Private static declarations / closure
@@ -585,7 +585,6 @@ if (!this.akme) this.akme = {
 	$.copyAll(Data.prototype, { // super-static prototype, public functions
 		toString : toString
 	});
-	$.setProperty($.THIS, CLASS, Data);
 
 	//
 	// Functions
@@ -602,7 +601,7 @@ if (!this.akme) this.akme = {
  * akme.core.IndexedMap
  */
 (function($,CLASS){
-	if ($.getProperty($.THIS,CLASS)) return; // One-time.
+	if ($.setProperty($.THIS,CLASS,IndexedMap,true)) return; // One-time.
   
 	//
 	// Private static declarations / closure
@@ -635,7 +634,6 @@ if (!this.akme) this.akme = {
 		copyFrom : copyFrom,
 		copyAllFrom : copyAllFrom
 	});
-	$.setProperty($.THIS, CLASS, IndexedMap);
 	
 	//
 	// Functions
@@ -727,7 +725,7 @@ if (!this.akme) this.akme = {
  * akme.core.DataTable
  */
 (function($,CLASS){
-	if ($.getProperty($.THIS,CLASS)) return; // One-time.
+	if ($.setProperty($.THIS,CLASS,DataTable,true)) return; // One-time.
 	
 	//
 	// Private static declarations / closure
@@ -789,8 +787,6 @@ if (!this.akme) this.akme = {
 		DataTable.prototype[k] = applyArrayMethod(k);
 	}
 	// Avoid writing, mutating methods: pop, push, reverse, shift, sort, splice, unshift.
-	// Publish the constructor.
-	$.setProperty($.THIS, CLASS, DataTable);
 
 	/**
 	 * Enhance join to take up to two arguments (rowSeparator,colSeparator) leaving the default as commas for both.
@@ -969,8 +965,7 @@ if (!this.akme) this.akme = {
  * into objects rather than act as a prototype/super-static.
  */
 (function($,CLASS){
-	if ($.getProperty($.THIS,CLASS)) return; // One-time.
-	$.setProperty($.THIS, CLASS, EventSource);
+	if ($.setProperty($.THIS,CLASS,EventSource,true)) return; // One-time.
 
 	//
 	// Private static declarations / closure
@@ -1103,14 +1098,38 @@ if (!this.akme) this.akme = {
  * akme.core.Promise
  */
 (function($,CLASS){
-	if ($.getProperty($.THIS,CLASS)) return; // One-time.
-	$.setProperty($.THIS,CLASS,Promise);
+    // If the standard ES6 promise is available, extend it support  self = this  in the constructor.
+    // http://stackoverflow.com/questions/31069453/creating-a-es6-promise-without-starting-to-resolve-it
+    if ($.THIS.Promise && !$.getProperty($.THIS,CLASS)) {
+        $.setProperty($.THIS,CLASS,ExtendPromise);
+		
+        $.copyAll(ExtendPromise, {  // static-constructor function properties
+            CLASS: CLASS,
+            constructor: $.THIS.Promise,  // this.constructor.constructor.apply(this) like this.super.apply(this)
+            fulfill: $.THIS.Promise.resolve,
+            resolve: $.THIS.Promise.resolve,
+            reject: $.THIS.Promise.reject
+        }).prototype = $.copyAll(Object.create($.THIS.Promise.prototype), {  // prototype inheritance
+			constructor: ExtendPromise
+		});
+    }
+    function ExtendPromise(executor) {
+        var execArgs,
+            promise = new $.THIS.Promise(function() { execArgs = arguments; });
+        try {
+            executor.apply(promise, execArgs);
+        }
+        catch (err) {
+            execArgs[1](err);
+        }
+        return promise;
+    }
+	if ($.setProperty($.THIS,CLASS,Promise,true)) return; // One-time.
 	
 	//
 	// Private static declarations / closure
 	//
-	var PRIVATES = {},  // Closure guard for privates.
-		Util = akme;
+	var PRIVATES = {};  // Closure guard for privates.
 		//STATE_NAMES = ["pending", "fulfilled", "rejected"];  // fulfilled aka resolved
 
 	//
@@ -1147,10 +1166,10 @@ if (!this.akme) this.akme = {
             }
         }
     }
-    Util.copyAll(Promise, {  // static-constructor function properties
+    $.copyAll(Promise, {  // static-constructor function properties
         CLASS: CLASS,
-        fulfill: fulfill,
-        resolve: fulfill,
+        fulfill: resolve,
+        resolve: resolve,
         reject: reject
     }).prototype = {  // super-prototype object properties
         then: then,
@@ -1173,7 +1192,7 @@ if (!this.akme) this.akme = {
         if (!!once) ary.length = 0;
     }
 
-    function fulfill() {  // fulfill aka resolve
+    function resolve() {  // fulfill aka resolve
         var args = arguments;
         return new Promise(function(fulfillFcn,rejectFcn) {
             fulfillFcn.apply(this,args);
@@ -1191,8 +1210,7 @@ if (!this.akme) this.akme = {
         // Append fulfillment and rejection handlers to the promise,
         // and return a new promise resolving to the return value of the called handler.
         var p = this.PRIVATES(PRIVATES), callbackArgs = arguments;
-        var result = new Promise(executor);
-		function executor(/*function fulfill, function reject*/) {
+        var result = new Promise(function executor(/*function fulfill, function reject*/) {
             var newPromise = this, executorArgs = arguments;
             for (var i=0; i<2; i++) pass0fail1(i);
             function pass0fail1(i) {
@@ -1211,7 +1229,7 @@ if (!this.akme) this.akme = {
                     }
                 };
             }
-        }
+        });
         // Now that a new Promise is prepared and callbackArgs adjusted if necessary,
         // add to the future callback arrays if the state is 0:pending otherwise call immediately.
         if (p.state === 0) for (var i=0, n=Math.min(callbackArgs.length, p.callbackAry.length); i<n; i++) {

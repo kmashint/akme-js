@@ -304,56 +304,25 @@ $(document).ready(function(){
 
 	module(akme.core.Promise.CLASS);
 	test("basics", function() {
-		expect(5);
 		var Promise = akme.core.Promise,
-			promise, promise2, promise3,
+			GlobalPromise,
+			promise, 
 			executor = function (resolve,reject) {
-				executor.resolve = resolve; executor.reject = reject;
+				executor.resolve = resolve;
+                executor.reject = reject;
 			};
+		if (typeof window !== "undefined") GlobalPromise = window.Promise;
+		if (typeof global !== "undefined") GlobalPromise = global.Promise;
+		expect(2 + (GlobalPromise ? 1 : 0));
 		
 		promise = new Promise(executor);
 		ok( typeof Promise.resolve === "function", "Promise.resolve (class function) should be function" );
-		ok( typeof promise.resolve === "undefined", "promise.resolve (instance function) should be undefined");
-
-		executor.resolve(function(){ ok(true, "should be resolved"); });
+		ok( typeof promise.resolve === "undefined", "promise.resolve (instance function) should be undefined" );
+		if (GlobalPromise) {
+			ok( new Promise(executor) instanceof GlobalPromise, "new Promise should be instanceof GlobalPromise" );
+		}
 		
-		promise = new Promise(executor);
-		executor.reject();
-		promise["catch"](function(){ ok(true, "should fail after reject"); });
-		
-		promise = new Promise(executor);
-		promise.then(function(){
-			ok(true, "then should be resolved/fulfilled");
-		}, function(){
-			ok(false, "then should be resolved/fulfilled");
-		});
-		executor.resolve();
-
-		promise = new Promise(executor);
-		executor.resolve(1);
-		promise.then(function(){ ok( arguments[0] == 1, "should receive arg 1" ); });
-		
-		/*
-		promise = new Promise();
-		promise2 = new Promise(); // Promise.when, jQuery.when
-		promise3 = Promise.when(promise, promise2).done(function(){
-			ok( true, "when should be resolved" );
-		}).fail(function(){
-			ok( false, "when should be resolved" );
-		});
-		promise.resolve();
-		promise2.resolve();
-		
-		promise = new Promise();
-		promise2 = new Promise(); // Promise.when, jQuery.when
-		promise3 = Promise.when(promise, promise2).done(function(){
-			ok( false, "when should be rejected" );
-		}).fail(function(){
-			ok( true, "when should be rejected" );
-		});
-		promise.reject();
-		*/
-		
+		// Note ES6 Promise resolves async on the next tick/pass of the JS event loop.
 	});
 	asyncTest("asyncPromise", function() {
 		expect(2);
