@@ -1163,14 +1163,14 @@ if (!this.akme) this.akme = {
         function fulfillFcn() {
             switch (p.state) {  // case 0 has intended fallthrough
             case 0: p.state = 1; p.args = arguments;  //jshint ignore:line
-            case 1: APPLY_ARRAY(p.callbackAry[p.state], p.self, p.args, true); break;
+            case 1: applyArrayAsync(p.callbackAry[p.state], p.self, p.args, true); break;
             case 2: console.warn(String( new RangeError("cannot resolve after reject") ));
             }
         }
         function rejectFcn() {
             switch (p.state) {  // case 0 has intended fallthrough
             case 0: p.state = 2; p.args = arguments;  //jshint ignore:line
-            case 2: APPLY_ARRAY(p.callbackAry[p.state], p.self, p.args, true); break;
+            case 2: applyArrayAsync(p.callbackAry[p.state], p.self, p.args, true); break;
             case 1: console.warn(String( new RangeError("cannot reject after resolve") ));
             }
         }
@@ -1196,7 +1196,7 @@ if (!this.akme) this.akme = {
 	
     // Apply/call an array of functions in the next JS event loop with a given this/self and arguments.
     // If once is true then the array of functions is cleared after being used.
-    function APPLY_ARRAY(ary, self, args, once) {  // IE8 cannot apply null or undefined args.
+    function applyArrayAsync(ary, self, args, once) {  // IE8 cannot apply null or undefined args.
 		setTimeout(function() {
 			for (var i=0; i<ary.length; i++) if (args) ary[i].apply(self, args); else ary[i].call(self);
 			if (!!once) ary.length = 0;
