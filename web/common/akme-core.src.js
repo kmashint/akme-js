@@ -170,9 +170,34 @@ if (!this.akme) this.akme = {
 	 */
 	isNumber : function(x) { return typeof x === "number" || x instanceof Number; },
 	/**
+	 * Check if the object is typeof object.
+	 */
+	isObject : function(x) { return typeof x === "object"; },
+	/**
 	 * Check if the object is typeof string (primitive) or instanceof String (object).
 	 */
 	isString : function(x) { return typeof x === "string" || x instanceof String; },
+	/** 
+	 * Check if the object is empty, e.g. undefined, null, boolean false, number 0,
+	 * empty string "", empty array [], empty object {}.  It can't tell an empty function.
+	 */
+	isEmpty : function(x) {
+		if (!x) {
+			// Handle undefined, null, boolean false, number 0, and empty string implicitly.
+			return true;
+		}
+		if (this.isArray(x)) {
+			return x.length === 0;
+		}
+		var k;
+		if (this.isObject(x)) {
+			for (k in x) {
+				return false;
+			}
+			return true;
+		}
+		return false;
+	},
 	/**
 	 * Concat a collection to an array and return it, helpful for HTMLCollection results of getElementsByTagName.
 	 */
@@ -1163,14 +1188,14 @@ if (!this.akme) this.akme = {
         function fulfillFcn() {
             switch (p.state) {  // case 0 has intended fallthrough
             case 0: p.state = 1; p.args = arguments;  //jshint ignore:line
-            case 1: APPLY_ARRAY(p.callbackAry[p.state], p.self, p.args, true); break;
+            case 1: applyArrayAsync(p.callbackAry[p.state], p.self, p.args, true); break;
             case 2: console.warn(String( new RangeError("cannot resolve after reject") ));
             }
         }
         function rejectFcn() {
             switch (p.state) {  // case 0 has intended fallthrough
             case 0: p.state = 2; p.args = arguments;  //jshint ignore:line
-            case 2: APPLY_ARRAY(p.callbackAry[p.state], p.self, p.args, true); break;
+            case 2: applyArrayAsync(p.callbackAry[p.state], p.self, p.args, true); break;
             case 1: console.warn(String( new RangeError("cannot reject after resolve") ));
             }
         }
@@ -1196,7 +1221,7 @@ if (!this.akme) this.akme = {
 	
     // Apply/call an array of functions in the next JS event loop with a given this/self and arguments.
     // If once is true then the array of functions is cleared after being used.
-    function APPLY_ARRAY(ary, self, args, once) {  // IE8 cannot apply null or undefined args.
+    function applyArrayAsync(ary, self, args, once) {  // IE8 cannot apply null or undefined args.
 		setTimeout(function() {
 			for (var i=0; i<ary.length; i++) if (args) ary[i].apply(self, args); else ary[i].call(self);
 			if (!!once) ary.length = 0;

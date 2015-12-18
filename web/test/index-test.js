@@ -62,6 +62,20 @@ $(document).ready(function(){
 
 	
 	module("akme utility functions");
+	test("akme isEmpty", function(){
+		equal( akme.isEmpty(), true, "undefined should be empty");
+        equal( akme.isEmpty(null), true, "null should be empty");
+        equal( akme.isEmpty(false), true, "false should be empty");
+        equal( akme.isEmpty(0), true, "0 should be empty");
+        equal( akme.isEmpty([]), true, "[] should be empty");
+        equal( akme.isEmpty({}), true, "{} should be empty");
+        
+        equal( akme.isEmpty(true), false, "true should be non-empty");
+        equal( akme.isEmpty(1), false, "1 should be non-empty");
+        equal( akme.isEmpty([0]), false, "[0] should be non-empty");
+        equal( akme.isEmpty({"x":1}), false, '{"x":1} should be non-empty');
+        equal( akme.isEmpty(function(){}), false, "function(){} should be non-empty");
+	});
 	test("akme.copy() and friends", function(){
 		var x = {a:1}, y = {a:2, b:2};
 		

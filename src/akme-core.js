@@ -170,9 +170,34 @@ if (!this.akme) this.akme = {
 	 */
 	isNumber : function(x) { return typeof x === "number" || x instanceof Number; },
 	/**
+	 * Check if the object is typeof object.
+	 */
+	isObject : function(x) { return typeof x === "object"; },
+	/**
 	 * Check if the object is typeof string (primitive) or instanceof String (object).
 	 */
 	isString : function(x) { return typeof x === "string" || x instanceof String; },
+	/** 
+	 * Check if the object is empty, e.g. undefined, null, boolean false, number 0,
+	 * empty string "", empty array [], empty object {}.  It can't tell an empty function.
+	 */
+	isEmpty : function(x) {
+		if (!x) {
+			// Handle undefined, null, boolean false, number 0, and empty string implicitly.
+			return true;
+		}
+		if (this.isArray(x)) {
+			return x.length === 0;
+		}
+		var k;
+		if (this.isObject(x)) {
+			for (k in x) {
+				return false;
+			}
+			return true;
+		}
+		return false;
+	},
 	/**
 	 * Concat a collection to an array and return it, helpful for HTMLCollection results of getElementsByTagName.
 	 */
