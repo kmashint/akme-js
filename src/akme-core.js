@@ -215,14 +215,21 @@ if (!this.akme) this.akme = {
 		else for (var key in aryOrMap) if (aryOrMap.hasOwnProperty(key)) delete aryOrMap[key];
 	},
 	/**
-	 * Shallow clone as in Java, returning a new/cloned obj.
-	 * Uses Object.create(Object.getPrototypeOf(obj)) and then copies hasOwnProperty/non-prototype properties by key.
+	 * Shallow or deep (unchecked) clone, returning a new/cloned obj.
+     * Uses appropriate handling for undefined, null, primitives, arrays, and simple {...} objects.
+     * In general it will call obj.constructor(obj) for non trivial objects, e.g. Date, RegExp, or MyObject.
+     * Warning: functions are referenced, not cloned!
+	 * Warning: deepUnchecked does NOT check for cyclical references!
 	 */
-	clone : function (obj) {
-		if (obj == null) return obj;  //jshint ignore:line
-		if (typeof obj.clone === "function") return obj.clone();
-		var clone = Object.create(Object.getPrototypeOf(obj));
-		for (var key in obj) if (obj.hasOwnProperty(key)) clone[key] = obj[key];
+	clone : function (obj, deepUnchecked) {
+		if (obj == null || !this.isObject(obj) || this.isFunction(obj)) return obj;  //jshint ignore:line
+        if (obj.constructor !== Object && !this.isArray(obj)) return new obj.constructor(obj);
+		var clone = this.isArray(obj) ? new Array(obj.length) : Object.create(Object.getPrototypeOf(obj));
+		for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                clone[key] = deepUnchecked ? this.clone(obj[key], deepUnchecked) : obj[key];
+            }
+        }
 		return clone;
 	},
 	/**

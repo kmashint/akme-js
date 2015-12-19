@@ -5,6 +5,8 @@
 /*globals Raphael, akme, my */
 $(document).ready(function(){
     
+    var global = global || window;
+    
     if (location.protocol === "file:") {
         window.alert("Warning: Some tests may fail when trying to run from a file: protocol instead of https:/https.");
     }
@@ -77,8 +79,35 @@ $(document).ready(function(){
         equal( akme.isEmpty(function(){}), false, "function(){} should be non-empty");
 	});
 	test("akme.copy() and friends", function(){
-		var x = {a:1}, y = {a:2, b:2};
-		
+		var x = {a:1},
+            y = {a:2, b:2},
+            Constructor = String,
+            z = {a:1, b:{d:2}, c:[3,4], d:/^d/, e:new Constructor("e")},
+            c;
+        
+        c = akme.clone(z, true);
+        //window.alert(JSON.stringify(c) +" cloned from "+ JSON.stringify(z));
+        ok(c !== z, "clone should not be the same instance as its source");
+        ok(c.a === z.a, "the clone.a property should be the same");
+        ok(c.b !== z.b, "the clone.b property should not be the same instance as its source");
+        ok(c.c instanceof Object, "the clone.c property should be an Object");
+        ok(c.b.d === z.b.d, "the clone.b.d property should be the same");
+        ok(c.c !== z.c, "the clone.c property should not be the same instance as its source");
+        ok(c.c instanceof Array, "the clone.c property should be an Array");
+        ok(c.c[0] === z.c[0] && c.c[1] === z.c[1], "the clone.c Array should contain the same values");
+        ok(c.d !== z.d, "the clone.d RegExp should not contain the exact same value");
+        ok(c.d.test("d"), "the clone.d RegExp should be able to test()");
+        ok(c.e !== z.e, "the clone.d new String should not contain the exact same value");
+        ok(String(c.e) == String(z.e), "the clone.e new String should contain a similar String() value");
+        
+        c = akme.clone(z);
+        ok(c !== z, "clone should not be the same instance as its source");
+        ok(c.a === z.a, "the clone.a property should be the same");
+        ok(c.b === z.b, "the clone.b property should be the same instance as its source");
+        ok(c.c === z.c, "the clone.c property should be the same instance as its source");
+        ok(c.d === z.d, "the clone.d property should be the same instance as its source");
+        ok(c.e === z.e, "the clone.e property should be the same instance as its source");
+        		
 		akme.copy(x, y);
 		equal( x.a, 2, "copy() should set a=2" );
 		equal( x.b, 2, "copy() should set b=2" );
