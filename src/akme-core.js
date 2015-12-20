@@ -217,17 +217,33 @@ if (!this.akme) this.akme = {
 	/**
 	 * Shallow or deep (unchecked) clone, returning a new/cloned obj.
      * Uses appropriate handling for undefined, null, primitives, arrays, and simple {...} objects.
+     * Functions are referenced, not cloned.
+     * An optional customFcn(obj, deepUnchecked) may be given for special cases beyond the above cases.
+     * If the customFcn does not exist or returns undefined then it will move on to the general case.
      * In general it will call obj.constructor(obj) for non-simple objects, e.g. Date, RegExp, or MyObject.
      * Warning: functions are referenced, not cloned!
 	 * Warning: deepUnchecked does NOT check for cyclical references!
+	 * Warning: deepUnchecked only applies to simple nested {} and [] like JSON!
 	 */
-	clone : function (obj, deepUnchecked) {
+	clone : function (obj, deepUnchecked, customFcn) {
 		if (obj == null || !this.isObject(obj) || this.isFunction(obj)) return obj;  //jshint ignore:line
-        if (obj.constructor !== Object && !this.isArray(obj)) return new obj.constructor(obj);
-		var clone = obj.constructor === Object ? {} : new Array(obj.length);
-		for (var key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                clone[key] = deepUnchecked ? this.clone(obj[key], deepUnchecked) : obj[key];
+        var clone;
+        if (obj.constructor !== Object && !this.isArray(obj)) {
+            if (customFcn) {
+                clone = customFcn(obj, deepUnchecked);
+                if (clone !== undefined) return clone;
+            }
+            return new obj.constructor(obj);
+        }
+        if (obj.constructor === Object) {
+            clone = {};
+            for (var key in obj) if (obj.hasOwnProperty(key)) {
+                clone[key] = deepUnchecked ? this.clone(obj[key], deepUnchecked, customFcn) : obj[key];
+            }
+        } else {  // Efficient handling for Array number indicies rather than Map-Object string keys.
+            clone = new obj.constructor(obj.length);
+            for (var i=0, n=obj.length; i<n; i++) {
+                clone[i] = deepUnchecked ? this.clone(obj[i], deepUnchecked, customFcn) : obj[i];
             }
         }
 		return clone;

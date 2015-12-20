@@ -77,6 +77,8 @@ $(document).ready(function(){
         var person = new Person({firstName: "foo", lastName: "bar"});
         ok(person instanceof Person, "person should be instanceof Person");
         ok(person instanceof Data, "person should be instanceof Data");
+        ok(person.constructor === Person, "person have constructor Person");
+        ok(person.constructor.constructor === Data, "person should have super (constructor.constructor) Data");
         if (typeof Object.defineProperties === "function") {
             Object.defineProperties(Person.prototype, {
                 "fullName": { 
@@ -85,6 +87,42 @@ $(document).ready(function(){
             });
             equal(person.fullName, "foo bar", "fullName should be 'foo bar'");
         }
+        // Create object with prototype inheritance but without running the new/constructor.
+        person = Object.create(Object.getPrototypeOf(person));  // or Person.prototype
+        ok(person instanceof Person, "person should be instanceof Person");
+        ok(person instanceof Data, "person should be instanceof Data");
+        ok(person.constructor === Person, "person have constructor Person");
+        ok(person.constructor.constructor === Data, "person should have super (constructor.constructor) Data");
+        equal(person.fullName, "undefined undefined", "fullName should be 'undefined undefined' before constructor");
+        // Delayed constructor/init can be used as mixin.
+        Person.call(person,{firstName: "foo", lastName: "bar"});
+        equal(person.fullName, "foo bar", "fullName should be 'foo bar' after constructor");
+        
+        function MyError(message, code) {
+            if (code !== undefined) this.code = code;
+            this.message = code !== undefined ? message +" ("+ code +")" : message;
+            var err = new Error(this.message);
+            err.name = this.name;  // Improve stack trace message, at least on Chrome/NodeJS.
+            if (err.stack) this.stack = err.stack;  // Not available on MSIE 10-11
+        }
+        akme.copy(MyError, {
+            constructor: Error  // super constructor
+        }).prototype = akme.copy(Object.create(Error.prototype), {
+            constructor: MyError,
+            name: "MyError"
+        });
+
+        var err = new MyError("Server Error", 500);
+        ok(err instanceof MyError, "err should be instanceof MyError");
+        ok(err instanceof Error, "err should be instanceof Error");
+        equal(err.name, "MyError");
+        equal(err.code, 500);
+        equal(err.message, "Server Error (500)");
+        equal(String(err), "MyError: Server Error (500)");
+        // MSIE JScript Error may have a .number, display with err.number & 0xffff.
+        // On Chrome err.stack first line will have "MyError: Server Error (500)".
+        // On Mozilla err.stack does not include the message, just the name.
+        //window.alert(err.stack);
 	});
 
 	
