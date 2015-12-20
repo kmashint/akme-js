@@ -1139,6 +1139,12 @@ if (!this.akme) this.akme = {
  * http://bugs.jquery.com/ticket/14510 - jQuery in 1.12+, 2.2+ better supports ES6 then-able
  */
 (function($,CLASS){
+	//
+	// Private static declarations / closure
+	//
+	var PRIVATES = {};  // Closure guard for privates.
+		//STATE_NAMES = ["pending", "fulfilled", "rejected"];  // fulfilled aka resolved
+
     // If the standard ES6 promise is available, extend it support  self = this  in the constructor.
     // http://stackoverflow.com/questions/31069453/creating-a-es6-promise-without-starting-to-resolve-it
     if ($.THIS.Promise && !$.getProperty($.THIS,CLASS)) {
@@ -1146,33 +1152,29 @@ if (!this.akme) this.akme = {
 		
         $.copyAll(ExtendPromise, {  // static-constructor function properties
             CLASS: CLASS,
-            constructor: $.THIS.Promise,  // this.constructor.constructor.apply(this) like this.super.apply(this)
-            fulfill: $.THIS.Promise.resolve,
-            resolve: $.THIS.Promise.resolve,
-            reject: $.THIS.Promise.reject
+            constructor: $.THIS.Promise,  // this.constructor.constructor.apply(this) like super.apply(this)
+            fulfill: $.THIS.Promise.resolve,  // actually returns an instance of the global Promise
+            resolve: $.THIS.Promise.resolve,  // actually returns an instance of the global Promise
+            reject: $.THIS.Promise.reject  // actually returns an instance of the global Promise
         }).prototype = $.copyAll(Object.create($.THIS.Promise.prototype), {  // prototype inheritance
-			constructor: ExtendPromise
+			constructor: ExtendPromise,
+            then: function (onFulfill, onReject) { return this.PRIVATES(PRIVATES).then(onFulfill, onReject); },
+            "catch": function (onReject) { return this.PRIVATES(PRIVATES)["catch"](onReject); }
 		});
     }
     function ExtendPromise(executor) {
         var execArgs,
-            promise = new $.THIS.Promise(function() { execArgs = arguments; });
+            p = new $.THIS.Promise(function() { execArgs = arguments; });
+        this.PRIVATES = function(self) { return self === PRIVATES ? p : undefined; };
         try {
-            executor.apply(promise, execArgs);
+            executor.apply(p, execArgs);
         }
         catch (err) {
             execArgs[1](err);
         }
-        return promise;
     }
 	if ($.setProperty($.THIS,CLASS,Promise,true)) return; // One-time.
 	
-	//
-	// Private static declarations / closure
-	//
-	var PRIVATES = {};  // Closure guard for privates.
-		//STATE_NAMES = ["pending", "fulfilled", "rejected"];  // fulfilled aka resolved
-
 	//
 	// Initialise constructor or singleton instance and public functions
 	//
@@ -1214,8 +1216,8 @@ if (!this.akme) this.akme = {
         reject: reject
     }).prototype = {  // super-prototype object properties
         then: then,
-        "catch": function (onRejected) {
-            return this.then(undefined, onRejected);
+        "catch": function (onReject) {
+            return this.then(undefined, onReject);
         },
         always: function (onAny) {
             return this.then(onAny, onAny);

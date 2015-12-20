@@ -60,6 +60,31 @@ $(document).ready(function(){
 		var car = new my.Car();
 		ok(car instanceof my.Car, "car should be instanceof my.Car");
 		ok(car instanceof my.Vehicle, "car should be instanceof my.Vehicle");
+        
+        function Data(that) {
+            if (that instanceof Data || that.constructor === Object) {
+                return akme.copy(this, that);
+            }
+        }
+        function Person() {
+            this.constructor.constructor.apply(this, arguments);  // super
+        }
+        akme.copy(Person, {  // constructor function properties
+            constructor: Data  // super constructor
+        }).prototype = akme.copy(Object.create(Data.prototype), {  // prototype inheritance
+            constructor: Person
+        });
+        var person = new Person({firstName: "foo", lastName: "bar"});
+        ok(person instanceof Person, "person should be instanceof Person");
+        ok(person instanceof Data, "person should be instanceof Data");
+        if (typeof Object.defineProperties === "function") {
+            Object.defineProperties(Person.prototype, {
+                "fullName": { 
+                    get: function () { return this.firstName +" "+ this.lastName; }
+                }
+            });
+            equal(person.fullName, "foo bar", "fullName should be 'foo bar'");
+        }
 	});
 
 	
