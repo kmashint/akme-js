@@ -223,7 +223,7 @@ if (!this.akme) this.akme = {
      * In general it will call obj.constructor(obj) for non-simple objects, e.g. Date, RegExp, or MyObject.
      * Warning: functions are referenced, not cloned!
 	 * Warning: deepUnchecked does NOT check for cyclical references!
-	 * Warning: deepUnchecked only applies to simple nested {} and [] like JSON!
+	 * Warning: deepUnchecked only applies to simple nested {} and [] like JSON and customFcn()!
 	 */
 	clone : function (obj, deepUnchecked, customFcn) {
 		if (obj == null || !this.isObject(obj) || this.isFunction(obj)) return obj;  //jshint ignore:line
