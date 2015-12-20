@@ -220,7 +220,7 @@ if (!this.akme) this.akme = {
      * Functions are referenced, not cloned.
      * An optional customFcn(obj, deepUnchecked) may be given for special cases beyond the above cases.
      * If the customFcn does not exist or returns undefined then it will move on to the general case.
-     * In general it will call obj.constructor(obj) for non-simple objects, e.g. Date, RegExp, or MyObject.
+     * In general it will use new obj.constructor(obj) for non-simple objects, e.g. Date, RegExp, or MyObject.
      * Warning: functions are referenced, not cloned!
 	 * Warning: deepUnchecked does NOT check for cyclical references!
 	 * Warning: deepUnchecked only applies to simple nested {} and [] like JSON and customFcn()!
