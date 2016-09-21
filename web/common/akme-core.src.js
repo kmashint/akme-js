@@ -217,13 +217,13 @@ if (!this.akme) this.akme = {
 	/**
 	 * Shallow or deep (unchecked) clone, returning a new/cloned obj.
      * Uses appropriate handling for undefined, null, primitives, arrays, and simple {...} objects.
-     * Function are referenced, not cloned.
+     * Functions are referenced, not cloned.
      * An optional customFcn(obj, deepUnchecked) may be given for special cases beyond the above cases.
      * If the customFcn does not exist or returns undefined then it will move on to the general case.
-     * In general it will call obj.constructor(obj) for non-simple objects, e.g. Date, RegExp, or MyObject.
+     * In general it will use new obj.constructor(obj) for non-simple objects, e.g. Date, RegExp, or MyObject.
      * Warning: functions are referenced, not cloned!
 	 * Warning: deepUnchecked does NOT check for cyclical references!
-	 * Warning: deepUnchecked only applies to simple nested {} and [] like JSON!
+	 * Warning: deepUnchecked only applies to simple nested {} and [] like JSON and customFcn()!
 	 */
 	clone : function (obj, deepUnchecked, customFcn) {
 		if (obj == null || !this.isObject(obj) || this.isFunction(obj)) return obj;  //jshint ignore:line

@@ -1,5 +1,5 @@
 # akme-js
-JavaScript library for HTML5+IE8 Development
+JavaScript library for HTML5+MSIE8 Development
 
 Use bin/build.js for NodeJS-based build.
 
@@ -19,7 +19,7 @@ Microsoft JScript:
 WSH and up to MSIE 8: https://msdn.microsoft.com/en-us/library/hbxc2t98%28v=vs.85%29.aspx
 MSIE 9+: https://msdn.microsoft.com/en-us/library/d1et7k7c%28VS.94%29.aspx
 Windows specific examples: https://gallery.technet.microsoft.com/scriptcenter/Simple-JScriptJavascript-2a46ed8b
-Use JScript (try/catch/finally) is much more reliable than VBScript, convert VBScript examples to JScript.
+Use JScript (try/catch/finally), much more reliable than VBScript, convert VBScript examples to JScript.
 
 For DataTable, toJSON {key:["",...],head:["",...],body:[[],...]}.
 Can then use toJSON when saving (check if typeof obj.toJSON === "function").
@@ -30,5 +30,5 @@ http://www.jslint.com/jslint.js
 http://www.jslint.com/webjslint.js
 
 Older:
-yuicompressor via bin/yuicompress-js.cmd provides minification/obfuscation.
+yuicompressor via bin/yuicompress-old.cmd provides minification/obfuscation.
 

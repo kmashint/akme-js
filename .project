@@ -16,7 +16,10 @@
 			<arguments>
 				<dictionary>
 					<key>LaunchConfigHandle</key>
-					<value>&lt;project&gt;/.externalToolBuilders/yuicompress [Builder].launch</value>
+					<value>&lt;project&gt;/.externalToolBuilders/node-build.launch</value>
+					<!--
+					<value>&lt;project&gt;/.externalToolBuilders/yuicompress-js.launch</value>
+					-->
 				</dictionary>
 			</arguments>
 		</buildCommand>

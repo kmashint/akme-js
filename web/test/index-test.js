@@ -99,17 +99,24 @@ $(document).ready(function(){
         equal(person.fullName, "foo bar", "fullName should be 'foo bar' after constructor");
         
         function MyError(message, code) {
-            if (code !== undefined) this.code = code;
-            this.message = code !== undefined ? message +" ("+ code +")" : message;
+            this.code = code;
+            this.message = message;
             var err = new Error(this.message);
-            err.name = this.name;  // Improve stack trace message, at least on Chrome/NodeJS.
-            if (err.stack) this.stack = err.stack;  // Not available on MSIE 10-11
+            if (err.stack) {
+                err.name = this.name;  // Improve stack trace message, at least on Chrome/NodeJS.
+                this.stack = err.stack;  // Not available on MSIE 10-11
+            }
         }
         akme.copy(MyError, {
             constructor: Error  // super constructor
         }).prototype = akme.copy(Object.create(Error.prototype), {
             constructor: MyError,
-            name: "MyError"
+            name: "MyError",
+            toString: function (debug) {
+                return this.name +": "+ this.message +
+                    (this.code !== undefined ? " ("+ this.code +")" : "") +
+                    (debug && this.stack !== undefined ? "\n" + this.stack : "");
+            }
         });
 
         var err = new MyError("Server Error", 500);
@@ -117,10 +124,10 @@ $(document).ready(function(){
         ok(err instanceof Error, "err should be instanceof Error");
         equal(err.name, "MyError");
         equal(err.code, 500);
-        equal(err.message, "Server Error (500)");
+        equal(err.message, "Server Error");
         equal(String(err), "MyError: Server Error (500)");
         // MSIE JScript Error may have a .number, display with err.number & 0xffff.
-        // On Chrome err.stack first line will have "MyError: Server Error (500)".
+        // On Chrome err.stack first line will have "MyError: Server Error".
         // On Mozilla err.stack does not include the message, just the name.
         //window.alert(err.stack);
 	});
@@ -159,6 +166,7 @@ $(document).ready(function(){
         ok(c.c instanceof Array, "the clone.c property should be an Array");
         ok(c.c[0] === z.c[0] && c.c[1] === z.c[1], "the clone.c Array should contain the same values");
         ok(c.d !== z.d, "the clone.d RegExp should not contain the exact same value");
+        ok(c.d instanceof RegExp, "the clone.d property should be a RegExp");
         ok(c.d.test("d"), "the clone.d RegExp should be able to test()");
         ok(c.e !== z.e, "the clone.d new String should not contain the exact same value");
         ok(String(c.e) == String(z.e), "the clone.e new String should contain a similar String() value");
@@ -166,10 +174,10 @@ $(document).ready(function(){
         c = akme.clone(z);
         ok(c !== z, "clone should not be the same instance as its source");
         ok(c.a === z.a, "the clone.a property should be the same");
-        ok(c.b === z.b, "the clone.b property should be the same instance as its source");
-        ok(c.c === z.c, "the clone.c property should be the same instance as its source");
-        ok(c.d === z.d, "the clone.d property should be the same instance as its source");
-        ok(c.e === z.e, "the clone.e property should be the same instance as its source");
+        ok(c.b === z.b, "the clone.b property should be the same");
+        ok(c.c === z.c, "the clone.c property should be the same");
+        ok(c.d === z.d, "the clone.d property should be the same");
+        ok(c.e === z.e, "the clone.e property should be the same");
         		
 		akme.copy(x, y);
 		equal( x.a, 2, "copy() should set a=2" );
@@ -284,6 +292,14 @@ $(document).ready(function(){
 		var car = new my.Car();
 		ok(car instanceof my.Car, "car should be instanceof my.Car");
 		ok(car instanceof my.Vehicle, "car should be instanceof my.Vehicle");
+		ok(car.constructor === my.Car, "car.constructor should be my.Car");
+		ok(car.constructor.constructor === my.Vehicle, "car.constructor.constructor should be my.Vehicle");
+		
+		function MyCar() {}
+		function MyVehicle() {}
+		akme.extendClass(MyCar, MyVehicle);
+		var car = new MyCar();
+		console.log("new MyCar().constructor.constructor ", new MyCar().constructor.constructor === MyVehicle);
 		
 		(function($,CLASS){
 			var PRIVATES = my.Car.PRIVATES;
@@ -677,5 +693,55 @@ $(document).ready(function(){
 		});
 		
 	}
-	
+
+
+	module("template loader");
+
+	asyncTest("link rel=html href", function() {
+		var util = akme.util,
+			http = akme.xhr;
+		
+		util.onContent(function (ev) {
+			var document = ev.target,
+				nodeList = document.querySelectorAll("link[rel=html]");
+			ok(nodeList.length === 0, "expect a certain nodeList length");
+			if (nodeList.length === 0) {
+				start();
+			}
+			util.some(nodeList, function (elem) {
+				// https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML
+				if (typeof location !== "undefined" && location.protocol === "file:") {
+					// TODO: use iframe instead of XHR.
+					document.body.appendChild(util.setAttributes(document.createElement("iframe"), {
+						src: elem.href,
+						style: "display: none;",
+						onload: function (ev) {
+							var iframe = ev.target,
+								result = iframe.contentWindow.document;
+							elem.insertAdjacentHTML("afterend", result.innerHTML);
+							iframe.parentElement.removeChild(iframe);
+							elem.onload(ev);
+						},
+						onerror: function (ev) {
+							var iframe = ev.target;
+							iframe.parentElement.removeChild(iframe);
+							elem.onerror(ev);
+						}
+					}));
+					start();
+					return;
+				}
+				http.callPromise("GET", elem.getAttribute("href")).then(function (result) {
+					elem.insertAdjacentHTML("afterend", result.content);
+					start();
+					elem.onload({type: "load", target: elem, result: result});
+				}, function (err) {
+					ok(false, err);
+					start();
+					elem.onerror({type: "error", target: elem, error: err});
+				});
+			});
+		});
+    });
+
 });
