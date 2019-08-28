@@ -6,7 +6,7 @@ akme.onLoad(function() {
 	// main.xhtml then should have a new akme.core.Template("templateScript", function() { ... });
 });
 
-if (!akme.core.Template) akme.core.Template = akme.extend(akme.copyAll(function(id,callback) {
+if (!akme.core.Template) akme.core.Template = akme.extendClass(akme.copyAll(function(id,callback) {
 		this.id = id || "templateScript";
 		this.callback = callback;
 		akme.getContext().set(this.id, this);

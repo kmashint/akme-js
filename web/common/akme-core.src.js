@@ -1,3 +1,4 @@
+// ..\web\common\akme-core
 // akme-core.js
 // Javascript Types: undefined, null, boolean, number, string, function, or object; Date and Array are typeof object.
 // typeof works for a function or object but note typeof String(1) is string yet typeof new String(1) is object.
@@ -370,7 +371,7 @@ if (!this.akme) this.akme = {
 	 * Extends a given contructFcn() to be an instanceof superClass.
 	 * The superClass may be a function or an object, the latter if it is intended to be the constructFcn.prototype.
 	 * This also creates a relationship such that this.constructor.constructor is the superClass constructor.
-	 * So given  var car = new akme.extendClass(Car, Vehicle);  then  car.constructor.constructor === Vehicle  .
+	 * So given  akme.extendClass(Car, Vehicle);  then  new Car().constructor.constructor === Vehicle  .
 	 */
 	extendClass : function (ctorFcn, superClass) {
 		if (superClass) {
