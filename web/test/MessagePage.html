@@ -17,8 +17,8 @@ function callServiceFrame(msg) {
 akme.onEvent(window, "message", function(messageEvent) { // ev.data, ev.origin, ev.source
     var source = messageEvent.source;
     var origin = messageEvent.origin;
-    var allowOrigin = "http://localhost";
-	if (allowOrigin !== origin) {
+	var allowOrigins = ["http://localhost", "http://localhost:8081"];
+    if (allowOrigins.indexOf(origin) == -1) {
 		alert("MessagePage DENY "+ origin);
 		return;
 	}
