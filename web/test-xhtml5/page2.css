@@ -1,0 +1,4 @@
+/* page2.css */
+#templateHead { display: block; background: lightblue; }
+#templateBody { display: block; background: yellowgreen; }
+#templateFoot { display: block; background: tomato; }

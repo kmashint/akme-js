@@ -1,5 +1,5 @@
 # akme-js
-JavaScript library for HTML5+MSIE8 Development
+JavaScript library for HTML5+MSIE11, and older +MSIE8 Development
 
 Use bin/build.js for NodeJS-based build.
 

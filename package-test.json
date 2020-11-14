@@ -1,0 +1,27 @@
+{
+    "name": "akme-js-lib-test",
+    "description": "AKME JavaScript Library",
+    "version": "0.1.0",
+    "license": "UNLICENSED",
+	"private": true,
+    "repository": {
+        "type" : "git",
+        "url" : "https://git.corp.adobe.com/kmashint/akme-js"
+    },
+    "readme": "readme.txt",
+    "dependencies": {
+    },
+    "devDependencies": {
+		"jslint": "0.9",
+		"serve-static": "1.10",
+		"uglify-js": "2.4"
+    },
+	"bundledDependencies": [
+	],
+	"files": [
+		"test/"
+	],
+	"scripts": {
+		"test": "node test/jasmine-run"
+	}
+}

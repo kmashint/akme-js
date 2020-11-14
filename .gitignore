@@ -1,0 +1,12 @@
+# .gitignore
+
+# general
+.bak
+
+# editors
+.vscode/
+.brackets.json
+
+# eclipse
+.settings/
+.project
