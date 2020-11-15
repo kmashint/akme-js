@@ -326,8 +326,8 @@
             // Use DOMParser on responseText for browsers that don't support the above.
             // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseXML
             // https://developer.mozilla.org/en-US/docs/Web/API/DOMParser
-            xhrWhen = akme.xhrWhen.open("GET", path);
-            xhrWhen.responseType = "document";
+            xhrWhen = akme.xhrWhen.open("GET", path)
+                .setProperty("responseType", "document");
             xhrWhen.whenDone(function (xhr) {
                 //console.info(xhr);
                 // If working with an overall Promise, it would be for the xhtml and if given the script.
@@ -348,7 +348,7 @@
 
         enableTemplates: function () {
             window.addEventListener('DOMContentLoaded', function () {
-                if (!(location.search.length > 1 || /(?:\?|&)xlink=/.test(location.search))) {
+                if (!(location.search.length > 1 && /(?:\?|&)xlink=/.test(location.search))) {
                     return;
                 }
                 akme.dom.fetchTemplate(location.search);
@@ -356,14 +356,18 @@
 
             document.body.addEventListener('click', function (ev) {
                 //console.log("click", ev);
-                if (!(ev.target.nodeName === "A" && ev.target.href)) {
+                var elem = ev.target, href = elem.getAttribute("href"), hrefHash, hrefSearch;
+                if (!(/^(?:A|BUTTON|INPUT)$/.test(elem.nodeName) && href)) {
                     return;
                 }
-                var hrefHash = ev.target.href.split("#", 2),
-                    hrefSearch = hrefHash[0].split("?", 2);
-                if (hrefSearch[0] === location.origin + location.pathname) {
+                if (elem.nodeName === "INPUT" && !/^(?:button|submit)$/.test(elem.getAttribute("type"))) {
+                    return;
+                }
+                hrefHash = href.split("#", 2);
+                hrefSearch = hrefHash[0].split("?", 2);
+                if (hrefSearch[0] === "" || hrefSearch[0] === location.origin + location.pathname) {
                     ev.preventDefault();
-                    history.pushState(null, "", ev.target.href);
+                    history.pushState(null, "", href);
                     akme.dom.fetchTemplate("?" + hrefSearch[1]);
                 }
             }, false);

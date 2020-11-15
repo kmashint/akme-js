@@ -6,7 +6,7 @@
     var dom = akme.dom,
         xdoc = dom.getCurrentTemplateDoc("page1.js");
 
-    console.log("loaded:", xdoc);
+    //console.log("loaded:", xdoc);
     if (xdoc) {
         var elem = dom.byId(xdoc, "templateBody");
         elem.appendChild(document.createTextNode(
