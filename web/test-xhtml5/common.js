@@ -42,8 +42,6 @@
         };
 
     akme.arrayFrom = function (obj) { return slice.call(obj); };
-    akme.xhrWhen = {};
-    akme.dom = {};
 
     /**
      * Prepare XMLHttpRequest helper methods, e.g.
@@ -76,7 +74,7 @@
         return self;
     }
 
-    Object.assign(akme.xhrWhen, {
+    akme.xhrWhen = {
         open: function () {
             var xhr = new XMLHttpRequest();
             xhr.open.apply(xhr, arguments);
@@ -111,9 +109,9 @@
             });
             return headers;
         }
-    });
+    };
 
-    Object.assign(akme.dom, {
+    akme.dom = {
         /**
          * Shortcut to document.getElementById(id).
          * If given (doc, id), uses the given document instead of the default.
@@ -346,6 +344,6 @@
                 this.importElementsReplaceById(document, xdoc, script);
             }.bind(this)).send();
         }
-    });
+    };
 
 }());
