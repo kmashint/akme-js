@@ -16,11 +16,14 @@ var useHttps = false,
     url = require("url"),
     baseDirectory = __dirname + "/web",  // or whatever base you want
     extTypeMap = {
-        ".html": "text/html",
+        "": "application/octet-stream",
         ".css": "text/css",
+        ".html": "text/html",
+        ".ico": "image/x-icon",
         ".js": "application/javascript",
         ".json": "application/json",
         ".svg": "image/svg+xml",
+        ".txt": "plain/text",
         ".xhtml": "application/xhtml+xml"
     };
 
@@ -34,18 +37,30 @@ httpServerArgs.push(function (req, res) {
 
         try {
             fsStat = fs.statSync(fsPath);
-            if (fsStat.isDirectory()) fsPath += "/index.html";
+            if (fsStat.isDirectory()) {
+                fsPath += "/index.html";
+                fsStat = fs.statSync(fsPath);
+            }
         } catch (er) {
             undefined;
         }
 
+        var headers = {},
+            contentType = extTypeMap[path.extname(fsPath)];
+        headers["Content-Type"] = contentType || extTypeMap[""];
+        if (fsStat) {
+            headers["Cache-Control"] = "public, max-age=60";
+            headers["Last-Modified"] = new Date(fsStat.mtimeMs).toUTCString();
+            headers["Content-Length"] = fsStat.size;
+            if (headers["Last-Modified"] === req.headers["if-modified-since"]) {
+                res.writeHead(304, headers);
+                res.end();
+                return;
+            }
+        }
         fileStream = fs.createReadStream(fsPath);
         fileStream.pipe(res);
         fileStream.on("open", function () {
-            var headers = {},
-                contentType = extTypeMap[path.extname(fsPath)];
-            if (contentType) headers["Content-Type"] = contentType;
-            headers["Cache-Control"] = "public, max-age=60";
             res.writeHead(200, headers);
             // The pipe() will take care of the res.end().
         });
