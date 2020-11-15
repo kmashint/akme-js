@@ -348,28 +348,28 @@
 
         enableTemplates: function () {
             window.addEventListener('DOMContentLoaded', function () {
+                document.body.addEventListener('click', function (ev) {
+                    //console.log("click", ev);
+                    var elem = ev.target, href = elem.getAttribute("href"), hrefHash, hrefSearch;
+                    if (!(/^(?:A|BUTTON|INPUT)$/.test(elem.nodeName) && href)) {
+                        return;
+                    }
+                    if (elem.nodeName === "INPUT" && !/^(?:button|submit)$/.test(elem.getAttribute("type"))) {
+                        return;
+                    }
+                    hrefHash = href.split("#", 2);
+                    hrefSearch = hrefHash[0].split("?", 2);
+                    if (hrefSearch[0] === "" || hrefSearch[0] === location.origin + location.pathname) {
+                        ev.preventDefault();
+                        history.pushState(null, "", href);
+                        akme.dom.fetchTemplate("?" + hrefSearch[1]);
+                    }
+                }, false);
+
                 if (!(location.search.length > 1 && /(?:\?|&)xlink=/.test(location.search))) {
                     return;
                 }
                 akme.dom.fetchTemplate(location.search);
-            }, false);
-
-            document.body.addEventListener('click', function (ev) {
-                //console.log("click", ev);
-                var elem = ev.target, href = elem.getAttribute("href"), hrefHash, hrefSearch;
-                if (!(/^(?:A|BUTTON|INPUT)$/.test(elem.nodeName) && href)) {
-                    return;
-                }
-                if (elem.nodeName === "INPUT" && !/^(?:button|submit)$/.test(elem.getAttribute("type"))) {
-                    return;
-                }
-                hrefHash = href.split("#", 2);
-                hrefSearch = hrefHash[0].split("?", 2);
-                if (hrefSearch[0] === "" || hrefSearch[0] === location.origin + location.pathname) {
-                    ev.preventDefault();
-                    history.pushState(null, "", href);
-                    akme.dom.fetchTemplate("?" + hrefSearch[1]);
-                }
             }, false);
         }
     };
