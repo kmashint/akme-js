@@ -9,8 +9,8 @@
     // That should work from replacing the template placeholders.
     // This only works for non-nested templates of course but keeps it simple.
     var templateMap = {
-        "page1": "page1.xhtml#xlink=css,js",
-        "page2": "page2.html#xlink=css,js"
+        "page1": "?page1.xhtml&xlink=css,js",
+        "page2": "?page2.html&xlink=css,js"
     };
     var buttons = akme.dom.queryAll(document.body, 'button[id^="page"]');
 
@@ -21,7 +21,7 @@
     buttons.forEach(function (elem) {
         elem.addEventListener("click", function (ev) {
             akme.dom.fetchTemplate(templateMap[ev.target.id]);
-        });
+        }, false);
     });
 
 }());

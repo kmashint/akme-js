@@ -285,10 +285,11 @@
         /**
          * Fetch the given xhtml template and case xlink=css,js any of those related.
          */
-        fetchTemplate: function (path) {
+        fetchTemplate: function (search) {
             var head = document.head,
-                pathHash = path.split("#", 2),
-                linkMatch = /(?:^|&)xlink=([\w,.+-]*)/.exec(pathHash[1]),
+                search = search.split("&", 2),
+                path = search[0].substring(1),
+                linkMatch = /(?:^|&)xlink=([\w,.+-]*)/.exec(search[1]),
                 stylePath = linkMatch && /css/.test(linkMatch[1]) ?
                     path.split(/\.x?html/, 2)[0] + ".css" :
                     null,
@@ -343,7 +344,33 @@
                 xdoc = xhr.responseXML || new DOMParser(xhr.responseText, "text/html");
                 this.importElementsReplaceById(document, xdoc, script);
             }.bind(this)).send();
+        },
+
+        enableTemplates: function () {
+            window.addEventListener('DOMContentLoaded', function () {
+                if (!(location.search.length > 1 || /(?:\?|&)xlink=/.test(location.search))) {
+                    return;
+                }
+                akme.dom.fetchTemplate(location.search);
+            }, false);
+
+            document.body.addEventListener('click', function (ev) {
+                //console.log("click", ev);
+                if (!(ev.target.nodeName === "A" && ev.target.href)) {
+                    return;
+                }
+                var hrefHash = ev.target.href.split("#", 2),
+                    hrefSearch = hrefHash[0].split("?", 2);
+                if (hrefSearch[0] === location.origin + location.pathname) {
+                    ev.preventDefault();
+                    history.pushState(null, "", ev.target.href);
+                    akme.dom.fetchTemplate("?" + hrefSearch[1]);
+                }
+            }, false);
         }
     };
+
+    // Enable by default.
+    akme.dom.enableTemplates();
 
 }());
