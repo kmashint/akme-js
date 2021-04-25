@@ -4,16 +4,17 @@
 
 /*eslint no-console: 0 */
 
-var useHttps = false,
+var fs = require("fs"),
+    path = require("path"),
+    url = require("url"),
+    useHttps = false,
     http = require(useHttps ? "https" : "http"),
+    httpHost = "localhost",
     httpPort = 8081,
     httpServerArgs = useHttps ? [{
         key: fs.readFileSync(__dirname + "/etc/server.key"),
         cert: fs.readFileSync(__dirname + "/etc/server.crt")
     }] : [],
-    fs = require("fs"),
-    path = require("path"),
-    url = require("url"),
     baseDirectory = __dirname + "/web",  // or whatever base you want
     extTypeMap = {
         "": "application/octet-stream",
@@ -42,7 +43,9 @@ httpServerArgs.push(function (req, res) {
                 fsStat = fs.statSync(fsPath);
             }
         } catch (er) {
-            undefined;
+            res.writeHead(404);
+            res.end();
+            return;
         }
 
         var headers = {},
@@ -76,5 +79,5 @@ httpServerArgs.push(function (req, res) {
 });
 http.createServer.apply(http, httpServerArgs).listen(httpPort);
 
-console.info("Listening on " + (useHttps ? "https" : "http") + "://localhost:" + httpPort);
+console.info("Listening on " + (useHttps ? "https" : "http") + "://" + httpHost + ":" + httpPort);
 console.info("Use Ctrl-C to stop.");
