@@ -1,5 +1,5 @@
 function simpleHtmlToDom(html) {
-  var rootNode = document.createElement("div"),
+  var rootNode = document.createDocumentFragment(),
     thisNode = rootNode,
     nextNode;
  
@@ -20,4 +20,6 @@ function simpleHtmlToDom(html) {
 simpleHtmlToDom.ALLOW_TAGS = /^<(?:b|br|code|dd|del|dl|dt|i|ins|kbd|li|ol|p|pre|samp|ul|var)\/?>$/;
  
 // In reality, use the returned DOM object, don't use innerHTML as below which is just to debug the sample.
-console.log(simpleHtmlToDom("Hello <b>Joe</b>!<br/><script>alert(1)</script>!").innerHTML);
+var div = document.createElement("div");
+div.appendChild(simpleHtmlToDom("Hello <b>Joe</b>!<br/><script>alert(1)</script>!"));
+console.log(div.innerHTML);
