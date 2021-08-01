@@ -3,7 +3,9 @@ function simpleHtmlToDom(html) {
     thisNode = rootNode,
     nextNode;
  
-  String(html).split(/(<[\w\/-]+>)/m).forEach(function (str) {
+  // Valid XML Names match /^[\w:][\w:.-]*/ && !/^\d/ where the first char cannot be a digit.
+  // We just need a valid superset at first and then be strict about the valid subset later.
+  String(html).split(/(<\/?[\w:.-]+\/?>)/m).forEach(function (str) {
     if (thisNode == null) return;
     if (str.startsWith("</")) {
       thisNode = thisNode.parentNode;
