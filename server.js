@@ -2,12 +2,15 @@
 // No dependencies necessary for NodeJS 8.9.4+.
 // Use:  node server.js
 
-/*eslint no-console: 0 */
+/* eslint-disable no-console */
+/* eslint-disable no-path-concat */
+/* eslint-disable prefer-spread */
+/* eslint-disable quote-props */
 
 var fs = require("fs"),
     path = require("path"),
-    url = require("url"),
     useHttps = false,
+    LOCAL_ORIGIN = (useHttps ? 'https' : 'http') + '://localhost',
     http = require(useHttps ? "https" : "http"),
     httpHost = "localhost",
     httpPort = 8081,
@@ -16,6 +19,9 @@ var fs = require("fs"),
         cert: fs.readFileSync(__dirname + "/etc/server.crt")
     }] : [],
     baseDirectory = __dirname + "/web",  // or whatever base you want
+    errCodeMap = {
+        '404': 'Not Found'
+    },
     extTypeMap = {
         "": "application/octet-stream",
         ".css": "text/css",
@@ -31,12 +37,13 @@ var fs = require("fs"),
 httpServerArgs.push(function (req, res) {
     try {
         // Use path.normalize to prevent access to directories underneath baseDirectory.
-        var reqUrl = url.parse(req.url),
+        var reqUrl = new URL(req.url, LOCAL_ORIGIN);
             fsPath = baseDirectory + path.normalize(reqUrl.pathname),
-            fsStat,
-            fileStream;
+            fsStat = null,
+            fileStream = null;
 
         try {
+            console.log(fsPath);
             fsStat = fs.statSync(fsPath);
             if (fsStat.isDirectory()) {
                 fsPath += "/index.html";
@@ -44,8 +51,8 @@ httpServerArgs.push(function (req, res) {
             }
         } catch (er) {
             res.writeHead(404);
-            res.end();
-            return;
+            res.end(errCodeMap[404] + ' : ' + String(er));
+            return null;
         }
 
         var headers = {},
@@ -58,7 +65,7 @@ httpServerArgs.push(function (req, res) {
             if (headers["Last-Modified"] === req.headers["if-modified-since"]) {
                 res.writeHead(304, headers);
                 res.end();
-                return;
+                return null;
             }
         }
         fileStream = fs.createReadStream(fsPath);
@@ -69,13 +76,14 @@ httpServerArgs.push(function (req, res) {
         });
         fileStream.on("error", function (er) {
             res.writeHead(404);
-            res.end();
+            res.end(errCodeMap[404] + ' : ' + String(er));
         });
     } catch (er) {
         res.writeHead(500);
         res.end();
         console.warn(er.stack);
     }
+    return null;
 });
 http.createServer.apply(http, httpServerArgs).listen(httpPort);
 

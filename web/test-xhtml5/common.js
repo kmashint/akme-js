@@ -134,14 +134,14 @@
         },
 
         /**
-         * Shortcut to Array.from(elem.querySelector(str)).
+         * Just an elem.querySelector(str) to pair with queryAll.
          */
         query: function(elem, str) {
             return elem.querySelector(str);
         },
 
         /**
-         * Shortcut to Array.from(elem.querySelector(str)).
+         * Shortcut to Array.from(elem.querySelectorAll(str)).
          */
         queryAll: function(elem, str) {
             var result = elem.querySelectorAll(str);
@@ -149,8 +149,7 @@
         },
 
         /**
-         * How to handle for IE11?
-         * Need to pass in the name of the script and search the DOM for it.
+         * Need to pass in the name of the script and search the DOM for it for IE11.
          */
         getCurrentScript: function (name) {
             return document.currentScript || document.querySelector("script[src*='" + name + "']");
