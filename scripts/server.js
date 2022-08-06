@@ -6,22 +6,20 @@
 /* eslint-disable no-path-concat */
 /* eslint-disable prefer-spread */
 
-const useHttps = true;
+const useHttps = false;
 
 const fs = require('fs');
 const path = require('path');
 const http = useHttps ? require('https') : require('http');
-const { logger } = require('../common/Logger');
-const { apiService } = require('../lib/apiService');
 
 const LOCAL_ORIGIN = (useHttps ? 'https' : 'http') + '://localhost';
-const httpHost = 'static.local.adobesigncdn.com';
+const httpHost = 'localhost';
 const httpPort = 9080;
-const httpServerArgs = useHttps ? [{
-  key: fs.readFileSync(__dirname + '/../etc/local.corp.adobesign.com.key'),
-  cert: fs.readFileSync(__dirname + '/../etc/local.corp.adobesign.com.crt')
-}] : [];
-const baseDirectory = __dirname + '/../dist'; // or whatever base you want
+const httpServerArgs = useHttps ? [/*{
+  key: fs.readFileSync(__dirname + '/../etc/localhost.key'),
+  cert: fs.readFileSync(__dirname + '/../etc/localhost.crt')
+}*/] : [];
+const baseDirectory = __dirname + '/../web';
 const errCodeMap = {
   // eslint-disable-next-line quote-props
   '404': 'Not Found'
@@ -38,25 +36,6 @@ const extTypeMap = {
   '.xhtml': 'application/xhtml+xml'
 };
 
-// Listen to service file changes and evict cache.
-// TODO: Debug since the delete of the require cache doesn't seem to work.
-// TODO: Try parcel/watcher.
-/*
-['./lib/'].forEach(function foundPath(filePath) {
-  fs.readdirSync(path.normalize(filePath)).forEach(function watchFile(fileName) {
-    logger.log('watchFile:', filePath + fileName);
-    fs.watchFile(
-      path.normalize(filePath + fileName),
-      { interval: 5007 },
-      function watched(curr) { // , prev
-        logger.log('watchedFile: %s %O', filePath + fileName, curr);
-        delete require.cache[require.resolve('.' + filePath + fileName)];
-      }
-    );
-  });
-});
-*/
-
 // Prepare and serve.
 httpServerArgs.push(function handle(req, res) {
   try {
@@ -66,7 +45,7 @@ httpServerArgs.push(function handle(req, res) {
     let fsStat;
 
     try {
-      logger.log(fsPath);
+      console.log(fsPath);
       fsStat = fs.statSync(fsPath);
       if (fsStat.isDirectory()) {
         fsPath += '/index.html';
@@ -74,10 +53,11 @@ httpServerArgs.push(function handle(req, res) {
       }
     }
     catch (er) {
-      return apiService(req, res);
-      // res.writeHead(404);
-      // res.end(errCodeMap[404]);
-      // return;
+      // In the future, this could try an apiService.
+      // return apiService(req, res);
+      res.writeHead(404);
+      res.end(errCodeMap[404]);
+      return;
     }
 
     const headers = {};
@@ -107,11 +87,11 @@ httpServerArgs.push(function handle(req, res) {
   catch (er) {
     res.writeHead(500);
     res.end();
-    logger.warn(er.stack);
+    console.warn(er.stack);
   }
   return null;
 });
 http.createServer.apply(http, httpServerArgs).listen(httpPort);
 
-logger.info('Listening on ' + (useHttps ? 'https' : 'http') + '://' + httpHost + ':' + httpPort);
-logger.info('Use Ctrl-C to stop.');
+console.info('Listening on ' + (useHttps ? 'https' : 'http') + '://' + httpHost + ':' + httpPort);
+console.info('Use Ctrl-C to stop.');
