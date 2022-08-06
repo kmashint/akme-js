@@ -1,0 +1,137 @@
+/* scenes (the good stuff) */
+
+.scenes {
+  position: relative;
+  aspect-ratio: 2.4 / 1;
+  outline: 2px solid #ccc;
+}
+
+.scene-1, .scene-2 {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+}
+
+.scene-1 {
+  background-image: url(https://assets.codepen.io/77020/sw-horizontal-wipe-scene-1.jpg);
+}
+
+.scene-2 {
+  background-image: url(https://assets.codepen.io/77020/sw-horizontal-wipe-scene-2.jpg);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 47.5%,
+    #fff 52.5%
+  );
+  -webkit-mask-size: 210%;
+  -webkit-mask-position: left;
+}
+
+.scenes:is(:hover, :focus) .scene-2 {
+  -webkit-mask-position: right;
+  transition: -webkit-mask-position 2s linear;
+}
+
+.scene-title {
+  position: absolute;
+  max-width: 45%;
+  margin: min(40px, 4vw);
+  font-size: 1.25em;
+}
+
+.scene-1 .scene-title {
+  top: 0;
+  left: 0;
+  color: #000;
+  text-align: left;
+}
+
+.scene-2 .scene-title {
+  top: 0;
+  right: 0;
+  color: #fff;
+  text-align: right;
+}
+
+/* everything else */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  color: #fff;
+  background-color: #111;
+  font: clamp(0.75rem, 0.3rem + 1.9vw, 1.5rem)/1.1 'Koulen', sans-serif;
+  letter-spacing: 0.1em;
+}
+
+.wrapper {
+  display: grid;
+  gap: 30px;
+  width: min(1000px, 100%);
+}
+
+.intro {
+  text-align: center;
+}
+
+.heading {
+  margin: 0;
+  font-size: 2.5em;
+}
+
+.heading::before, .heading::after {
+  content: ' — ';
+}
+
+.nudge {
+  margin: 0;
+  color: #888;
+  font-size: 1.25em;
+}
+
+.visualizer {
+  display: flex;
+  justify-content: center;
+}
+
+.visualizer-frame {
+  position: relative;
+  width: min(150px, 25vw);
+  aspect-ratio: 2.4 / 1;
+  outline: 2px solid #ccc;
+}
+
+.visualizer-mask {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 210%;
+  background-color: #333;
+  background-image:
+    linear-gradient(to right, transparent 47.5%, #fff 52.5%),
+    linear-gradient(45deg, #444 25%, transparent 25%, transparent 75%, #444 75%),
+    linear-gradient(45deg, #444 25%, transparent 25%, transparent 75%, #444 75%);
+  background-size:
+    auto auto,
+    16px 16px,
+    16px 16px;
+  background-position:
+    0 0,
+    0 0,
+    8px 8px;
+  box-shadow: inset 0 0 0 2px #111;
+}
+
+.scenes:is(:hover, :focus) + .visualizer .visualizer-mask {
+  transform: translateX(calc((100% - 210%) / 2.1));
+  transition: transform 2s linear;
+}
