@@ -1,3 +1,5 @@
+@charset "utf-8";
+
 /* scenes (the good stuff) */
 
 @keyframes scene-transition {
@@ -31,8 +33,7 @@
 .scene-2 {
   background-image: url(https://assets.codepen.io/77020/sw-shape-zoom-scene-2.jpg);
   filter: brightness(0%);
-  /* -webkit-mask-image: url(https://assets.codepen.io/77020/sw-jedi-crest.svg); */
-  -webkit-mask-image: url(Adobe_Systems_logo.svg);
+  -webkit-mask-image: url(https://assets.codepen.io/77020/sw-jedi-crest.svg);
   -webkit-mask-size: 10%;
   -webkit-mask-position: center;
   -webkit-mask-repeat: no-repeat;
@@ -106,7 +107,7 @@ body {
 }
 
 .heading::before, .heading::after {
-  content: ' — ';
+  content: ' â€” ';
 }
 
 .nudge {
@@ -149,8 +150,7 @@ body {
 }
 
 .visualizer-frame-2 .visualizer-mask {
-  /* background-image: url(https://assets.codepen.io/77020/sw-jedi-crest.svg); */
-  background-image: url(Adobe_Systems_logo.svg);
+  background-image: url(https://assets.codepen.io/77020/sw-jedi-crest.svg);
   background-size: 10%;
   background-position: center;
   background-repeat: no-repeat;
