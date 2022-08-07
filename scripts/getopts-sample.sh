@@ -1,6 +1,8 @@
-#!/bin/bash -eu
+#!/bin/bash
 # getopts-sample.sh
-# 
+#
+
+set -eu
 
 usage="Use: $0 [-a ...] [-b ...] c"
 a=
