@@ -149,7 +149,8 @@ body {
 }
 
 .visualizer-frame-2 .visualizer-mask {
-  background-image: url(https://assets.codepen.io/77020/sw-jedi-crest.svg);
+  /* background-image: url(https://assets.codepen.io/77020/sw-jedi-crest.svg); */
+  background-image: url(Adobe_Systems_logo.svg);
   background-size: 10%;
   background-position: center;
   background-repeat: no-repeat;
