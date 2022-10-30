@@ -1,5 +1,5 @@
 #!/bin/bash
-# getopts-sample.sh
+# getopts-avoid.sh
 #
 
 set -eu
