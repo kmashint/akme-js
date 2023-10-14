@@ -28,7 +28,10 @@ if (!this.AkmeMS) this.AkmeMS = {
 	
 	fso : new ActiveXObject("Scripting.FileSystemObject"),
 	wsh : new ActiveXObject("WScript.Shell"),
-	wmi : AkmeGetObject("winmgmts://./root/cimv2"),
+  
+  // https://learn.microsoft.com/en-us/windows/win32/wmisdk/wmi-reference
+  // https://learn.microsoft.com/en-us/windows/win32/wmisdk/creating-a-wmi-script
+  wmi: new ActiveXObject("WbemScripting.SWbemLocator").ConnectServer(".", "root\\cimv2"),
 	wmiInstancesOf : function(path) { return this.wmi.InstancesOf(path, this.wbemFast); },
 	wmiExecQuery : function(qry) { return this.wmi.ExecQuery(qry, this.wbemFast); }
 

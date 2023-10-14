@@ -1,4 +1,4 @@
-// page2.js
+// page1.js
 
 (function () {
     "use strict";

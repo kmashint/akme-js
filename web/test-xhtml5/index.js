@@ -3,6 +3,9 @@
 (function () {
     "use strict";
 
+    // Enable template handling on .
+    akme.dom.enableTemplates();
+    
     // Could add xlink=svg support.
     // Could declare the template links in xhtml but that would delay loading.
     // Then what about unloading, removing style?

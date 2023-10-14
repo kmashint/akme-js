@@ -373,7 +373,4 @@
         }
     };
 
-    // Enable by default.
-    akme.dom.enableTemplates();
-
 }());
