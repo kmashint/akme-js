@@ -1,3 +1,21 @@
+/**
+ * CouchByWindows.js
+ * Access CouchDB from Microsoft Windows HTA.
+ *
+ * cscript.exe and wscript.exe do NOT support even some older JS such as:
+ *   JSON, Object.defineProperty(), Object.getOwnPropertyDescriptor(), Promise
+ * https://stackoverflow.com/questions/5497967/jscript-version-availability-for-wsh-installations
+ * https://web.archive.org/web/20110223213002/http://msdn.microsoft.com:80/en-us/library/yek4tbz0(v=vs.85).aspx
+*/
+
+// Polyfill JSON if not available.
+var JSON = JSON || (function () {
+ var json, htmlfile = new ActiveXObject('htmlfile');
+ htmlfile.write('<meta http-equiv="x-ua-compatible" content="IE=11" />');
+ htmlfile.close(json = htmlfile.parentWindow.JSON);
+ return json;
+}());
+
 if (!this.AkmeMS) this.AkmeMS = {
 	fsoRead : 1,
 	fsoWrite : 2,
@@ -25,10 +43,10 @@ if (!this.AkmeMS) this.AkmeMS = {
 	wbemFast : 16 | 32,
 	winHide : 0,
 	winShow : 1,
-	
+
 	fso : new ActiveXObject("Scripting.FileSystemObject"),
 	wsh : new ActiveXObject("WScript.Shell"),
-  
+
   // https://learn.microsoft.com/en-us/windows/win32/wmisdk/wmi-reference
   // https://learn.microsoft.com/en-us/windows/win32/wmisdk/creating-a-wmi-script
   wmi: new ActiveXObject("WbemScripting.SWbemLocator").ConnectServer(".", "root\\cimv2"),
@@ -78,10 +96,10 @@ akme.xhr.callAsyncXHR = function(/*XMLHttpRequest*/ xhr, method, url, headers, c
 			else if (/xml;|xml$/.test(type)) content = self.getResponseXML(xhr);
 			else content = xhr.responseText;
 		}
-		catch (er) { 
-			headers.status = 500; 
-			headers.statusText = String(er); 
-			content = xhr.responseText; 
+		catch (er) {
+			headers.status = 500;
+			headers.statusText = String(er);
+			content = xhr.responseText;
 		}
 		akme.handleEvent(callbackFnOrOb, headers, content);
 		self = xhr = callbackFnOrOb = null; // closure cleanup
@@ -124,7 +142,7 @@ var Base64 = {
  		}
  		return output;
 	},
- 
+
 	// public method for decoding
 	decode : function (input) {
 		var output = "";
@@ -151,7 +169,7 @@ var Base64 = {
 		output = Base64._utf8_decode(output);
 		return output;
 	},
- 
+
 	// private method for UTF-8 encoding
 	_utf8_encode : function (string) {
 		string = string.replace(/\r\n/g,"\n");
@@ -173,7 +191,7 @@ var Base64 = {
 		}
 		return utftext;
 	},
- 
+
 	// private method for UTF-8 decoding
 	_utf8_decode : function (utftext) {
 		var string = "";
@@ -199,15 +217,15 @@ var Base64 = {
 		}
 		return string;
 	}
- 
+
 };
 
 (function(self){
 	var SLICE = Array.prototype.slice;
-	
+
 	akme.copy(self.console, {
 		log : function() { this.write.apply(this,arguments); },
-		write : function() { 
+		write : function() {
 			var div = document.getElementById("log");
 			div.appendChild(document.createTextNode(SLICE.call(arguments,0).join("\t")));
 			div.appendChild(document.createElement("br"));
@@ -216,7 +234,7 @@ var Base64 = {
 })(this);
 
 
-akme.onEvent(window, "DOMContentLoaded", function doContent(ev) { 
+akme.onEvent(window, "DOMContentLoaded", function doContent(ev) {
 	console.log("documentMode:"+document.documentMode);
 	console.log("XMLHttpRequest:"+XMLHttpRequest);
 	console.log("MSXML2.ServerXMLHTTP:"+(new ActiveXObject("MSXML2.ServerXMLHTTP") != null));
@@ -245,7 +263,7 @@ function doSubmit(ev) {
 	function getResult(headers,content) {
 		console.log(akme.formatJSON(headers), content);
 	}
-	
+
 	/*
 	// Note _attachments ... data should be Base64-encoded.
 	var ins = AkmeMS.fso.OpenTextFile("CouchByWindows/_design/live.json", AkmeMS.fsoRead);
@@ -306,6 +324,6 @@ akme.CouchCrossOrigin = {
 		// Still need proxy.jsp, but can be at Rackspace, e.g. cloudant.akme.org, cloudant-test.akme.org.
 		// So no need for cross-origin at cloudant.  The cross-origin would remain on a web server with proxy.jsp.
 		var dir = AkmeMS.fso.GetFolder("CouchByWindows");
-		
+
 	}
 };
