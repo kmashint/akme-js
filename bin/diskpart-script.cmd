@@ -35,7 +35,8 @@ set SysSync=sync.exe
 if not "%1" == "" set DiskLetter=%1
 if defined DiskLetter set ScriptCmd=%2
 rem This should work for USB-SCSI but doesn't? disk=PCIROOT(0)#PCI(0801)#PCI(0004)#USBROOT(0)#USB(5)#SAS(P00T00L00)
-if /i "%DiskLetter%" == "D" set DiskPath=1
+rem So use DiskPath=1 for now.
+if /i "%DiskLetter%" == "D" set DiskPath=1 & set VDiskPath=W-Drive.vhd
 if defined DiskPath goto :%ScriptCmd%
 goto :EOF
 
@@ -48,8 +49,9 @@ goto :diskpart
 rem Use SysInternals sync to flush write caches but then diskpart takes time to start.
 rem PowerShell has a better alternative with Write-VolumeCache, but Mount-VHD requires a server.
 %SysSync% -nobanner
-if not exist "%DiskLetter%:\X-Drive.vhd" goto :EOF
-echo>>"%ScriptFile%" select vdisk file="%DiskLetter%:\W-Drive.vhd"
+if not defined VDiskPath goto :EOF
+if not exist "%DiskLetter%:\%VDiskPath%" goto :EOF
+echo>>"%ScriptFile%" select vdisk file="%DiskLetter%:\%VDiskPath%"
 echo>>"%ScriptFile%" detail vdisk
 echo>>"%ScriptFile%" detach vdisk noerr
 goto :EOF
@@ -60,7 +62,8 @@ set ExtroCmd=onlineExtro
 goto :diskpart
 
 :onlineExtro
-echo>>"%ScriptFile%" select vdisk file="%DiskLetter%:\W-Drive.vhd"
+if not defined VDiskPath goto :EOF
+echo>>"%ScriptFile%" select vdisk file="%DiskLetter%:\%VDiskPath%"
 echo>>"%ScriptFile%" attach vdisk
 echo>>"%ScriptFile%" detail vdisk
 goto :EOF
