@@ -1,12 +1,13 @@
 <html>
 <head>
-<script type="text/javascript">window.moveTo((screen.width-800)/2,(screen.height-600)/2); window.resizeTo(800,600);</script>
+<script type="text/javascript">window.moveTo((screen.width-(896*screen.deviceXDPI/100.0))/2,(screen.height-(630*screen.deviceYDPI/100.0))/2); window.resizeTo(896*screen.deviceXDPI/100.0,630*screen.deviceYDPI/100.0);</script>
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="-1" />
 <meta http-equiv="Content-Type" content="application/hta; charset=windows-1252" />
 <meta http-equiv="Content-Script-Type" content="text/javascript" />
-<meta http-equiv="X-UA-Compatible" content="IE=10" />
+<meta http-equiv="X-UA-Compatible" content="IE=11" />
 <title>Microsoft WMI Test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <hta:application id="oHTA"
     applicationName="Microsoft WMI Test"
     version="1.0.1"
@@ -72,6 +73,9 @@ if (typeof(WScript) != "undefined") {
  AkmeMS.Debug( "ScriptFullName "+ WScript.ScriptFullName )
  AkmeMS.Debug( "Arguments "+ WScript.Arguments.Count() )
 }
+// for (var key in screen) AkmeMS.Debug(key + ': ' + screen[key]);
+AkmeMS.Debug( "screen.width, .height, .availWidth, .availHeight, deviceXDPI: "+
+	screen.width +', '+ screen.height +', '+ screen.availWidth +', '+ screen.availHeight +', '+ screen.deviceXDPI );
 AkmeMS.Debug( "ComputerName "+ net.ComputerName )
 AkmeMS.Debug( "UserDomain "+ net.UserDomain )
 AkmeMS.Debug( "UserName "+ net.UserName )
