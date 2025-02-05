@@ -37,7 +37,7 @@ var fs = require("fs"),
 httpServerArgs.push(function (req, res) {
     try {
         // Use path.normalize to prevent access to directories underneath baseDirectory.
-        var reqUrl = new URL(req.url, LOCAL_ORIGIN);
+        var reqUrl = new URL(req.url, LOCAL_ORIGIN),
             fsPath = baseDirectory + path.normalize(reqUrl.pathname),
             fsStat = null,
             fileStream = null;

@@ -1,0 +1,31 @@
+<!DOCTYPE html ><html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Try to be X-UA-Compatible with IE=edge</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<link id='templateLinkStyle'></link>
+<script type='text/javascript'></script>
+<hta:application 
+	id="hta"
+	applicationname="htatest"
+	version="0.1.1"
+	navigable="yes"
+	/>
+</head>
+<body>
+<form method='post' action=''>
+<br/><input type='text' size="50" name='formAction' value='https://kmashint-e65/thlc/test/test.html' />
+<br/><input type='submit' name='submitBtn' value='submit' />
+</form>
+<script type='text/javascript'>/*<![CDATA[*/
+
+if (window.addEventListener) window.addEventListener("load", doLoad, false);
+else window.attachEvent("onload", doLoad);
+
+function doLoad() {
+	var form = document.forms[0];
+	form.onsubmit = function(ev) { form.action = form.elements['formAction'].value; form.submit(); return true; }
+}
+
+/*]]>*/</script>
+</body>
+</html>

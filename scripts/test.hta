@@ -1,0 +1,41 @@
+<!DOCTYPE html ><html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Try to be X-UA-Compatible with IE=edge</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<script type='text/javascript'></script>
+<hta:application 
+	id="hta"
+	applicationname="htatest"
+	version="0.1.1"
+	/>
+</head>
+<body>
+Notes on HTA and IE=edge or IE=8 standards mode.
+<ol>
+<li>For IE=8 Javascript objects such as JSON to be available, there must be no script tags before meta X-UA-Compatible IE=8 or IE=edge.
+<li>It appears that sessionStorage and localStorage are not available under HTA since it's essentially a file:url.
+</ol>
+<!--[if lt IE 9]><script type="text/javascript" src="../common/fix-ie8.js"></script><![endif]-->
+<script type='text/javascript' src='../common/fw-core.src.js'></script>
+<script type='text/javascript'>/*<![CDATA[*/
+
+if (window.addEventListener) window.addEventListener("load", doLoad, false);
+else window.attachEvent("onload", doLoad);
+
+function doLoad() {
+
+	document.body.appendChild(document.createElement("div"));
+	document.body.lastChild.innerHTML = [
+		"location.href: "+String(location.href),
+		"navigator.userAgent: "+String(navigator.userAgent),
+		"document.documentMode: "+String(document.documentMode),
+		"typeof window.JSON: "+String(typeof window.JSON),
+		"typeof sessionStorage: "+String(typeof sessionStorage),
+		"typeof localStorage: "+String(typeof localStorage),
+		"typeof window.postMessage: "+String(typeof window.postMessage)
+		].join("<br/>\r\n");
+}
+
+/*]]>*/</script>
+</body>
+</html>
