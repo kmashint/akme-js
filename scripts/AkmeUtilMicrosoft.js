@@ -6,7 +6,7 @@
  */
 
 // For GetObject in IE=9 HTA use <script type="text/vbscript">Function AkmeGetObject(str) Set AkmeGetObject = GetObject(str) End Function</script>
-if (typeof GetObject != "function") this.Getobject = function(str) { return AkmeGetObject(str); };
+if (typeof GetObject !== "function") this.Getobject = function(str) { return AkmeGetObject(str); };
 
 var AkmeMS = {
  fsoRead : 1,

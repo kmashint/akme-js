@@ -20,20 +20,20 @@
 	caption="yes"
 	scroll="no"
 	selection="yes"
-    icon="">
-<!-- <script type="text/vbscript">Function AkmeGetObject(str) Set AkmeGetObject = GetObject(str) End Function</script> -->
-<script type="text/javascript" src="AkmeUtilMicrosoft.js"></script>
-<script type="text/javascript">
+  icon="">
+<script src="json2.js"></script>
+<script src="AkmeUtilMicrosoft.js"></script>
+<script>
 //
 // Test Microsoft WScript and WMI information.  Could add MicrosoftInstaller.Installer as well.
 // Scripting.FileSystemObject, Scripting.Dictionary, WScript.Shell, WScript.Network
 //
 var net = new ActiveXObject("WScript.Network")
 var wsh = new ActiveXObject("WScript.Shell")
-// var wmi = GetObject("winmgmts:{impersonationLevel=impersonate}!//./root/cimv2")
-var wsl = new ActiveXObject("WbemScripting.SWbemLocator")
-var wmi = wsl.ConnectServer(".", "root/cimv2")
-
+var wmi = GetObject("winmgmts:{impersonationLevel=impersonate}!//./root/cimv2")
+//var wsl = new ActiveXObject("WbemScripting.SWbemLocator")
+//var wmi = wsl.ConnectServer(".", "root/cimv2")
+//AkmeMS.Debug(JSON)
 /*
 
 // cmd.exe, user32.dll
