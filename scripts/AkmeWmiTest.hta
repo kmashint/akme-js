@@ -9,19 +9,19 @@
 <title>Microsoft WMI Test</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <hta:application id="oHTA"
-    applicationName="Microsoft WMI Test"
-    version="1.0.1"
-    singleInstance="yes"
-    windowState="normal"
-    maximizeButton="no"
-    minimizeButton="yes"
-    sysMenu="yes"
-    contextMenu="no"
-    caption="yes"
-    scroll="no"
-    selection="yes"
+	applicationName="Microsoft WMI Test"
+	version="1.0.1"
+	singleInstance="yes"
+	windowState="normal"
+	maximizeButton="no"
+	minimizeButton="yes"
+	sysMenu="yes"
+	contextMenu="no"
+	caption="yes"
+	scroll="no"
+	selection="yes"
     icon="">
-<script type="text/vbscript">Function AkmeGetObject(str) Set AkmeGetObject = GetObject(str) End Function</script>
+<!-- <script type="text/vbscript">Function AkmeGetObject(str) Set AkmeGetObject = GetObject(str) End Function</script> -->
 <script type="text/javascript" src="AkmeUtilMicrosoft.js"></script>
 <script type="text/javascript">
 //
@@ -30,7 +30,9 @@
 //
 var net = new ActiveXObject("WScript.Network")
 var wsh = new ActiveXObject("WScript.Shell")
-var wmi = GetObject("winmgmts:{impersonationLevel=impersonate}!//./root/cimv2")
+// var wmi = GetObject("winmgmts:{impersonationLevel=impersonate}!//./root/cimv2")
+var wsl = new ActiveXObject("WbemScripting.SWbemLocator")
+var wmi = wsl.ConnectServer(".", "root/cimv2")
 
 /*
 
@@ -62,290 +64,290 @@ WScript.Echo(
 //alert( "result "+ result +" processId "+ pc.lastProcessId );
 
 function doSummary() {
-document.forms['debug'].elements['log'].value = "";
+	document.forms['debug'].elements['log'].value = "";
 
-if (typeof(WScript) != "undefined") {
- AkmeMS.Debug( "Name "+ WScript.Name )
- AkmeMS.Debug( "Version "+ WScript.Version )
- AkmeMS.Debug( "BuildVersion "+ WScript.BuildVersion )
- AkmeMS.Debug( "Interactive "+ WScript.Interactive )
- AkmeMS.Debug( "FullName "+ WScript.FullName )
- AkmeMS.Debug( "ScriptFullName "+ WScript.ScriptFullName )
- AkmeMS.Debug( "Arguments "+ WScript.Arguments.Count() )
-}
-// for (var key in screen) AkmeMS.Debug(key + ': ' + screen[key]);
-AkmeMS.Debug( "screen.width, .height, .availWidth, .availHeight, deviceXDPI: "+
-	screen.width +', '+ screen.height +', '+ screen.availWidth +', '+ screen.availHeight +', '+ screen.deviceXDPI );
-AkmeMS.Debug( "ComputerName "+ net.ComputerName )
-AkmeMS.Debug( "UserDomain "+ net.UserDomain )
-AkmeMS.Debug( "UserName "+ net.UserName )
-AkmeMS.Debug( "CurrentDirectory "+ wsh.CurrentDirectory )
-AkmeMS.Debug( "ALLUSERSPROFILE "+ wsh.Environment("Process")("ALLUSERSPROFILE") )
-AkmeMS.Debug( "APPDATA "+ wsh.Environment("Process")("APPDATA") )
-AkmeMS.Debug( "CLASSPATH "+ wsh.Environment("Process")("CLASSPATH") )
-AkmeMS.Debug( "CommonProgramFiles "+ wsh.Environment("Process")("CommonProgramFiles") )
-AkmeMS.Debug( "ComSpec "+ wsh.Environment("Process")("ComSpec") )
-AkmeMS.Debug( "NUMBER_OF_PROCESSORS "+ wsh.Environment("Process")("NUMBER_OF_PROCESSORS") )
-AkmeMS.Debug( "PROCESSOR_ARCHITECTURE "+ wsh.Environment("Process")("PROCESSOR_ARCHITECTURE") )
-AkmeMS.Debug( "PROCESSOR_IDENTIFIER "+ wsh.Environment("Process")("PROCESSOR_IDENTIFIER") )
-AkmeMS.Debug( "PROCESSOR_LEVEL "+ wsh.Environment("Process")("PROCESSOR_LEVEL") )
-AkmeMS.Debug( "PROCESSOR_REVISION "+ wsh.Environment("Process")("PROCESSOR_REVISION") )
-AkmeMS.Debug( "OS "+ wsh.Environment("Process")("OS") )
-AkmeMS.Debug( "LOGONSERVER "+ wsh.Environment("Process")("LOGONSERVER") )
-AkmeMS.Debug( "HOMEDRIVE "+ wsh.Environment("Process")("HOMEDRIVE") )
-AkmeMS.Debug( "HOMEPATH "+ wsh.Environment("Process")("HOMEPATH") )
-AkmeMS.Debug( "ProgramFiles "+ wsh.Environment("Process")("ProgramFiles") )
-AkmeMS.Debug( "Path "+ wsh.Environment("Process")("Path") )
-AkmeMS.Debug( "PATHEXT "+ wsh.Environment("Process")("PATHEXT") )
-AkmeMS.Debug( "SystemDrive "+ wsh.Environment("Process")("SystemDrive") )
-AkmeMS.Debug( "SystemRoot "+ wsh.Environment("Process")("SystemRoot") )
-AkmeMS.Debug( "windir "+ wsh.Environment("Process")("windir") )
-AkmeMS.Debug( "TEMP "+ wsh.Environment("Process")("TEMP") )
-AkmeMS.Debug( "TMP "+ wsh.Environment("Process")("TMP") )
-AkmeMS.Debug( "AllUsersDesktop "+ wsh.SpecialFolders("AllUsersDesktop") )
-AkmeMS.Debug( "AllUsersStartMenu "+ wsh.SpecialFolders("AllUsersStartMenu") )
-AkmeMS.Debug( "AllUsersPrograms "+ wsh.SpecialFolders("AllUsersPrograms") )
-AkmeMS.Debug( "AllUsersStartup "+ wsh.SpecialFolders("AllUsersStartup") )
-AkmeMS.Debug( "Desktop "+ wsh.SpecialFolders("Desktop") )
-AkmeMS.Debug( "Favorites "+ wsh.SpecialFolders("Favorites") )
-AkmeMS.Debug( "Fonts "+ wsh.SpecialFolders("Fonts") )
-AkmeMS.Debug( "MyDocuments "+ wsh.SpecialFolders("MyDocuments") )
-AkmeMS.Debug( "NetHood "+ wsh.SpecialFolders("NetHood") )
-AkmeMS.Debug( "PrintHood "+ wsh.SpecialFolders("PrintHood") )
-AkmeMS.Debug( "Programs "+ wsh.SpecialFolders("Programs") )
-AkmeMS.Debug( "Recent "+ wsh.SpecialFolders("Recent") )
-AkmeMS.Debug( "SendTo "+ wsh.SpecialFolders("SendTo") )
-AkmeMS.Debug( "StartMenu "+ wsh.SpecialFolders("StartMenu") )
-AkmeMS.Debug( "Startup "+ wsh.SpecialFolders("Startup") )
-AkmeMS.Debug( "Templates "+ wsh.SpecialFolders("Templates") )
-// //Server/Namespace:Class.KeyName="KeyValue"
-// MyClass.MyProp="e:"
-// MyClass="e:"
-// MyOtherClass.FirstKey=1,SecondKey=2
-// MySingletonClass=@
-for (var en=new Enumerator(wmi.InstancesOf("Win32_BaseBoard")); !en.atEnd(); en.moveNext()) {
- var item = en.item();
- AkmeMS.Debug( "BB.Caption "+ item.Caption )
- AkmeMS.Debug( "BB.Description "+ item.Description )
- AkmeMS.Debug( "BB.InstallDate "+ item.InstallDate )
- AkmeMS.Debug( "BB.Manufacturer "+ item.Manufacturer )
- AkmeMS.Debug( "BB.Model "+ item.Model )
- AkmeMS.Debug( "BB.Name "+ item.Name )
- AkmeMS.Debug( "BB.PartNumber "+ item.PartNumber )
- AkmeMS.Debug( "BB.Product "+ item.Product )
- AkmeMS.Debug( "BB.SerialNumber "+ item.SerialNumber )
- AkmeMS.Debug( "BB.SKU "+ item.SKU )
- AkmeMS.Debug( "BB.Status "+ item.Status )
- AkmeMS.Debug( "BB.Version "+ item.Version )
- AkmeMS.Debug( "BB.Weight "+ item.Weight )
- AkmeMS.Debug( "BB.Width "+ item.Width )
- AkmeMS.Debug( "BB.Height "+ item.Height )
- AkmeMS.Debug( "BB.Depth "+ item.Depth )
-}
-for (var en=new Enumerator(wmi.InstancesOf("Win32_BIOS")); !en.atEnd(); en.moveNext()) {
- var item = en.item();
- AkmeMS.Debug( "IO.BuildNumber "+ item.BuildNumber )
- AkmeMS.Debug( "IO.Caption "+ item.Caption )
- AkmeMS.Debug( "IO.CodeSet "+ item.CodeSet )
- AkmeMS.Debug( "IO.CurrentLanguage "+ item.CurrentLanguage )
- AkmeMS.Debug( "IO.Description "+ item.Description )
- AkmeMS.Debug( "IO.InstallDate "+ item.InstallDate )
- AkmeMS.Debug( "IO.LanguageEdition "+ item.LanguageEdition )
- AkmeMS.Debug( "IO.Manufacturer "+ item.Manufacturer )
- AkmeMS.Debug( "IO.Name "+ item.Name )
- AkmeMS.Debug( "IO.PrimaryBIOS "+ item.PrimaryBIOS )
- AkmeMS.Debug( "IO.Status "+ item.Status )
- AkmeMS.Debug( "IO.Version "+ item.Version )
-}
-for (var en=new Enumerator(wmi.InstancesOf("CIM_Chassis")); !en.atEnd(); en.moveNext()) {
- var item = en.item();
- AkmeMS.Debug( "CH.Caption "+ item.Caption )
- AkmeMS.Debug( "CH.Description "+ item.Description )
- AkmeMS.Debug( "CH.InstallDate "+ item.InstallDate )
- AkmeMS.Debug( "CH.Manufacturer "+ item.Manufacturer )
- AkmeMS.Debug( "CH.Model "+ item.Model )
- AkmeMS.Debug( "CH.Name "+ item.Name )
- AkmeMS.Debug( "CH.OtherIdentifyingInfo "+ item.OtherIdentifyingInfo )
- AkmeMS.Debug( "CH.PartNumber "+ item.PartNumber )
- AkmeMS.Debug( "CH.SerialNumber "+ item.SerialNumber )
- AkmeMS.Debug( "CH.Status "+ item.Status )
- AkmeMS.Debug( "CH.Version "+ item.Version )
-}
-for (var en=new Enumerator(wmi.InstancesOf("Win32_ComputerSystem")); !en.atEnd(); en.moveNext()) {
- var item = en.item();
- AkmeMS.Debug( "CS.Caption "+ item.Caption )
- AkmeMS.Debug( "CS.ChassisBootupState "+ item.ChassisBootupState )
- AkmeMS.Debug( "CS.CurrentTimeZone "+ item.CurrentTimeZone )
- AkmeMS.Debug( "CS.DaylightInEffect "+ item.DaylightInEffect )
- AkmeMS.Debug( "CS.Description "+ item.Description )
- AkmeMS.Debug( "CS.DNSHostName "+ item.DNSHostName )
- AkmeMS.Debug( "CS.Domain "+ item.Domain )
- AkmeMS.Debug( "CS.DomainRole  "+ item.DomainRole )
- AkmeMS.Debug( "CS.Description "+ item.Description )
- AkmeMS.Debug( "CS.InstallDate "+ item.InstallDate )
- AkmeMS.Debug( "CS.Manufacturer "+ item.Manufacturer )
- AkmeMS.Debug( "CS.Model "+ item.Model )
- AkmeMS.Debug( "CS.Name "+ item.Name )
- AkmeMS.Debug( "CS.NameFormat "+ item.NameFormat )
- AkmeMS.Debug( "CS.NumberOfLogicalProcessors "+ item.NumberOfLogicalProcessors )
- AkmeMS.Debug( "CS.NumberOfProcessors "+ item.NumberOfProcessors )
- AkmeMS.Debug( "CS.OtherIdentifyingInfo "+ item.OtherIdentifyingInfo )
- AkmeMS.Debug( "CS.PartOfDomain "+ item.PartOfDomain )
- AkmeMS.Debug( "CS.PrimaryOwnerContact "+ item.PrimaryOwnerContact )
- AkmeMS.Debug( "CS.PrimaryOwnerName "+ item.PrimaryOwnerName )
- AkmeMS.Debug( "CS.Status "+ item.Status )
- AkmeMS.Debug( "CS.SystemType "+ item.SystemType )
- AkmeMS.Debug( "CS.ThermalState "+ item.ThermalState )
- AkmeMS.Debug( "CS.TotalPhysicalMemory "+ item.TotalPhysicalMemory )
- AkmeMS.Debug( "CS.UserName "+ item.UserName )
- AkmeMS.Debug( "CS.Workgroup "+ item.Workgroup )
-}
-for (var en=new Enumerator(wmi.InstancesOf("Win32_VideoController")); !en.atEnd(); en.moveNext()) {
- var item = en.item();
- //AkmeMS.Debug( "VC.AcceleratorCapabilities "+ item.AcceleratorCapabilities )
- AkmeMS.Debug( "VC.AdapterCompatibility "+ item.AdapterCompatibility )
- AkmeMS.Debug( "VC.AdapterDACType "+ item.AdapterDACType )
- AkmeMS.Debug( "VC.AdapterRAM "+ item.AdapterRAM )
- AkmeMS.Debug( "VC.Caption "+ item.Caption )
- AkmeMS.Debug( "VC.CurrentBitsPerPixel "+ item.CurrentBitsPerPixel )
- AkmeMS.Debug( "VC.CurrentHorizontalResolution "+ item.CurrentHorizontalResolution )
- //AkmeMS.Debug( "VC.CurrentNumberOfColors "+ item.CurrentNumberOfColors )
- //AkmeMS.Debug( "VC.CurrentNumberOfColumns "+ item.CurrentNumberOfColumns )
- //AkmeMS.Debug( "VC.CurrentNumberOfRows "+ item.CurrentNumberOfRows )
- AkmeMS.Debug( "VC.CurrentRefreshRate "+ item.CurrentRefreshRate )
- //AkmeMS.Debug( "VC.CurrentScanMode "+ item.CurrentScanMode )
- AkmeMS.Debug( "VC.CurrentVerticalResolution "+ item.CurrentVerticalResolution )
- AkmeMS.Debug( "VC.Description "+ item.Description )
- AkmeMS.Debug( "VC.DriverDate "+ item.DriverDate )
- AkmeMS.Debug( "VC.DriverVersion "+ item.DriverVersion )
- //AkmeMS.Debug( "VC.InstallDate "+ item.InstallDate )
- AkmeMS.Debug( "VC.InstalledDisplayDrivers "+ item.InstalledDisplayDrivers )
- //AkmeMS.Debug( "VC.MaxMemorySupported "+ item.MaxMemorySupported )
- //AkmeMS.Debug( "VC.MaxRefreshRate "+ item.MaxRefreshRate )
- //AkmeMS.Debug( "VC.MinRefreshRate "+ item.MinRefreshRate )
- AkmeMS.Debug( "VC.Name "+ item.Name )
- //AkmeMS.Debug( "VC.NumberOfColorPlanes "+ item.NumberOfColorPlanes )
- //AkmeMS.Debug( "VC.NumberOfVideoPages "+ item.NumberOfVideoPages )
- AkmeMS.Debug( "VC.PNPDeviceID "+ item.PNPDeviceID )
- //AkmeMS.Debug( "VC.PowerManagementCapabilities "+ item.PowerManagementCapabilities )
- //AkmeMS.Debug( "VC.PowerManagementSupported "+ item.PowerManagementSupported )
- //AkmeMS.Debug( "VC.ProtocolSupported "+ item.ProtocolSupported )
- //AkmeMS.Debug( "VC.ReservedSystemPaletteEntries "+ item.ReservedSystemPaletteEntries )
- //AkmeMS.Debug( "VC.SpecificationVersion "+ item.SpecificationVersion )
- //AkmeMS.Debug( "VC.SystemPaletteEntries "+ item.SystemPaletteEntries )
- //AkmeMS.Debug( "VC.TimeOfLastReset "+ item.TimeOfLastReset )
- AkmeMS.Debug( "VC.VideoArchitecture "+ item.VideoArchitecture )
- AkmeMS.Debug( "VC.VideoMemoryType "+ item.VideoMemoryType )
- //AkmeMS.Debug( "VC.VideoMode "+ item.VideoMode )
- AkmeMS.Debug( "VC.VideoModeDescription "+ item.VideoModeDescription )
- AkmeMS.Debug( "VC.VideoProcessor "+ item.VideoProcessor )
-}
-for (var en=new Enumerator(wmi.InstancesOf("Win32_OperatingSystem")); !en.atEnd(); en.moveNext()) {
- var item = en.item();
- // Win32_OperatingSystem=@ Fails even though it should be a singleton.
- //var item = wmi.Get("Win32_OperatingSystem=@")
- AkmeMS.Debug( "OS.Caption "+ item.Caption )
- AkmeMS.Debug( "OS.CodeSet "+ item.CodeSet ) // Expect 1252 Latin 1 - Western European.
- AkmeMS.Debug( "OS.CountryCode "+ item.CountryCode )
- AkmeMS.Debug( "OS.CurrentTimeZone "+ item.CurrentTimeZone )
- AkmeMS.Debug( "OS.Description "+ item.Description )
- AkmeMS.Debug( "OS.InstallDate "+ item.InstallDate )
- AkmeMS.Debug( "OS.LastBootupTime "+ item.LastBootupTime )
- AkmeMS.Debug( "OS.LocalDateTime "+ item.LocalDateTime )
- AkmeMS.Debug( "OS.Manufacturer "+ item.Manufacturer )
- AkmeMS.Debug( "OS.Name "+ item.Name )
- AkmeMS.Debug( "OS.NumberOfLicensedUsers "+ item.NumberOfLicensedUsers )
- AkmeMS.Debug( "OS.OperatingSystemSKU "+ item.OperatingSystemSKU )
- AkmeMS.Debug( "OS.Organization "+ item.Organization )
- AkmeMS.Debug( "OS.OSArchitecture "+ item.OSArchitecture )
- AkmeMS.Debug( "OS.OSLanguage "+ item.OSLanguage )
- AkmeMS.Debug( "OS.OSProductSuite "+ item.OSProductSuite )
- AkmeMS.Debug( "OS.OSType "+ item.OSType )
- AkmeMS.Debug( "OS.OtherTypeDescription "+ item.OtherTypeDescription )
- AkmeMS.Debug( "OS.Primary "+ item.Primary )
- AkmeMS.Debug( "OS.ProductType "+ item.ProductType )
- AkmeMS.Debug( "OS.QuantumLength "+ item.QuantumLength )
- AkmeMS.Debug( "OS.QuantumType "+ item.QuantumType )
- AkmeMS.Debug( "OS.RegisteredUser "+ item.RegisteredUser )
- AkmeMS.Debug( "OS.SerialNumber "+ item.SerialNumber )
- AkmeMS.Debug( "OS.ServicePackMajorVersion "+ item.ServicePackMajorVersion )
- AkmeMS.Debug( "OS.ServicePackMinorVersion "+ item.ServicePackMinorVersion )
- AkmeMS.Debug( "OS.Status "+ item.Status )
- AkmeMS.Debug( "OS.SuiteMask "+ item.SuiteMask )
- AkmeMS.Debug( "OS.SystemDevice "+ item.SystemDevice )
- AkmeMS.Debug( "OS.SystemDirectory "+ item.SystemDirectory )
- AkmeMS.Debug( "OS.SystemDrive "+ item.SystemDrive )
- AkmeMS.Debug( "OS.Version "+ item.Version )
- AkmeMS.Debug( "OS.WindowsDirectory "+ item.WindowsDirectory )
-}
+	if (typeof(WScript) != "undefined") {
+	 AkmeMS.Debug( "Name "+ WScript.Name )
+	 AkmeMS.Debug( "Version "+ WScript.Version )
+	 AkmeMS.Debug( "BuildVersion "+ WScript.BuildVersion )
+	 AkmeMS.Debug( "Interactive "+ WScript.Interactive )
+	 AkmeMS.Debug( "FullName "+ WScript.FullName )
+	 AkmeMS.Debug( "ScriptFullName "+ WScript.ScriptFullName )
+	 AkmeMS.Debug( "Arguments "+ WScript.Arguments.Count() )
+	}
+	// for (var key in screen) AkmeMS.Debug(key + ': ' + screen[key]);
+	AkmeMS.Debug( "screen.width, .height, .availWidth, .availHeight, deviceXDPI: "+
+		screen.width +', '+ screen.height +', '+ screen.availWidth +', '+ screen.availHeight +', '+ screen.deviceXDPI );
+	AkmeMS.Debug( "ComputerName "+ net.ComputerName )
+	AkmeMS.Debug( "UserDomain "+ net.UserDomain )
+	AkmeMS.Debug( "UserName "+ net.UserName )
+	AkmeMS.Debug( "CurrentDirectory "+ wsh.CurrentDirectory )
+	AkmeMS.Debug( "ALLUSERSPROFILE "+ wsh.Environment("Process")("ALLUSERSPROFILE") )
+	AkmeMS.Debug( "APPDATA "+ wsh.Environment("Process")("APPDATA") )
+	AkmeMS.Debug( "CLASSPATH "+ wsh.Environment("Process")("CLASSPATH") )
+	AkmeMS.Debug( "CommonProgramFiles "+ wsh.Environment("Process")("CommonProgramFiles") )
+	AkmeMS.Debug( "ComSpec "+ wsh.Environment("Process")("ComSpec") )
+	AkmeMS.Debug( "NUMBER_OF_PROCESSORS "+ wsh.Environment("Process")("NUMBER_OF_PROCESSORS") )
+	AkmeMS.Debug( "PROCESSOR_ARCHITECTURE "+ wsh.Environment("Process")("PROCESSOR_ARCHITECTURE") )
+	AkmeMS.Debug( "PROCESSOR_IDENTIFIER "+ wsh.Environment("Process")("PROCESSOR_IDENTIFIER") )
+	AkmeMS.Debug( "PROCESSOR_LEVEL "+ wsh.Environment("Process")("PROCESSOR_LEVEL") )
+	AkmeMS.Debug( "PROCESSOR_REVISION "+ wsh.Environment("Process")("PROCESSOR_REVISION") )
+	AkmeMS.Debug( "OS "+ wsh.Environment("Process")("OS") )
+	AkmeMS.Debug( "LOGONSERVER "+ wsh.Environment("Process")("LOGONSERVER") )
+	AkmeMS.Debug( "HOMEDRIVE "+ wsh.Environment("Process")("HOMEDRIVE") )
+	AkmeMS.Debug( "HOMEPATH "+ wsh.Environment("Process")("HOMEPATH") )
+	AkmeMS.Debug( "ProgramFiles "+ wsh.Environment("Process")("ProgramFiles") )
+	AkmeMS.Debug( "Path "+ wsh.Environment("Process")("Path") )
+	AkmeMS.Debug( "PATHEXT "+ wsh.Environment("Process")("PATHEXT") )
+	AkmeMS.Debug( "SystemDrive "+ wsh.Environment("Process")("SystemDrive") )
+	AkmeMS.Debug( "SystemRoot "+ wsh.Environment("Process")("SystemRoot") )
+	AkmeMS.Debug( "windir "+ wsh.Environment("Process")("windir") )
+	AkmeMS.Debug( "TEMP "+ wsh.Environment("Process")("TEMP") )
+	AkmeMS.Debug( "TMP "+ wsh.Environment("Process")("TMP") )
+	AkmeMS.Debug( "AllUsersDesktop "+ wsh.SpecialFolders("AllUsersDesktop") )
+	AkmeMS.Debug( "AllUsersStartMenu "+ wsh.SpecialFolders("AllUsersStartMenu") )
+	AkmeMS.Debug( "AllUsersPrograms "+ wsh.SpecialFolders("AllUsersPrograms") )
+	AkmeMS.Debug( "AllUsersStartup "+ wsh.SpecialFolders("AllUsersStartup") )
+	AkmeMS.Debug( "Desktop "+ wsh.SpecialFolders("Desktop") )
+	AkmeMS.Debug( "Favorites "+ wsh.SpecialFolders("Favorites") )
+	AkmeMS.Debug( "Fonts "+ wsh.SpecialFolders("Fonts") )
+	AkmeMS.Debug( "MyDocuments "+ wsh.SpecialFolders("MyDocuments") )
+	AkmeMS.Debug( "NetHood "+ wsh.SpecialFolders("NetHood") )
+	AkmeMS.Debug( "PrintHood "+ wsh.SpecialFolders("PrintHood") )
+	AkmeMS.Debug( "Programs "+ wsh.SpecialFolders("Programs") )
+	AkmeMS.Debug( "Recent "+ wsh.SpecialFolders("Recent") )
+	AkmeMS.Debug( "SendTo "+ wsh.SpecialFolders("SendTo") )
+	AkmeMS.Debug( "StartMenu "+ wsh.SpecialFolders("StartMenu") )
+	AkmeMS.Debug( "Startup "+ wsh.SpecialFolders("Startup") )
+	AkmeMS.Debug( "Templates "+ wsh.SpecialFolders("Templates") )
+	// //Server/Namespace:Class.KeyName="KeyValue"
+	// MyClass.MyProp="e:"
+	// MyClass="e:"
+	// MyOtherClass.FirstKey=1,SecondKey=2
+	// MySingletonClass=@
+	for (var en=new Enumerator(wmi.InstancesOf("Win32_BaseBoard")); !en.atEnd(); en.moveNext()) {
+	 var item = en.item();
+	 AkmeMS.Debug( "BB.Caption "+ item.Caption )
+	 AkmeMS.Debug( "BB.Description "+ item.Description )
+	 AkmeMS.Debug( "BB.InstallDate "+ item.InstallDate )
+	 AkmeMS.Debug( "BB.Manufacturer "+ item.Manufacturer )
+	 AkmeMS.Debug( "BB.Model "+ item.Model )
+	 AkmeMS.Debug( "BB.Name "+ item.Name )
+	 AkmeMS.Debug( "BB.PartNumber "+ item.PartNumber )
+	 AkmeMS.Debug( "BB.Product "+ item.Product )
+	 AkmeMS.Debug( "BB.SerialNumber "+ item.SerialNumber )
+	 AkmeMS.Debug( "BB.SKU "+ item.SKU )
+	 AkmeMS.Debug( "BB.Status "+ item.Status )
+	 AkmeMS.Debug( "BB.Version "+ item.Version )
+	 AkmeMS.Debug( "BB.Weight "+ item.Weight )
+	 AkmeMS.Debug( "BB.Width "+ item.Width )
+	 AkmeMS.Debug( "BB.Height "+ item.Height )
+	 AkmeMS.Debug( "BB.Depth "+ item.Depth )
+	}
+	for (var en=new Enumerator(wmi.InstancesOf("Win32_BIOS")); !en.atEnd(); en.moveNext()) {
+	 var item = en.item();
+	 AkmeMS.Debug( "IO.BuildNumber "+ item.BuildNumber )
+	 AkmeMS.Debug( "IO.Caption "+ item.Caption )
+	 AkmeMS.Debug( "IO.CodeSet "+ item.CodeSet )
+	 AkmeMS.Debug( "IO.CurrentLanguage "+ item.CurrentLanguage )
+	 AkmeMS.Debug( "IO.Description "+ item.Description )
+	 AkmeMS.Debug( "IO.InstallDate "+ item.InstallDate )
+	 AkmeMS.Debug( "IO.LanguageEdition "+ item.LanguageEdition )
+	 AkmeMS.Debug( "IO.Manufacturer "+ item.Manufacturer )
+	 AkmeMS.Debug( "IO.Name "+ item.Name )
+	 AkmeMS.Debug( "IO.PrimaryBIOS "+ item.PrimaryBIOS )
+	 AkmeMS.Debug( "IO.Status "+ item.Status )
+	 AkmeMS.Debug( "IO.Version "+ item.Version )
+	}
+	for (var en=new Enumerator(wmi.InstancesOf("CIM_Chassis")); !en.atEnd(); en.moveNext()) {
+	 var item = en.item();
+	 AkmeMS.Debug( "CH.Caption "+ item.Caption )
+	 AkmeMS.Debug( "CH.Description "+ item.Description )
+	 AkmeMS.Debug( "CH.InstallDate "+ item.InstallDate )
+	 AkmeMS.Debug( "CH.Manufacturer "+ item.Manufacturer )
+	 AkmeMS.Debug( "CH.Model "+ item.Model )
+	 AkmeMS.Debug( "CH.Name "+ item.Name )
+	 AkmeMS.Debug( "CH.OtherIdentifyingInfo "+ item.OtherIdentifyingInfo )
+	 AkmeMS.Debug( "CH.PartNumber "+ item.PartNumber )
+	 AkmeMS.Debug( "CH.SerialNumber "+ item.SerialNumber )
+	 AkmeMS.Debug( "CH.Status "+ item.Status )
+	 AkmeMS.Debug( "CH.Version "+ item.Version )
+	}
+	for (var en=new Enumerator(wmi.InstancesOf("Win32_ComputerSystem")); !en.atEnd(); en.moveNext()) {
+	 var item = en.item();
+	 AkmeMS.Debug( "CS.Caption "+ item.Caption )
+	 AkmeMS.Debug( "CS.ChassisBootupState "+ item.ChassisBootupState )
+	 AkmeMS.Debug( "CS.CurrentTimeZone "+ item.CurrentTimeZone )
+	 AkmeMS.Debug( "CS.DaylightInEffect "+ item.DaylightInEffect )
+	 AkmeMS.Debug( "CS.Description "+ item.Description )
+	 AkmeMS.Debug( "CS.DNSHostName "+ item.DNSHostName )
+	 AkmeMS.Debug( "CS.Domain "+ item.Domain )
+	 AkmeMS.Debug( "CS.DomainRole  "+ item.DomainRole )
+	 AkmeMS.Debug( "CS.Description "+ item.Description )
+	 AkmeMS.Debug( "CS.InstallDate "+ item.InstallDate )
+	 AkmeMS.Debug( "CS.Manufacturer "+ item.Manufacturer )
+	 AkmeMS.Debug( "CS.Model "+ item.Model )
+	 AkmeMS.Debug( "CS.Name "+ item.Name )
+	 AkmeMS.Debug( "CS.NameFormat "+ item.NameFormat )
+	 AkmeMS.Debug( "CS.NumberOfLogicalProcessors "+ item.NumberOfLogicalProcessors )
+	 AkmeMS.Debug( "CS.NumberOfProcessors "+ item.NumberOfProcessors )
+	 AkmeMS.Debug( "CS.OtherIdentifyingInfo "+ item.OtherIdentifyingInfo )
+	 AkmeMS.Debug( "CS.PartOfDomain "+ item.PartOfDomain )
+	 AkmeMS.Debug( "CS.PrimaryOwnerContact "+ item.PrimaryOwnerContact )
+	 AkmeMS.Debug( "CS.PrimaryOwnerName "+ item.PrimaryOwnerName )
+	 AkmeMS.Debug( "CS.Status "+ item.Status )
+	 AkmeMS.Debug( "CS.SystemType "+ item.SystemType )
+	 AkmeMS.Debug( "CS.ThermalState "+ item.ThermalState )
+	 AkmeMS.Debug( "CS.TotalPhysicalMemory "+ item.TotalPhysicalMemory )
+	 AkmeMS.Debug( "CS.UserName "+ item.UserName )
+	 AkmeMS.Debug( "CS.Workgroup "+ item.Workgroup )
+	}
+	for (var en=new Enumerator(wmi.InstancesOf("Win32_VideoController")); !en.atEnd(); en.moveNext()) {
+	 var item = en.item();
+	 //AkmeMS.Debug( "VC.AcceleratorCapabilities "+ item.AcceleratorCapabilities )
+	 AkmeMS.Debug( "VC.AdapterCompatibility "+ item.AdapterCompatibility )
+	 AkmeMS.Debug( "VC.AdapterDACType "+ item.AdapterDACType )
+	 AkmeMS.Debug( "VC.AdapterRAM "+ item.AdapterRAM )
+	 AkmeMS.Debug( "VC.Caption "+ item.Caption )
+	 AkmeMS.Debug( "VC.CurrentBitsPerPixel "+ item.CurrentBitsPerPixel )
+	 AkmeMS.Debug( "VC.CurrentHorizontalResolution "+ item.CurrentHorizontalResolution )
+	 //AkmeMS.Debug( "VC.CurrentNumberOfColors "+ item.CurrentNumberOfColors )
+	 //AkmeMS.Debug( "VC.CurrentNumberOfColumns "+ item.CurrentNumberOfColumns )
+	 //AkmeMS.Debug( "VC.CurrentNumberOfRows "+ item.CurrentNumberOfRows )
+	 AkmeMS.Debug( "VC.CurrentRefreshRate "+ item.CurrentRefreshRate )
+	 //AkmeMS.Debug( "VC.CurrentScanMode "+ item.CurrentScanMode )
+	 AkmeMS.Debug( "VC.CurrentVerticalResolution "+ item.CurrentVerticalResolution )
+	 AkmeMS.Debug( "VC.Description "+ item.Description )
+	 AkmeMS.Debug( "VC.DriverDate "+ item.DriverDate )
+	 AkmeMS.Debug( "VC.DriverVersion "+ item.DriverVersion )
+	 //AkmeMS.Debug( "VC.InstallDate "+ item.InstallDate )
+	 AkmeMS.Debug( "VC.InstalledDisplayDrivers "+ item.InstalledDisplayDrivers )
+	 //AkmeMS.Debug( "VC.MaxMemorySupported "+ item.MaxMemorySupported )
+	 //AkmeMS.Debug( "VC.MaxRefreshRate "+ item.MaxRefreshRate )
+	 //AkmeMS.Debug( "VC.MinRefreshRate "+ item.MinRefreshRate )
+	 AkmeMS.Debug( "VC.Name "+ item.Name )
+	 //AkmeMS.Debug( "VC.NumberOfColorPlanes "+ item.NumberOfColorPlanes )
+	 //AkmeMS.Debug( "VC.NumberOfVideoPages "+ item.NumberOfVideoPages )
+	 AkmeMS.Debug( "VC.PNPDeviceID "+ item.PNPDeviceID )
+	 //AkmeMS.Debug( "VC.PowerManagementCapabilities "+ item.PowerManagementCapabilities )
+	 //AkmeMS.Debug( "VC.PowerManagementSupported "+ item.PowerManagementSupported )
+	 //AkmeMS.Debug( "VC.ProtocolSupported "+ item.ProtocolSupported )
+	 //AkmeMS.Debug( "VC.ReservedSystemPaletteEntries "+ item.ReservedSystemPaletteEntries )
+	 //AkmeMS.Debug( "VC.SpecificationVersion "+ item.SpecificationVersion )
+	 //AkmeMS.Debug( "VC.SystemPaletteEntries "+ item.SystemPaletteEntries )
+	 //AkmeMS.Debug( "VC.TimeOfLastReset "+ item.TimeOfLastReset )
+	 AkmeMS.Debug( "VC.VideoArchitecture "+ item.VideoArchitecture )
+	 AkmeMS.Debug( "VC.VideoMemoryType "+ item.VideoMemoryType )
+	 //AkmeMS.Debug( "VC.VideoMode "+ item.VideoMode )
+	 AkmeMS.Debug( "VC.VideoModeDescription "+ item.VideoModeDescription )
+	 AkmeMS.Debug( "VC.VideoProcessor "+ item.VideoProcessor )
+	}
+	for (var en=new Enumerator(wmi.InstancesOf("Win32_OperatingSystem")); !en.atEnd(); en.moveNext()) {
+	 var item = en.item();
+	 // Win32_OperatingSystem=@ Fails even though it should be a singleton.
+	 //var item = wmi.Get("Win32_OperatingSystem=@")
+	 AkmeMS.Debug( "OS.Caption "+ item.Caption )
+	 AkmeMS.Debug( "OS.CodeSet "+ item.CodeSet ) // Expect 1252 Latin 1 - Western European.
+	 AkmeMS.Debug( "OS.CountryCode "+ item.CountryCode )
+	 AkmeMS.Debug( "OS.CurrentTimeZone "+ item.CurrentTimeZone )
+	 AkmeMS.Debug( "OS.Description "+ item.Description )
+	 AkmeMS.Debug( "OS.InstallDate "+ item.InstallDate )
+	 AkmeMS.Debug( "OS.LastBootupTime "+ item.LastBootupTime )
+	 AkmeMS.Debug( "OS.LocalDateTime "+ item.LocalDateTime )
+	 AkmeMS.Debug( "OS.Manufacturer "+ item.Manufacturer )
+	 AkmeMS.Debug( "OS.Name "+ item.Name )
+	 AkmeMS.Debug( "OS.NumberOfLicensedUsers "+ item.NumberOfLicensedUsers )
+	 AkmeMS.Debug( "OS.OperatingSystemSKU "+ item.OperatingSystemSKU )
+	 AkmeMS.Debug( "OS.Organization "+ item.Organization )
+	 AkmeMS.Debug( "OS.OSArchitecture "+ item.OSArchitecture )
+	 AkmeMS.Debug( "OS.OSLanguage "+ item.OSLanguage )
+	 AkmeMS.Debug( "OS.OSProductSuite "+ item.OSProductSuite )
+	 AkmeMS.Debug( "OS.OSType "+ item.OSType )
+	 AkmeMS.Debug( "OS.OtherTypeDescription "+ item.OtherTypeDescription )
+	 AkmeMS.Debug( "OS.Primary "+ item.Primary )
+	 AkmeMS.Debug( "OS.ProductType "+ item.ProductType )
+	 AkmeMS.Debug( "OS.QuantumLength "+ item.QuantumLength )
+	 AkmeMS.Debug( "OS.QuantumType "+ item.QuantumType )
+	 AkmeMS.Debug( "OS.RegisteredUser "+ item.RegisteredUser )
+	 AkmeMS.Debug( "OS.SerialNumber "+ item.SerialNumber )
+	 AkmeMS.Debug( "OS.ServicePackMajorVersion "+ item.ServicePackMajorVersion )
+	 AkmeMS.Debug( "OS.ServicePackMinorVersion "+ item.ServicePackMinorVersion )
+	 AkmeMS.Debug( "OS.Status "+ item.Status )
+	 AkmeMS.Debug( "OS.SuiteMask "+ item.SuiteMask )
+	 AkmeMS.Debug( "OS.SystemDevice "+ item.SystemDevice )
+	 AkmeMS.Debug( "OS.SystemDirectory "+ item.SystemDirectory )
+	 AkmeMS.Debug( "OS.SystemDrive "+ item.SystemDrive )
+	 AkmeMS.Debug( "OS.Version "+ item.Version )
+	 AkmeMS.Debug( "OS.WindowsDirectory "+ item.WindowsDirectory )
+	}
 
 }
 
 
 function doCheckInternetSecurity() {
- var form = document.forms[0];
- // SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WinTrust\\Trust Providers\\Software Publishing\\State=0x0 // check (0x200 to not) publisher cert revo
- // SOFTWARE\\Policies\\Microsoft\\Windows\\CurrentVersion\\WinTrust\\Trust Providers\\Software Publishing\\State=
- // SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\CertificateRevocation= // 0 or 1 for server cert revo
- // SOFTWARE\\Policies\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\CertificateRevocation=
- // SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\WarnOnPostRedirect= // 0 or 1
- // SOFTWARE\\Policies\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\WarnOnPostRedirect=
- // Software\Microsoft\Ftp\Use Web Based FTP= // no (for FTP folder view) or yes (use yes for Passive FTP)
- // Software\Microsoft\Ftp\Use PASV= // no or yes (use yes) for Passive FTP
- // SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_LOCALMACHINE_LOCKDOWN\\iexplore.exe=0x1
- // SOFTWARE\\Policies\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_LOCALMACHINE_LOCKDOWN\\iexplore.exe=0x1
- var regKeys = ["HKEY_CURRENT_USER\\cscript.exe",
-  "HKEY_CURRENT_USER\\explorer.exe",
-  "HKEY_CURRENT_USER\\iexplore.exe",
-  "HKEY_CURRENT_USER\\mshta.exe",
-  "HKEY_CURRENT_USER\\msimn.exe",
-  "HKEY_CURRENT_USER\\msscript.ocx",
-  "HKEY_CURRENT_USER\\wmplayer.exe",
-  "HKEY_CURRENT_USER\\wscript.exe",
-  "HKEY_LOCAL_MACHINE\\cscript.exe",
-  "HKEY_LOCAL_MACHINE\\explorer.exe",
-  "HKEY_LOCAL_MACHINE\\iexplore.exe",
-  "HKEY_LOCAL_MACHINE\\mshta.exe",
-  "HKEY_LOCAL_MACHINE\\msimn.exe",
-  "HKEY_LOCAL_MACHINE\\msscript.ocx",
-  "HKEY_LOCAL_MACHINE\\wmplayer.exe",
-  "HKEY_LOCAL_MACHINE\\wscript.exe"];
- var key, value;
- form.elements['log'].value = "Local Machine Lockdown Check:"+"\r\n";
- var lines = [];
- for (var i=0; i<regKeys.length; i++) {
-  try { key = regKeys[i]; value = wsh.RegRead(key.split("\\").join("\\Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_LOCALMACHINE_LOCKDOWN\\")); }
-  catch (ex) { value = null; }
-  if (value) lines[lines.length] = key.substring(0, key.indexOf("\\")) + key.substring(key.lastIndexOf("\\")) +"\t "+ value;
- }
- form.elements['log'].value += lines.join("\r\n");
- form.elements['log'].value += "\r\n\r\n"+"Normal Zones 0 (Local Machine):"+"\r\n";
- var regPrefix = "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones\\"; // Also see Lockdown_Zones.
- var machineZone = "0\\";
- var value;
- var lines = [];
- for (var key in UrlSecurtyAction) { //lines[lines.length] = (key);
-  if (key > 0) {
-   var hexKey = Math.floor(key).toString(16).toUpperCase(); //alert(regPrefix + machineZone + Math.floor(key).toString(16).toUpperCase())
-   try { value = wsh.RegRead(regPrefix + machineZone + hexKey); }
-   catch (ex) { value = null; }
-   if (value) lines[lines.length] = UrlSecurityActionName[new String(key)] +"\t "+ (UrlSecurityPolicyName[value] ? UrlSecurityPolicyName[value] : value);
-  }
- }
- form.elements['log'].value += lines.join("\r\n");
- form.elements['log'].value += "\r\n\r\n"+"Lockdown_Zones 0 (Local Machine):"+"\r\n";
- var regPrefix = "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Lockdown_Zones\\";
- var value;
- var lines = [];
- for (var key in UrlSecurtyAction) { //lines[lines.length] = (key);
-  if (key > 0) {
-   var hexKey = Math.floor(key).toString(16).toUpperCase(); //alert(regPrefix + machineZone + Math.floor(key).toString(16).toUpperCase())
-   try { value = wsh.RegRead(regPrefix + machineZone + hexKey); }
-   catch (ex) { value = null; }
-   if (value) lines[lines.length] = UrlSecurityActionName[new String(key)] +"\t "+ (UrlSecurityPolicyName[value] ? UrlSecurityPolicyName[value] : value);
-  }
- }
- form.elements['log'].value += lines.join("\r\n");
+	 var form = document.forms[0];
+	 // SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WinTrust\\Trust Providers\\Software Publishing\\State=0x0 // check (0x200 to not) publisher cert revo
+	 // SOFTWARE\\Policies\\Microsoft\\Windows\\CurrentVersion\\WinTrust\\Trust Providers\\Software Publishing\\State=
+	 // SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\CertificateRevocation= // 0 or 1 for server cert revo
+	 // SOFTWARE\\Policies\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\CertificateRevocation=
+	 // SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\WarnOnPostRedirect= // 0 or 1
+	 // SOFTWARE\\Policies\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\WarnOnPostRedirect=
+	 // Software\Microsoft\Ftp\Use Web Based FTP= // no (for FTP folder view) or yes (use yes for Passive FTP)
+	 // Software\Microsoft\Ftp\Use PASV= // no or yes (use yes) for Passive FTP
+	 // SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_LOCALMACHINE_LOCKDOWN\\iexplore.exe=0x1
+	 // SOFTWARE\\Policies\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_LOCALMACHINE_LOCKDOWN\\iexplore.exe=0x1
+	 var regKeys = ["HKEY_CURRENT_USER\\cscript.exe",
+		"HKEY_CURRENT_USER\\explorer.exe",
+		"HKEY_CURRENT_USER\\iexplore.exe",
+		"HKEY_CURRENT_USER\\mshta.exe",
+		"HKEY_CURRENT_USER\\msimn.exe",
+		"HKEY_CURRENT_USER\\msscript.ocx",
+		"HKEY_CURRENT_USER\\wmplayer.exe",
+		"HKEY_CURRENT_USER\\wscript.exe",
+		"HKEY_LOCAL_MACHINE\\cscript.exe",
+		"HKEY_LOCAL_MACHINE\\explorer.exe",
+		"HKEY_LOCAL_MACHINE\\iexplore.exe",
+		"HKEY_LOCAL_MACHINE\\mshta.exe",
+		"HKEY_LOCAL_MACHINE\\msimn.exe",
+		"HKEY_LOCAL_MACHINE\\msscript.ocx",
+		"HKEY_LOCAL_MACHINE\\wmplayer.exe",
+		"HKEY_LOCAL_MACHINE\\wscript.exe"];
+	 var key, value;
+	 form.elements['log'].value = "Local Machine Lockdown Check:"+"\r\n";
+	 var lines = [];
+	 for (var i=0; i<regKeys.length; i++) {
+		try { key = regKeys[i]; value = wsh.RegRead(key.split("\\").join("\\Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_LOCALMACHINE_LOCKDOWN\\")); }
+		catch (ex) { value = null; }
+		if (value) lines[lines.length] = key.substring(0, key.indexOf("\\")) + key.substring(key.lastIndexOf("\\")) +"\t "+ value;
+	 }
+	 form.elements['log'].value += lines.join("\r\n");
+	 form.elements['log'].value += "\r\n\r\n"+"Normal Zones 0 (Local Machine):"+"\r\n";
+	 var regPrefix = "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones\\"; // Also see Lockdown_Zones.
+	 var machineZone = "0\\";
+	 var value;
+	 var lines = [];
+	 for (var key in UrlSecurtyAction) { //lines[lines.length] = (key);
+		if (key > 0) {
+		 var hexKey = Math.floor(key).toString(16).toUpperCase(); //alert(regPrefix + machineZone + Math.floor(key).toString(16).toUpperCase())
+		 try { value = wsh.RegRead(regPrefix + machineZone + hexKey); }
+		 catch (ex) { value = null; }
+		 if (value) lines[lines.length] = UrlSecurityActionName[new String(key)] +"\t "+ (UrlSecurityPolicyName[value] ? UrlSecurityPolicyName[value] : value);
+		}
+	 }
+	 form.elements['log'].value += lines.join("\r\n");
+	 form.elements['log'].value += "\r\n\r\n"+"Lockdown_Zones 0 (Local Machine):"+"\r\n";
+	 var regPrefix = "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Lockdown_Zones\\";
+	 var value;
+	 var lines = [];
+	 for (var key in UrlSecurtyAction) { //lines[lines.length] = (key);
+		if (key > 0) {
+		 var hexKey = Math.floor(key).toString(16).toUpperCase(); //alert(regPrefix + machineZone + Math.floor(key).toString(16).toUpperCase())
+		 try { value = wsh.RegRead(regPrefix + machineZone + hexKey); }
+		 catch (ex) { value = null; }
+		 if (value) lines[lines.length] = UrlSecurityActionName[new String(key)] +"\t "+ (UrlSecurityPolicyName[value] ? UrlSecurityPolicyName[value] : value);
+		}
+	 }
+	 form.elements['log'].value += lines.join("\r\n");
 }
 
 
@@ -364,325 +366,329 @@ function reverseMap(map) { var rev = {}; for (var key in map) rev[map[key]] = ke
 var UrlSecurityPolicy = { Allow : 0x00, Prompt : 0x01, Deny : 0x03 };
 var UrlSecurityPolicyName = reverseMap(UrlSecurityPolicy);
 var UrlSecurtyAction = {
-URLACTION_MIN : 0x00001000, 0x00001000 :
-"The minimum value of URLACTIONS."
-,
-URLACTION_ACTIVEX_CONFIRM_NOOBJECTSAFETY : 0x00001204, 0x00001204 :
-"User can decide whether to load and script a Microsoft ActiveX control that is not safe."
-,
-URLACTION_ACTIVEX_CURR_MAX : 0x0000120B, 0x0000120B :
-"Current maximum value of the URL action ActiveX flags."
-,
-URLACTION_ACTIVEX_DYNSRC_VIDEO_AND_ANIMATION : 0x0000120A, 0x0000120A :
-"Windows Internet Explorer 7. Determines whether to allow native playback of video and animation in Web pages that specify media files in the DYNSRC attribute of the IMG element. Users may still be able to view non-native video and animation because animation and video can be created in the context of an external player application using the OBJECT tag."
-,
-URLACTION_ACTIVEX_MAX : 0x000013ff, 0x000013ff :
-"Maximum value of the URL action ActiveX flags."
-,
-URLACTION_ACTIVEX_MIN : 0x00001200, 0x00001200 :
-"Minimum value of the URL action ActiveX flags."
-,
-URLACTION_ACTIVEX_NO_WEBOC_SCRIPT : 0x00001206, 0x00001206 :
-"Controls the ability to script the Web browser ActiveX control."
-,
-URLACTION_ACTIVEX_OVERRIDE_DATA_SAFETY : 0x00001202, 0x00001202 :
-"Determines whether ActiveX safety for untrusted data can be overridden."
-,
-URLACTION_ACTIVEX_OVERRIDE_OBJECT_SAFETY : 0x00001201, 0x00001201 :
-"Determines whether the ActiveX control object safety is overridden or enforced for pages in the URL security zone. Object safety should be overridden only if all ActiveX Controls and scripts that might interact with them on pages in the zone can be trusted not to breach security. This is an aggregate of URLACTION_ACTIVEX_OVERRIDE_DATA_SAFETY, URLACTION_ACTIVEX_OVERRIDE_SCRIPT_SAFETY, URLACTION_ACTIVEX_CONFIRM_NOOBJECTSAFETY, and URLACTION_SCRIPT_OVERRIDE_SAFETY."
-,
-URLACTION_ACTIVEX_OVERRIDE_OPTIN : 0x00001208, 0x00001208 :
-"Internet Explorer 7. Applications can opt-in to bypass the ActiveX prompt mode to prevent security prompts from appearing out of context. This action determines whether to override this setting."
-,
-URLACTION_ACTIVEX_OVERRIDE_REPURPOSEDETECTION : 0x00001207, 0x00001207 :
-"Microsoft Internet Explorer 6 for Microsoft Windows XP Service Pack 2 (SP2) and later. Determines whether to perform ActiveX re-purpose detection, which tests if the control is safe to be hosted. Internet Explorer checks for the IObjectSafety interface on ActiveX controls in the Internet zone to identify how the author intends for the control to be re-used. (See KB909738  for more information.) The default policy for this action is set by security update and should not be modified. Requires that the feature control FEATURE_ACTIVEX_REPURPOSEDETECTION is enabled."
-,
-URLACTION_ACTIVEX_OVERRIDE_SCRIPT_SAFETY : 0x00001203, 0x00001203 :
-"Determines whether ActiveX safety for scripting is overridden."
-,
-URLACTION_ACTIVEX_RUN : 0x00001200, 0x00001200 :
-"Manages the execution of ActiveX Controls and plug-ins from HTML pages in the zone."
-,
-URLACTION_ACTIVEX_SCRIPTLET_RUN : 0x00001209, 0x00001209 :
-"Internet Explorer 7. Determines whether scriptlets are allowed to run. This action has no effect if URLACTION_ACTIVEX_RUN is disabled."
-,
-URLACTION_ACTIVEX_TREATASUNTRUSTED : 0x00001205, 0x00001205 :
-"Not implemented."
-,
-URLACTION_ACTIVEX_USE_DOMAINLIST : 0x0000120B, 0x0000120B :
-"Internet Explorer 8. Set to 1 when the Per-Site ActiveX Domain List feature is enabled by its Feature Control Key (FCK) in the registry. The default is enabled."
-,
-URLACTION_ALLOW_APEVALUATION : 0x00001205, 0x00001205 :
-"Internet Explorer 7. Determine whether Microsoft Phishing Filter evaluation is enabled."
-,
-URLACTION_ALLOW_RESTRICTEDPROTOCOLS : 0x00002300, 0x00002300 :
-"Internet Explorer 6 for Windows XP SP2 and later. Determines whether content loaded over a particular protocol should be restricted. Requires that the feature control FEATURE_PROTOCOL_LOCKDOWN is enabled."
-,
-URLACTION_ALLOW_XDOMIAN_SUBFRAME_RESIZE : 0x00001408, 0x00001408 :
-"Internet Explorer 7. Prevents content residing on an alternate domain from executing a resize command on a sub-frame (frames/Iframes). The following methods are blocked within a sub-frame if the domain is foreign: window.moveTo(x,y), window.moveBy(x,y), window.resizeTo(x,y), window.resizeBy(x,y). There is no user interface (UI) to modify this behavior."
-,
-URLACTION_AUTHENTICATE_CLIENT : 0x00001A01, 0x00001A01 :
-"Not currently used."
-,
-URLACTION_AUTOMATIC_ACTIVEX_UI : 0x00002201, 0x00002201 :
-"Internet Explorer 6 for Windows XP SP2 and later. Determines whether to display the Information Bar for ActiveX control installations rather than the ActiveX control prompt. Requires that the feature control FEATURE_RESTRICT_ACTIVEXINSTALL for code downloads is enabled. "
-,
-URLACTION_AUTOMATIC_DOWNLOAD_UI : 0x00002200, 0x00002200 :
-"Internet Explorer 6 for Windows XP SP2 and later. Determines whether to display the file download dialogs or the Information Bar for downloads that are not initiated by the user. Requires that the feature control FEATURE_RESTRICT_FILEDOWNLOAD for file downloads is enabled. "
-,
-URLACTION_AUTOMATIC_DOWNLOAD_UI_MIN : 0x00002200, 0x00002200 :
-"Internet Explorer 6 for Windows XP SP2 and later. Minimum value of the URL action download UI flags. "
-,
-URLACTION_BEHAVIOR_MIN : 0x00002000, 0x00002000 :
-"Internet Explorer 6 for Windows XP SP2 and later. Minimum value of the URL action behavior flags. "
-,
-URLACTION_BEHAVIOR_RUN : 0x00002000, 0x00002000 :
-"Internet Explorer 6 for Windows XP SP2 and later. Determines whether to allow Dynamic HTML (DHTML) behaviors and binary behaviors to run securely. Requires that the feature control FEATURE_BEHAVIORS is enabled. "
-,
-URLACTION_CHANNEL_SOFTDIST_MAX : 0x00001Eff, 0x00001Eff :
-"Maximum value for a URL action Software Update Channel flag."
-,
-URLACTION_CHANNEL_SOFTDIST_MIN : 0x00001E00, 0x00001E00 :
-"Minimum value for a URL action Software Update Channel flag."
-,
-URLACTION_CHANNEL_SOFTDIST_PERMISSIONS : 0x00001E05, 0x00001E05 :
-"Determines the level of trust placed on Software Update Channels."
-,
-URLACTION_CLIENT_CERT_PROMPT : 0x00001A04, 0x00001A04 :
-"Internet Explorer 6 and later. Determines whether to suppress the authentication dialog that prompts the user to select a client certificate when no certificate or only one certificate is already installed."
-,
-URLACTION_COOKIES : 0x00001A02, 0x00001A02 :
-"Determines whether HTTP persistent cookies are allowed."
-,
-URLACTION_COOKIES_ENABLED : 0x00001A10, 0x00001A10 :
-"Internet Explorer 6 and later. Determines whether HTTP cookies can be set and retrieved."
-,
-URLACTION_COOKIES_SESSION : 0x00001A03, 0x00001A03 :
-"Determines whether HTTP session cookies are allowed."
-,
-URLACTION_COOKIES_SESSION_THIRD_PARTY : 0x00001A06, 0x00001A06 :
-"Internet Explorer 6 and later. Determines whether third party HTTP session cookies are allowed."
-,
-URLACTION_COOKIES_THIRD_PARTY : 0x00001A05, 0x00001A05 :
-"Internet Explorer 6 and later. Determines whether third party HTTP persistent cookies are allowed. "
-,
-URLACTION_CREDENTIALS_USE : 0x00001A00, 0x00001A00 :
-"Determines how the user's credentials are used over the network."
-,
-URLACTION_CROSS_DOMAIN_DATA : 0x00001406, 0x00001406 :
-"Determines whether the resource is allowed to access data sources across domains."
-,
-URLACTION_DOWNLOAD_CURR_MAX : 0x00001004, 0x00001004 :
-"Maximum value for the URL action download flags."
-,
-URLACTION_DOWNLOAD_MAX : 0x000011FF, 0x000011FF :
-"Maximum value of a URL action download flag."
-,
-URLACTION_DOWNLOAD_MIN : 0x00001000, 0x00001000 :
-"Minimum value of a URL action download flag."
-,
-URLACTION_DOWNLOAD_SIGNED_ACTIVEX : 0x00001001, 0x00001001 :
-"Manages the download of signed ActiveX Controls from the URL zone of the HTML page that contains the control."
-,
-URLACTION_DOWNLOAD_UNSIGNED_ACTIVEX : 0x00001004, 0x00001004 :
-"Manages the download of unsigned ActiveX Controls from the URL zone of the HTML page that contains the control."
-,
-URLACTION_FEATURE_BLOCK_INPUT_PROMPTS : 0x00002105, 0x00002105 :
-"Internet Explorer 7. Determines whether to allow the popup blocker to show input prompt dialogs. Used to mitigate the risk of spoofing."
-,
-URLACTION_FEATURE_FORCE_ADDR_AND_STATUS : 0x00002104, 0x00002104 :
-"Internet Explorer 7. Determines whether to allow sites to open windows without address or status bar. Overrides the setting of FEATURE_FORCE_ADDR_AND_STATUS. This flag also overrides the attempt of a script to hide the status and address bar."
-,
-URLACTION_FEATURE_MIME_SNIFFING : 0x00002100, 0x00002100 :
-"Internet Explorer 6 for Windows XP SP2 and later. Allows Internet Explorer to determine a file's type by examining its bit signature. Internet Explorer uses this information to determine how to render the file. Requires that the feature control FEATURE_MIME_SNIFFING is enabled. "
-,
-URLACTION_FEATURE_MIN : 0x00002100, 0x00002100 :
-"Internet Explorer 6 for Windows XP SP2 and later. Minimum value of the URL action feature control flags. "
-,
-URLACTION_FEATURE_SCRIPT_STATUS_BAR : 0x00002103, 0x00002103 :
-"Internet Explorer 7. Determines whether scripts can update the text of the status bar. "
-,
-URLACTION_FEATURE_WINDOW_RESTRICTIONS : 0x00002102, 0x00002102 :
-"Internet Explorer 6 for Windows XP SP2 and later. Determines whether a window should be constrained to the viewable desktop area and forced to have a status bar. Also, pop-up windows without chrome should be restricted in size and position so that they cannot overlay important information on their parent windows and cannot overlay system dialog box information. Requires that the feature control FEATURE_WINDOW_RESTRICTIONS is enabled. "
-,
-URLACTION_FEATURE_ZONE_ELEVATION : 0x00002101, 0x00002101 :
-"Internet Explorer 6 for Windows XP SP2 and later. Determines whether to prevent non-user-initiated navigation between a page in a lower security zone to a page in a higher security zone. Requires that the feature control FEATURE_ZONE_ELEVATION is enabled. "
-,
-URLACTION_HTML_CURR_MAX : 0x00001609, 0x00001609 :
-"Deprecated. Use URLACTION_HTML_MAX instead. "
-,
-URLACTION_HTML_FONT_DOWNLOAD : 0x00001604, 0x00001604 :
-"Determines whether HTML font downloads are allowed."
-,
-URLACTION_HTML_INCLUDE_FILE_PATH : 0x0000160A, 0x0000160A :
-"Internet Explorer 7. Controls whether file pathnames are submitted during a file upload."
-,
-URLACTION_HTML_JAVA_RUN : 0x00001605, 0x00001605 :
-"Determines whether Java applets are allowed to run."
-,
-URLACTION_HTML_MAX : 0x000017ff, 0x000017ff :
-"Maximum value of the URL action HTML flags."
-,
-URLACTION_HTML_META_REFRESH : 0x00001608, 0x00001608 :
-"Internet Explorer 6 and later. Determines whether an HTML page can refresh in the security zone where the page is hosted."
-,
-URLACTION_HTML_MIN : 0x00001600, 0x00001600 :
-"Minimum value of the URL action HTML flags."
-,
-URLACTION_HTML_MIXED_CONTENT : 0x00001609, 0x00001609 :
-"Internet Explorer 6 and later. Indicates that a secure Secure Hypertext Transfer Protocol (HTTPS) document contains unsecure elements, such as frames, HTTP image sources, and so forth. "
-,
-URLACTION_HTML_SUBFRAME_NAVIGATE : 0x00001607, 0x00001607 :
-"Internet Explorer 5 and later. Determines whether subframes are allowed to navigate across different domains."
-,
-URLACTION_HTML_SUBMIT_FORMS : 0x00001601, 0x00001601 :
-"Determines whether HTML forms on pages in the URL security zone, or submitted to servers in the zone, are allowed. Aggregate of the URLACTION_HTML_SUBMIT_FORMS_FROM and URLACTION_HTML_SUBMIT_FORMS_TO flags."
-,
-URLACTION_HTML_SUBMIT_FORMS_FROM : 0x00001602, 0x00001602 :
-"Determines whether form submissions from pages in the security zone are allowed. This flag is part of the URLACTION_HTML_SUBMIT_FORMS aggregate flag."
-,
-URLACTION_HTML_SUBMIT_FORMS_TO : 0x00001603, 0x00001603 :
-"Determines whether form submissions to a server in the security zone are allowed. This flag is part of the URLACTION_HTML_SUBMIT_FORMS aggregate flag."
-,
-URLACTION_HTML_USERDATA_SAVE : 0x00001606, 0x00001606 :
-"Internet Explorer 5 and later. Determines whether user data persistence is enabled."
-,
-URLACTION_INFODELIVERY_CURR_MAX : 0x00001D06, 0x00001D06 :
-"Reserved."
-,
-URLACTION_INFODELIVERY_MAX : 0x00001Dff, 0x00001Dff :
-"Reserved."
-,
-URLACTION_INFODELIVERY_MIN : 0x00001D00, 0x00001D00 :
-"Reserved."
-,
-URLACTION_INFODELIVERY_NO_ADDING_CHANNELS : 0x00001D00, 0x00001D00 :
-"Reserved."
-,
-URLACTION_INFODELIVERY_NO_ADDING_SUBSCRIPTIONS : 0x00001D03, 0x00001D03 :
-"Reserved."
-,
-URLACTION_INFODELIVERY_NO_CHANNEL_LOGGING : 0x00001D06, 0x00001D06 :
-"Reserved."
-,
-URLACTION_INFODELIVERY_NO_EDITING_CHANNELS : 0x00001D01, 0x00001D01 :
-"Reserved."
-,
-URLACTION_INFODELIVERY_NO_EDITING_SUBSCRIPTIONS : 0x00001D04, 0x00001D04 :
-"Reserved."
-,
-URLACTION_INFODELIVERY_NO_REMOVING_CHANNELS : 0x00001D02, 0x00001D02 :
-"Reserved."
-,
-URLACTION_INFODELIVERY_NO_REMOVING_SUBSCRIPTIONS : 0x00001D05, 0x00001D05 :
-"Reserved."
-,
-URLACTION_JAVA_CURR_MAX : 0x00001C00, 0x00001C00 :
-"Current maximum value of the URL action Java flags."
-,
-URLACTION_JAVA_MAX : 0x00001Cff, 0x00001Cff :
-"Maximum value for URL action Java flags."
-,
-URLACTION_JAVA_MIN : 0x00001C00, 0x00001C00 :
-"Minimum value for URL action Java flags."
-,
-URLACTION_JAVA_PERMISSIONS : 0x00001C00, 0x00001C00 :
-"Determines the Java permissions for the zone."
-,
-URLACTION_MANAGED_SIGNED : 0x00002001, 0x00002001 :
-"Windows XP SP2 and later. Determines whether to run Microsoft .NET Framework-reliant components that have been signed with Microsoft Authenticode. This constant is not defined in Urlmon.h nor is it used directly by Internet Explorer; it is created by the common language runtime. "
-,
-URLACTION_MANAGED_UNSIGNED : 0x00002004, 0x00002004 :
-"Windows XP SP2 and later. Determines whether to run Framework-reliant components that have not been signed with Authenticode. This constant is not defined in Urlmon.h nor is it used directly by Internet Explorer; it is created by the common language runtime. "
-,
-URLACTION_LOOSE_XAML : 0x00002402, 0x00002402 :
-"Internet Explorer 7. Determines whether to process Loose Extensible Application Markup Language (XAML) files, which are markup-only files that are not compiled into a browser application. See also URLACTION_WINDOWS_BROWSER_APPLICATIONS."
-,
-URLACTION_LOWRIGHTS : 0x00002500, 0x00002500 :
-"Internet Explorer 7. Determines whether Protected Mode  is enabled in the security zone. Available on Windows Vista only. "
-,
-URLACTION_NETWORK_CURR_MAX : 0x00001A10, 0x00001A10 :
-"Current maximum value for URL action network flags."
-,
-URLACTION_NETWORK_MAX : 0x00001Bff, 0x00001Bff :
-"Maximum value for URL action network flags."
-,
-URLACTION_NETWORK_MIN : 0x00001A00, 0x00001A00 :
-"Minimum value for URL action network flags."
-,
-URLACTION_SCRIPT_CURR_MAX : 0x00001408, 0x00001408 :
-"Current maximum value for a URL action script flag."
-,
-URLACTION_SCRIPT_JAVA_USE : 0x00001402, 0x00001402 :
-"Determines whether or not script code on HTML pages in the URL security zone is allowed to use Java applets if the properties, methods, and events of the applet are exposed to scripts."
-,
-URLACTION_SCRIPT_MAX : 0x000015ff, 0x000015ff :
-"Maximum value for a URL action script flag."
-,
-URLACTION_SCRIPT_MIN : 0x00001400, 0x00001400 :
-"Minimum value for a URL action script flag."
-,
-URLACTION_SCRIPT_OVERRIDE_SAFETY : 0x00001401, 0x00001401 :
-"Do not use ActiveX safety for objects created by scripts."
-,
-URLACTION_SCRIPT_PASTE : 0x00001407, 0x00001407 :
-"Internet Explorer 5 and later. Determines whether scripts can do paste operations."
-,
-URLACTION_SCRIPT_RUN : 0x00001400, 0x00001400 :
-"Determines whether script code on the pages in the URL security zone is run or not."
-,
-URLACTION_SCRIPT_SAFE_ACTIVEX : 0x00001405, 0x00001405 :
-"Determines whether scripting of safe ActiveX Controls is allowed."
-,
-URLACTION_SHELL_CURR_MAX : 0x0000180C, 0x0000180C :
-"Current maximum value for a URL action Shell flag."
-,
-URLACTION_SHELL_ENHANCED_DRAGDROP_SECURITY : 0x0000180B, 0x0000180B :
-"Internet Explorer 6 for Windows XP SP2 and later. Determines whether to allow drag-and-drop operations that originate from Internet Explorer."
-,
-URLACTION_SHELL_EXECUTE_HIGHRISK : 0x00001806, 0x00001806 :
-"Internet Explorer 6 for Windows XP SP2 and later. Determines whether launching dangerous files (file types known to be used by viruses and other malicious code) is permitted from the URL security zone. "
-,
-URLACTION_SHELL_EXECUTE_LOWRISK : 0x00001808, 0x00001808 :
-"Internet Explorer 6 for Windows XP SP2 and later. Determines whether launching typically safe files (data only) is permitted from the URL security zone. "
-,
-URLACTION_SHELL_EXECUTE_MODRISK : 0x00001807, 0x00001807 :
-"Internet Explorer 6 for Windows XP SP2 and later. Determines whether launching ambiguous files (file types that could be used by viruses or other malicious code) is permitted from the URL security zone. "
-,
-URLACTION_SHELL_EXTENSIONSECURITY : 0x0000180C, 0x0000180C : 
-"Internet Explorer 7. Determines whether extensions to the shell are allowed to load. Blocked extensions are never loaded. Approved shell extensions are not affected by this action."
-,
-URLACTION_SHELL_FILE_DOWNLOAD : 0x00001803, 0x00001803 :
-"Determines whether file downloads are permitted from the URL security zone of the HTML page with the link that is causing the download."
-,
-URLACTION_SHELL_INSTALL_DTITEMS : 0x00001800 , 0x00001800 :
-"Determines whether desktop items can be installed."
-,
-URLACTION_SHELL_MAX : 0x000019ff, 0x000019ff :
-"Maximum value for a URL action Shell flag."
-,
-URLACTION_SHELL_MIN : 0x00001800, 0x00001800 :
-"Minimum value for a URL action Shell flag."
-,
-URLACTION_SHELL_MOVE_OR_COPY : 0x00001802, 0x00001802 : 
-"Determines whether Move or Copy operations are allowed."
-,
-URLACTION_SHELL_POPUPMGR : 0x00001809, 0x00001809 :
-"Internet Explorer 6 for Windows XP SP2 and later. Determines whether to apply pop-up window management to Internet Explorer."
-,
-URLACTION_SHELL_SHELLEXECUTE : 0x00001806, 0x00001806 :
-"Internet Explorer 6 for Windows XP SP2 and later. See URLACTION_SHELL_EXECUTE_HIGHRISK."
+	URLACTION_MIN : 0x00001000, 0x00001000 :
+	"The minimum value of URLACTIONS."
+	,
+	URLACTION_ACTIVEX_CONFIRM_NOOBJECTSAFETY : 0x00001204, 0x00001204 :
+	"User can decide whether to load and script a Microsoft ActiveX control that is not safe."
+	,
+	URLACTION_ACTIVEX_CURR_MAX : 0x0000120B, 0x0000120B :
+	"Current maximum value of the URL action ActiveX flags."
+	,
+	URLACTION_ACTIVEX_DYNSRC_VIDEO_AND_ANIMATION : 0x0000120A, 0x0000120A :
+	"Windows Internet Explorer 7. Determines whether to allow native playback of video and animation in Web pages that specify media files in the DYNSRC attribute of the IMG element. Users may still be able to view non-native video and animation because animation and video can be created in the context of an external player application using the OBJECT tag."
+	,
+	URLACTION_ACTIVEX_MAX : 0x000013ff, 0x000013ff :
+	"Maximum value of the URL action ActiveX flags."
+	,
+	URLACTION_ACTIVEX_MIN : 0x00001200, 0x00001200 :
+	"Minimum value of the URL action ActiveX flags."
+	,
+	URLACTION_ACTIVEX_NO_WEBOC_SCRIPT : 0x00001206, 0x00001206 :
+	"Controls the ability to script the Web browser ActiveX control."
+	,
+	URLACTION_ACTIVEX_OVERRIDE_DATA_SAFETY : 0x00001202, 0x00001202 :
+	"Determines whether ActiveX safety for untrusted data can be overridden."
+	,
+	URLACTION_ACTIVEX_OVERRIDE_OBJECT_SAFETY : 0x00001201, 0x00001201 :
+	"Determines whether the ActiveX control object safety is overridden or enforced for pages in the URL security zone. Object safety should be overridden only if all ActiveX Controls and scripts that might interact with them on pages in the zone can be trusted not to breach security. This is an aggregate of URLACTION_ACTIVEX_OVERRIDE_DATA_SAFETY, URLACTION_ACTIVEX_OVERRIDE_SCRIPT_SAFETY, URLACTION_ACTIVEX_CONFIRM_NOOBJECTSAFETY, and URLACTION_SCRIPT_OVERRIDE_SAFETY."
+	,
+	URLACTION_ACTIVEX_OVERRIDE_OPTIN : 0x00001208, 0x00001208 :
+	"Internet Explorer 7. Applications can opt-in to bypass the ActiveX prompt mode to prevent security prompts from appearing out of context. This action determines whether to override this setting."
+	,
+	URLACTION_ACTIVEX_OVERRIDE_REPURPOSEDETECTION : 0x00001207, 0x00001207 :
+	"Microsoft Internet Explorer 6 for Microsoft Windows XP Service Pack 2 (SP2) and later. Determines whether to perform ActiveX re-purpose detection, which tests if the control is safe to be hosted. Internet Explorer checks for the IObjectSafety interface on ActiveX controls in the Internet zone to identify how the author intends for the control to be re-used. (See KB909738  for more information.) The default policy for this action is set by security update and should not be modified. Requires that the feature control FEATURE_ACTIVEX_REPURPOSEDETECTION is enabled."
+	,
+	URLACTION_ACTIVEX_OVERRIDE_SCRIPT_SAFETY : 0x00001203, 0x00001203 :
+	"Determines whether ActiveX safety for scripting is overridden."
+	,
+	URLACTION_ACTIVEX_RUN : 0x00001200, 0x00001200 :
+	"Manages the execution of ActiveX Controls and plug-ins from HTML pages in the zone."
+	,
+	URLACTION_ACTIVEX_SCRIPTLET_RUN : 0x00001209, 0x00001209 :
+	"Internet Explorer 7. Determines whether scriptlets are allowed to run. This action has no effect if URLACTION_ACTIVEX_RUN is disabled."
+	,
+	URLACTION_ACTIVEX_TREATASUNTRUSTED : 0x00001205, 0x00001205 :
+	"Not implemented."
+	,
+	URLACTION_ACTIVEX_USE_DOMAINLIST : 0x0000120B, 0x0000120B :
+	"Internet Explorer 8. Set to 1 when the Per-Site ActiveX Domain List feature is enabled by its Feature Control Key (FCK) in the registry. The default is enabled."
+	,
+	URLACTION_ALLOW_APEVALUATION : 0x00001205, 0x00001205 :
+	"Internet Explorer 7. Determine whether Microsoft Phishing Filter evaluation is enabled."
+	,
+	URLACTION_ALLOW_RESTRICTEDPROTOCOLS : 0x00002300, 0x00002300 :
+	"Internet Explorer 6 for Windows XP SP2 and later. Determines whether content loaded over a particular protocol should be restricted. Requires that the feature control FEATURE_PROTOCOL_LOCKDOWN is enabled."
+	,
+	URLACTION_ALLOW_XDOMIAN_SUBFRAME_RESIZE : 0x00001408, 0x00001408 :
+	"Internet Explorer 7. Prevents content residing on an alternate domain from executing a resize command on a sub-frame (frames/Iframes). The following methods are blocked within a sub-frame if the domain is foreign: window.moveTo(x,y), window.moveBy(x,y), window.resizeTo(x,y), window.resizeBy(x,y). There is no user interface (UI) to modify this behavior."
+	,
+	URLACTION_AUTHENTICATE_CLIENT : 0x00001A01, 0x00001A01 :
+	"Not currently used."
+	,
+	URLACTION_AUTOMATIC_ACTIVEX_UI : 0x00002201, 0x00002201 :
+	"Internet Explorer 6 for Windows XP SP2 and later. Determines whether to display the Information Bar for ActiveX control installations rather than the ActiveX control prompt. Requires that the feature control FEATURE_RESTRICT_ACTIVEXINSTALL for code downloads is enabled. "
+	,
+	URLACTION_AUTOMATIC_DOWNLOAD_UI : 0x00002200, 0x00002200 :
+	"Internet Explorer 6 for Windows XP SP2 and later. Determines whether to display the file download dialogs or the Information Bar for downloads that are not initiated by the user. Requires that the feature control FEATURE_RESTRICT_FILEDOWNLOAD for file downloads is enabled. "
+	,
+	URLACTION_AUTOMATIC_DOWNLOAD_UI_MIN : 0x00002200, 0x00002200 :
+	"Internet Explorer 6 for Windows XP SP2 and later. Minimum value of the URL action download UI flags. "
+	,
+	URLACTION_BEHAVIOR_MIN : 0x00002000, 0x00002000 :
+	"Internet Explorer 6 for Windows XP SP2 and later. Minimum value of the URL action behavior flags. "
+	,
+	URLACTION_BEHAVIOR_RUN : 0x00002000, 0x00002000 :
+	"Internet Explorer 6 for Windows XP SP2 and later. Determines whether to allow Dynamic HTML (DHTML) behaviors and binary behaviors to run securely. Requires that the feature control FEATURE_BEHAVIORS is enabled. "
+	,
+	URLACTION_CHANNEL_SOFTDIST_MAX : 0x00001Eff, 0x00001Eff :
+	"Maximum value for a URL action Software Update Channel flag."
+	,
+	URLACTION_CHANNEL_SOFTDIST_MIN : 0x00001E00, 0x00001E00 :
+	"Minimum value for a URL action Software Update Channel flag."
+	,
+	URLACTION_CHANNEL_SOFTDIST_PERMISSIONS : 0x00001E05, 0x00001E05 :
+	"Determines the level of trust placed on Software Update Channels."
+	,
+	URLACTION_CLIENT_CERT_PROMPT : 0x00001A04, 0x00001A04 :
+	"Internet Explorer 6 and later. Determines whether to suppress the authentication dialog that prompts the user to select a client certificate when no certificate or only one certificate is already installed."
+	,
+	URLACTION_COOKIES : 0x00001A02, 0x00001A02 :
+	"Determines whether HTTP persistent cookies are allowed."
+	,
+	URLACTION_COOKIES_ENABLED : 0x00001A10, 0x00001A10 :
+	"Internet Explorer 6 and later. Determines whether HTTP cookies can be set and retrieved."
+	,
+	URLACTION_COOKIES_SESSION : 0x00001A03, 0x00001A03 :
+	"Determines whether HTTP session cookies are allowed."
+	,
+	URLACTION_COOKIES_SESSION_THIRD_PARTY : 0x00001A06, 0x00001A06 :
+	"Internet Explorer 6 and later. Determines whether third party HTTP session cookies are allowed."
+	,
+	URLACTION_COOKIES_THIRD_PARTY : 0x00001A05, 0x00001A05 :
+	"Internet Explorer 6 and later. Determines whether third party HTTP persistent cookies are allowed. "
+	,
+	URLACTION_CREDENTIALS_USE : 0x00001A00, 0x00001A00 :
+	"Determines how the user's credentials are used over the network."
+	,
+	URLACTION_CROSS_DOMAIN_DATA : 0x00001406, 0x00001406 :
+	"Determines whether the resource is allowed to access data sources across domains."
+	,
+	URLACTION_DOWNLOAD_CURR_MAX : 0x00001004, 0x00001004 :
+	"Maximum value for the URL action download flags."
+	,
+	URLACTION_DOWNLOAD_MAX : 0x000011FF, 0x000011FF :
+	"Maximum value of a URL action download flag."
+	,
+	URLACTION_DOWNLOAD_MIN : 0x00001000, 0x00001000 :
+	"Minimum value of a URL action download flag."
+	,
+	URLACTION_DOWNLOAD_SIGNED_ACTIVEX : 0x00001001, 0x00001001 :
+	"Manages the download of signed ActiveX Controls from the URL zone of the HTML page that contains the control."
+	,
+	URLACTION_DOWNLOAD_UNSIGNED_ACTIVEX : 0x00001004, 0x00001004 :
+	"Manages the download of unsigned ActiveX Controls from the URL zone of the HTML page that contains the control."
+	,
+	URLACTION_FEATURE_BLOCK_INPUT_PROMPTS : 0x00002105, 0x00002105 :
+	"Internet Explorer 7. Determines whether to allow the popup blocker to show input prompt dialogs. Used to mitigate the risk of spoofing."
+	,
+	URLACTION_FEATURE_FORCE_ADDR_AND_STATUS : 0x00002104, 0x00002104 :
+	"Internet Explorer 7. Determines whether to allow sites to open windows without address or status bar. Overrides the setting of FEATURE_FORCE_ADDR_AND_STATUS. This flag also overrides the attempt of a script to hide the status and address bar."
+	,
+	URLACTION_FEATURE_MIME_SNIFFING : 0x00002100, 0x00002100 :
+	"Internet Explorer 6 for Windows XP SP2 and later. Allows Internet Explorer to determine a file's type by examining its bit signature. Internet Explorer uses this information to determine how to render the file. Requires that the feature control FEATURE_MIME_SNIFFING is enabled. "
+	,
+	URLACTION_FEATURE_MIN : 0x00002100, 0x00002100 :
+	"Internet Explorer 6 for Windows XP SP2 and later. Minimum value of the URL action feature control flags. "
+	,
+	URLACTION_FEATURE_SCRIPT_STATUS_BAR : 0x00002103, 0x00002103 :
+	"Internet Explorer 7. Determines whether scripts can update the text of the status bar. "
+	,
+	URLACTION_FEATURE_WINDOW_RESTRICTIONS : 0x00002102, 0x00002102 :
+	"Internet Explorer 6 for Windows XP SP2 and later. Determines whether a window should be constrained to the viewable desktop area and forced to have a status bar. Also, pop-up windows without chrome should be restricted in size and position so that they cannot overlay important information on their parent windows and cannot overlay system dialog box information. Requires that the feature control FEATURE_WINDOW_RESTRICTIONS is enabled. "
+	,
+	URLACTION_FEATURE_ZONE_ELEVATION : 0x00002101, 0x00002101 :
+	"Internet Explorer 6 for Windows XP SP2 and later. Determines whether to prevent non-user-initiated navigation between a page in a lower security zone to a page in a higher security zone. Requires that the feature control FEATURE_ZONE_ELEVATION is enabled. "
+	,
+	URLACTION_HTML_CURR_MAX : 0x00001609, 0x00001609 :
+	"Deprecated. Use URLACTION_HTML_MAX instead. "
+	,
+	URLACTION_HTML_FONT_DOWNLOAD : 0x00001604, 0x00001604 :
+	"Determines whether HTML font downloads are allowed."
+	,
+	URLACTION_HTML_INCLUDE_FILE_PATH : 0x0000160A, 0x0000160A :
+	"Internet Explorer 7. Controls whether file pathnames are submitted during a file upload."
+	,
+	URLACTION_HTML_JAVA_RUN : 0x00001605, 0x00001605 :
+	"Determines whether Java applets are allowed to run."
+	,
+	URLACTION_HTML_MAX : 0x000017ff, 0x000017ff :
+	"Maximum value of the URL action HTML flags."
+	,
+	URLACTION_HTML_META_REFRESH : 0x00001608, 0x00001608 :
+	"Internet Explorer 6 and later. Determines whether an HTML page can refresh in the security zone where the page is hosted."
+	,
+	URLACTION_HTML_MIN : 0x00001600, 0x00001600 :
+	"Minimum value of the URL action HTML flags."
+	,
+	URLACTION_HTML_MIXED_CONTENT : 0x00001609, 0x00001609 :
+	"Internet Explorer 6 and later. Indicates that a secure Secure Hypertext Transfer Protocol (HTTPS) document contains unsecure elements, such as frames, HTTP image sources, and so forth. "
+	,
+	URLACTION_HTML_SUBFRAME_NAVIGATE : 0x00001607, 0x00001607 :
+	"Internet Explorer 5 and later. Determines whether subframes are allowed to navigate across different domains."
+	,
+	URLACTION_HTML_SUBMIT_FORMS : 0x00001601, 0x00001601 :
+	"Determines whether HTML forms on pages in the URL security zone, or submitted to servers in the zone, are allowed. Aggregate of the URLACTION_HTML_SUBMIT_FORMS_FROM and URLACTION_HTML_SUBMIT_FORMS_TO flags."
+	,
+	URLACTION_HTML_SUBMIT_FORMS_FROM : 0x00001602, 0x00001602 :
+	"Determines whether form submissions from pages in the security zone are allowed. This flag is part of the URLACTION_HTML_SUBMIT_FORMS aggregate flag."
+	,
+	URLACTION_HTML_SUBMIT_FORMS_TO : 0x00001603, 0x00001603 :
+	"Determines whether form submissions to a server in the security zone are allowed. This flag is part of the URLACTION_HTML_SUBMIT_FORMS aggregate flag."
+	,
+	URLACTION_HTML_USERDATA_SAVE : 0x00001606, 0x00001606 :
+	"Internet Explorer 5 and later. Determines whether user data persistence is enabled."
+	,
+	URLACTION_INFODELIVERY_CURR_MAX : 0x00001D06, 0x00001D06 :
+	"Reserved."
+	,
+	URLACTION_INFODELIVERY_MAX : 0x00001Dff, 0x00001Dff :
+	"Reserved."
+	,
+	URLACTION_INFODELIVERY_MIN : 0x00001D00, 0x00001D00 :
+	"Reserved."
+	,
+	URLACTION_INFODELIVERY_NO_ADDING_CHANNELS : 0x00001D00, 0x00001D00 :
+	"Reserved."
+	,
+	URLACTION_INFODELIVERY_NO_ADDING_SUBSCRIPTIONS : 0x00001D03, 0x00001D03 :
+	"Reserved."
+	,
+	URLACTION_INFODELIVERY_NO_CHANNEL_LOGGING : 0x00001D06, 0x00001D06 :
+	"Reserved."
+	,
+	URLACTION_INFODELIVERY_NO_EDITING_CHANNELS : 0x00001D01, 0x00001D01 :
+	"Reserved."
+	,
+	URLACTION_INFODELIVERY_NO_EDITING_SUBSCRIPTIONS : 0x00001D04, 0x00001D04 :
+	"Reserved."
+	,
+	URLACTION_INFODELIVERY_NO_REMOVING_CHANNELS : 0x00001D02, 0x00001D02 :
+	"Reserved."
+	,
+	URLACTION_INFODELIVERY_NO_REMOVING_SUBSCRIPTIONS : 0x00001D05, 0x00001D05 :
+	"Reserved."
+	,
+	URLACTION_JAVA_CURR_MAX : 0x00001C00, 0x00001C00 :
+	"Current maximum value of the URL action Java flags."
+	,
+	URLACTION_JAVA_MAX : 0x00001Cff, 0x00001Cff :
+	"Maximum value for URL action Java flags."
+	,
+	URLACTION_JAVA_MIN : 0x00001C00, 0x00001C00 :
+	"Minimum value for URL action Java flags."
+	,
+	URLACTION_JAVA_PERMISSIONS : 0x00001C00, 0x00001C00 :
+	"Determines the Java permissions for the zone."
+	,
+	URLACTION_MANAGED_SIGNED : 0x00002001, 0x00002001 :
+	"Windows XP SP2 and later. Determines whether to run Microsoft .NET Framework-reliant components that have been signed with Microsoft Authenticode. This constant is not defined in Urlmon.h nor is it used directly by Internet Explorer; it is created by the common language runtime. "
+	,
+	URLACTION_MANAGED_UNSIGNED : 0x00002004, 0x00002004 :
+	"Windows XP SP2 and later. Determines whether to run Framework-reliant components that have not been signed with Authenticode. This constant is not defined in Urlmon.h nor is it used directly by Internet Explorer; it is created by the common language runtime. "
+	,
+	URLACTION_LOOSE_XAML : 0x00002402, 0x00002402 :
+	"Internet Explorer 7. Determines whether to process Loose Extensible Application Markup Language (XAML) files, which are markup-only files that are not compiled into a browser application. See also URLACTION_WINDOWS_BROWSER_APPLICATIONS."
+	,
+	URLACTION_LOWRIGHTS : 0x00002500, 0x00002500 :
+	"Internet Explorer 7. Determines whether Protected Mode  is enabled in the security zone. Available on Windows Vista only. "
+	,
+	URLACTION_NETWORK_CURR_MAX : 0x00001A10, 0x00001A10 :
+	"Current maximum value for URL action network flags."
+	,
+	URLACTION_NETWORK_MAX : 0x00001Bff, 0x00001Bff :
+	"Maximum value for URL action network flags."
+	,
+	URLACTION_NETWORK_MIN : 0x00001A00, 0x00001A00 :
+	"Minimum value for URL action network flags."
+	,
+	URLACTION_SCRIPT_CURR_MAX : 0x00001408, 0x00001408 :
+	"Current maximum value for a URL action script flag."
+	,
+	URLACTION_SCRIPT_JAVA_USE : 0x00001402, 0x00001402 :
+	"Determines whether or not script code on HTML pages in the URL security zone is allowed to use Java applets if the properties, methods, and events of the applet are exposed to scripts."
+	,
+	URLACTION_SCRIPT_MAX : 0x000015ff, 0x000015ff :
+	"Maximum value for a URL action script flag."
+	,
+	URLACTION_SCRIPT_MIN : 0x00001400, 0x00001400 :
+	"Minimum value for a URL action script flag."
+	,
+	URLACTION_SCRIPT_OVERRIDE_SAFETY : 0x00001401, 0x00001401 :
+	"Do not use ActiveX safety for objects created by scripts."
+	,
+	URLACTION_SCRIPT_PASTE : 0x00001407, 0x00001407 :
+	"Internet Explorer 5 and later. Determines whether scripts can do paste operations."
+	,
+	URLACTION_SCRIPT_RUN : 0x00001400, 0x00001400 :
+	"Determines whether script code on the pages in the URL security zone is run or not."
+	,
+	URLACTION_SCRIPT_SAFE_ACTIVEX : 0x00001405, 0x00001405 :
+	"Determines whether scripting of safe ActiveX Controls is allowed."
+	,
+	URLACTION_SHELL_CURR_MAX : 0x0000180C, 0x0000180C :
+	"Current maximum value for a URL action Shell flag."
+	,
+	URLACTION_SHELL_ENHANCED_DRAGDROP_SECURITY : 0x0000180B, 0x0000180B :
+	"Internet Explorer 6 for Windows XP SP2 and later. Determines whether to allow drag-and-drop operations that originate from Internet Explorer."
+	,
+	URLACTION_SHELL_EXECUTE_HIGHRISK : 0x00001806, 0x00001806 :
+	"Internet Explorer 6 for Windows XP SP2 and later. Determines whether launching dangerous files (file types known to be used by viruses and other malicious code) is permitted from the URL security zone. "
+	,
+	URLACTION_SHELL_EXECUTE_LOWRISK : 0x00001808, 0x00001808 :
+	"Internet Explorer 6 for Windows XP SP2 and later. Determines whether launching typically safe files (data only) is permitted from the URL security zone. "
+	,
+	URLACTION_SHELL_EXECUTE_MODRISK : 0x00001807, 0x00001807 :
+	"Internet Explorer 6 for Windows XP SP2 and later. Determines whether launching ambiguous files (file types that could be used by viruses or other malicious code) is permitted from the URL security zone. "
+	,
+	URLACTION_SHELL_EXTENSIONSECURITY : 0x0000180C, 0x0000180C : 
+	"Internet Explorer 7. Determines whether extensions to the shell are allowed to load. Blocked extensions are never loaded. Approved shell extensions are not affected by this action."
+	,
+	URLACTION_SHELL_FILE_DOWNLOAD : 0x00001803, 0x00001803 :
+	"Determines whether file downloads are permitted from the URL security zone of the HTML page with the link that is causing the download."
+	,
+	URLACTION_SHELL_INSTALL_DTITEMS : 0x00001800 , 0x00001800 :
+	"Determines whether desktop items can be installed."
+	,
+	URLACTION_SHELL_MAX : 0x000019ff, 0x000019ff :
+	"Maximum value for a URL action Shell flag."
+	,
+	URLACTION_SHELL_MIN : 0x00001800, 0x00001800 :
+	"Minimum value for a URL action Shell flag."
+	,
+	URLACTION_SHELL_MOVE_OR_COPY : 0x00001802, 0x00001802 : 
+	"Determines whether Move or Copy operations are allowed."
+	,
+	URLACTION_SHELL_POPUPMGR : 0x00001809, 0x00001809 :
+	"Internet Explorer 6 for Windows XP SP2 and later. Determines whether to apply pop-up window management to Internet Explorer."
+	,
+	URLACTION_SHELL_SHELLEXECUTE : 0x00001806, 0x00001806 :
+	"Internet Explorer 6 for Windows XP SP2 and later. See URLACTION_SHELL_EXECUTE_HIGHRISK."
 };
 var UrlSecurityActionName = reverseMap(UrlSecurtyAction);
 
 
+function doReload() {
+  window.location.reload();
+}
+
 function doClose() {
- window.close();
+  window.close();
 }
 
 </script>
 <style type="text/css">
-form button { width: 100px; }
+form button { width: 8em; }
 </style>
 </head>
 <body onload="if (this.doLoad) this.doLoad()" onbeforeunload="if (this.doUnload) this.doUnload()">
@@ -697,6 +703,8 @@ form button { width: 100px; }
 <button name="summaryBtn" onclick="doSummary()">Wmi Summary</button>
 &nbsp;
 <button name="securityBtn" onclick="doCheckInternetSecurity()">Url Security</button>
+&nbsp;
+<button name="reloadBtn" onclick="doReload()">Reload</button>
 &nbsp;
 <button name="closeBtn" onclick="doClose()">Close</button>
 </form>
