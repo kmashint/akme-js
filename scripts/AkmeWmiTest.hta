@@ -31,8 +31,7 @@
 var net = new ActiveXObject("WScript.Network")
 var wsh = new ActiveXObject("WScript.Shell")
 var wmi = GetObject("winmgmts:{impersonationLevel=impersonate}!//./root/cimv2")
-//var wsl = new ActiveXObject("WbemScripting.SWbemLocator")
-//var wmi = wsl.ConnectServer(".", "root/cimv2")
+//var wmi = new ActiveXObject("WbemScripting.SWbemLocator").ConnectServer(".", "root/cimv2")
 //AkmeMS.Debug(JSON)
 /*
 
