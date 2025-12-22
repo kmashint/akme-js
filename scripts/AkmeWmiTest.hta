@@ -4,24 +4,23 @@
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="-1" />
 <meta http-equiv="Content-Type" content="application/hta; charset=windows-1252" />
-<meta http-equiv="Content-Script-Type" content="text/javascript" />
 <meta http-equiv="X-UA-Compatible" content="IE=11" />
+<meta http-equiv="Content-Script-Type" content="text/javascript" />
 <title>Microsoft WMI Test</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <hta:application id="oHTA"
-	applicationName="Microsoft WMI Test"
-	version="1.0.1"
-	singleInstance="yes"
-	windowState="normal"
-	maximizeButton="no"
-	minimizeButton="yes"
-	sysMenu="yes"
-	contextMenu="no"
-	caption="yes"
-	scroll="no"
-	selection="yes"
-  icon="">
-<script src="json2.js"></script>
+    applicationName="Microsoft WMI Test"
+    version="1.0.1"
+    singleInstance="yes"
+    windowState="normal"
+    maximizeButton="no"
+    minimizeButton="yes"
+    sysMenu="yes"
+    contextMenu="no"
+    caption="yes"
+    scroll="no"
+    selection="yes"
+    icon="">
 <script src="AkmeUtilMicrosoft.js"></script>
 <script>
 //
@@ -350,7 +349,7 @@ function doCheckInternetSecurity() {
 }
 
 
-// You can determine the zones under which the Shell can open files (URLACTION_SHELL_EXECUTE_HIGHRISK) by checking the following registry values. 
+// You can determine the zones under which the Shell can open files (URLACTION_SHELL_EXECUTE_HIGHRISK) by checking the following registry values.
 // These values correspond to the following zones, respectively: Local Machine zone, Local intranet, Trusted sites, Internet, Restricted sites.
 // HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones\\0 \\1 \\2 \\3 \\4
 //
@@ -650,7 +649,7 @@ var UrlSecurtyAction = {
 	URLACTION_SHELL_EXECUTE_MODRISK : 0x00001807, 0x00001807 :
 	"Internet Explorer 6 for Windows XP SP2 and later. Determines whether launching ambiguous files (file types that could be used by viruses or other malicious code) is permitted from the URL security zone. "
 	,
-	URLACTION_SHELL_EXTENSIONSECURITY : 0x0000180C, 0x0000180C : 
+	URLACTION_SHELL_EXTENSIONSECURITY : 0x0000180C, 0x0000180C :
 	"Internet Explorer 7. Determines whether extensions to the shell are allowed to load. Blocked extensions are never loaded. Approved shell extensions are not affected by this action."
 	,
 	URLACTION_SHELL_FILE_DOWNLOAD : 0x00001803, 0x00001803 :
@@ -665,7 +664,7 @@ var UrlSecurtyAction = {
 	URLACTION_SHELL_MIN : 0x00001800, 0x00001800 :
 	"Minimum value for a URL action Shell flag."
 	,
-	URLACTION_SHELL_MOVE_OR_COPY : 0x00001802, 0x00001802 : 
+	URLACTION_SHELL_MOVE_OR_COPY : 0x00001802, 0x00001802 :
 	"Determines whether Move or Copy operations are allowed."
 	,
 	URLACTION_SHELL_POPUPMGR : 0x00001809, 0x00001809 :
