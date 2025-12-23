@@ -1,0 +1,226 @@
+<!DOCTYPE html >
+<html>
+<head>
+<title>Find Proxy Device</title>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="Content-Script-Type" content="text/javascript"/>
+<!-- GetObject is not supported in JScript/HTA for IE=9 or higher, use IE=8 or vbs helper before js.
+	http://social.technet.microsoft.com/Forums/en-US/ITCG/thread/37246a26-6401-4d3f-87c7-77046e11b8af/
+	More on HTA and Windows Scripting Host.
+	http://msdn.microsoft.com/en-us/library/ms536496%28v=vs.85%29.aspx
+	-->
+<hta:application id="HTA"
+	applicationName="Find Proxy Device"
+	singleInstance="yes"
+	/>
+<style>
+body { }
+#body { }
+#inputDiv { float: left; }
+#outputDiv { float: right; clear: right; }
+#outputFrame { width: 480px; }
+#log { clear: both; }
+</style>
+</head>
+<body>
+<div id='body'>
+
+<p>Find a squid proxy, port 3128, on the local network.
+To cache larger files on disk, set maximum_object_size 512 MB ;
+and cache_dir aufs [maxCacheSizeMB] 16 256 max-size=536870912 ;
+where max-size is in bytes (512 MB = 536870912 bytes).
+</p>
+<div id='inputDiv'>
+<form name='testForm' onsubmit='return false;'>
+<input type='button' name='findBtn' value='refresh page' onclick='location.reload()' />
+<br/><input type='text' name='ipAddress' value=''/> this ip-address
+<br/><input type='text' name='subnetMask' value=''/> subnet-mask
+<br/><input type='text' name='lastAddress' value=''/> last-ip on subnet
+<br/><select name='addressList'>
+</select> known neighbours
+<br/><input type='button' name='findBtn' value='find more' onclick='Test.find()' />
+<input type='button' name='openBtn' value='open selected' onclick='Test.open()' />
+</form>
+</div>
+
+<div id='outputDiv'>
+<iframe id='outputFrame' application="no" src="javascript:"></iframe>
+</div>
+
+<div id='log'>
+</div>
+
+</div>
+<script src="AkmeUtilMicrosoft.js"></script>
+<script>
+//
+
+this.onload = function() {
+	Test.init();
+};
+
+var Test = (function(){
+
+	//alert(ipInt2Str(ipStr2Int("123.234.123.234")))
+	var IP_PORT = 3128, //3128;
+		PROXY_PATH = "/squid-internal-mgr/info"; // "/squid-internal-mgr/info",
+		TIMEOUT_MS = 2000;
+
+	var oldGetServerXmlHttpRequest = AkmeMS.GetServerXmlHttpRequest;
+	AkmeMS.GetServerXmlHttpRequest = function(){
+		var xhr = oldGetServerXmlHttpRequest.apply(AkmeMS, arguments);
+		// http://msdn.microsoft.com/en-us/library/ms760403(v=vs.85).aspx
+		// oServerXMLHTTPRequest.setTimeouts(resolveTimeout, connectTimeout, sendTimeout, receiveTimeout)
+		xhr.setTimeouts(TIMEOUT_MS, TIMEOUT_MS, TIMEOUT_MS, TIMEOUT_MS);
+		return xhr;
+	}
+
+	return {
+		ipconfig: ipconfig,
+		init: init,
+		find: find,
+		open: open
+	};
+
+	function init() {
+		ipconfig();
+		ipproxy();
+	}
+
+	function ipconfig() {
+		var outFile = AkmeMS.GetTempFilename(".txt");
+		log("ipconfig to "+ outFile +" ...");
+		AkmeMS.wsh.Run('cmd /c "ipconfig >"'+outFile+'""', AkmeMS.winHide, true);
+		var ip, mask;
+		readFileAndDelete(outFile, function(line, idx) {
+			if (line.indexOf("  IPv4 Address") != -1) {
+				ip = line.substring(line.lastIndexOf(' ')).replace(/^\s+|\s+$/g,"");
+			}
+			else if (ip && line.indexOf("Subnet Mask") != -1) {
+				mask = line.substring(line.lastIndexOf(' ')).replace(/^\s+|\s+$/g,"");
+				return false;
+			}
+			return true;
+		});
+		var form = document.forms[0];
+		form.elements["ipAddress"].value = ip;
+		form.elements["subnetMask"].value = mask;
+		var subnetOnly = ipStr2Int(mask) ^ 0xffffffff;
+		form.elements["lastAddress"].value = subnetOnly;
+	}
+
+	function getRegKey(key) {
+		try { return AkmeMS.wsh.RegRead(key); }
+		catch (er) { return null; }
+	}
+
+	function ipproxy() {
+		var regParent = "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\";
+		var inetSet = {
+			"MigrateProxy": getRegKey(regParent+"MigrateProxy"),
+			"ProxyEnable": getRegKey(regParent+"ProxyEnable"),
+			"ProxyHttp1.1": getRegKey(regParent+"ProxyHttp1.1"),
+			"ProxyServer": getRegKey(regParent+"ProxyServer"),
+			"ProxyOverride": getRegKey(regParent+"ProxyOverride")
+			};
+		log(regParent);
+		for (var key in inetSet) log(key +": "+ inetSet[key]);
+	}
+
+	function find() {
+		log("");
+		var form = document.forms[0];
+		var ip = form.elements["ipAddress"].value;
+		var sn = form.elements["subnetMask"].value;
+		var bc = form.elements["lastAddress"].value;
+		var prefix = ip.replace(/\.[0-9]+$/, ".");
+		log("connect to "+ prefix +"* one address at a time ...");
+		var list = document.forms[0].elements["addressList"];
+		list.options.length = 0;
+		var a = [];
+		for (var i=1; i<bc; i++) a.push(prefix+String(i));
+		findRecursive(a,0);
+		return false;
+	}
+
+	function findRecursive(a,k) {
+		if (k >= a.length) return;
+		var ip = a[k], xhr, tmo;
+		//log("TRY "+ "http://"+ip+":"+IP_PORT+PROXY_PATH);
+		xhr = AkmeMS.GetServerXmlHttpRequest();
+		xhr.open("GET", "http://"+ip+":"+IP_PORT+PROXY_PATH, true);
+		xhr.onreadystatechange = function() {
+			//log("GOT "+ xhr.readyState +" FROM "+ ip);
+			if (xhr.readyState !== 4) return;
+			clearTimeout(tmo);
+			log("GOT "+ xhr.status +" FROM "+ ip);
+			if (xhr.status > 0) {
+				var list = document.forms[0].elements["addressList"];
+				list.options[list.options.length] = new Option(ip, ip);
+			}
+			tmo = xhr = ip = null; // closure cleanup
+		};
+		try {
+			xhr.send();
+			tmo = setTimeout(function(ev){
+				if (!tmo) return;
+				//log("TIMEOUT FROM "+ ip);
+				xhr.abort();
+				xhr = ip = null; // closure cleanup
+			}, TIMEOUT_MS);
+		} catch (er) {
+			log("GOT "+ er +" FROM "+ ip);
+			tmo = xhr = ip = null; // closure cleanup
+		}
+		findRecursive(a,k+1);
+	}
+
+	function open() {
+		var form = document.forms[0];
+		var list = form.elements["addressList"];
+		var ip = list.options[list.selectedIndex].value;
+		var url = "http://"+ip+":"+IP_PORT+PROXY_PATH;
+		var frame = document.getElementById("outputFrame");
+		frame.src = url;
+	}
+
+	function readFileAndDelete(fileName, lineFn) {
+		var ins = AkmeMS.fso.OpenTextFile(fileName, AkmeMS.fsoRead, false);
+		var str = null;
+		try {
+			if (typeof lineFn == "function") for (var i=0; !ins.AtEndOfStream; i++) {
+				str = ins.ReadLine();
+				if (!lineFn(str, i+1)) break;
+			}
+			ins.Close();
+		}
+		catch (ex) {
+			log(ex);
+			try { ins.Close(); } catch (ex) { log(ex); }
+			throw ex;
+		}
+		finally {
+			if (AkmeMS.fso.FileExists(fileName)) AkmeMS.fso.DeleteFile(fileName);
+		}
+	}
+
+	function ipStr2Int(ip) {
+		var ipa = ip.split('.');
+		return (Number(ipa[0])<<24)+(Number(ipa[1])<<16)+(Number(ipa[2])<<8)+Number(ipa[3]);
+	}
+
+	function ipInt2Str(ip) {
+		return String(ip>>>24) +'.'+ String((ip>>>16)&0xff) +'.'+ String((ip>>>8)&0xff) +'.'+ String(ip&0xff);
+	}
+
+	function log(text) {
+		var div = document.getElementById("log");
+		div.appendChild(document.createTextNode(text));
+		div.appendChild(document.createElement("br"));
+	}
+
+})();
+
+</script>
+</body>
+</html>

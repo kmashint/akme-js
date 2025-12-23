@@ -24,11 +24,12 @@ var JSON = JSON || (function () {
 var AkmeMS = {
   errPathNotFound: -2146828212,
   errFileNotFound: -2147024894,
-  fsoRead : 1,
-  fsoWrite : 2,
-  fsoAppend : 8,
-  fsoAscii : false,
-  fsoUnicode : true,
+
+  fsoRead: 1,
+  fsoWrite: 2,
+  fsoAppend: 8,
+  fsoAscii: false,
+  fsoUnicode: true,
 
   popOk: 0,
   popOkCancel: 1,
@@ -78,7 +79,6 @@ var AkmeMS = {
   wmiReboot: 2,
   wmiForced: 4, // add this with one of the other flags, e.g. 0+4
   wmiPowerOff: 8,
-
 
   // wmi.InstancesOf("...", this.wmiFast) or wmi.ExecQuery("SELECT * FROM ...", "WQL", this.wmiFast)
   wmiFast: 0x30, // 0x10: wbemFlagReturnImmediately + 0x20: wbemFlagForwardOnly
@@ -302,7 +302,9 @@ var AkmeMS = {
     }
     return errCodeDescName;
   }
+
 } // AkmeMS
+
 
 // Remember the error number and description.
 function AkmeErr(ex) {
@@ -402,6 +404,7 @@ var AkmeScriptingHost = {
 
 }
 AkmeScriptingHost.Init();
+
 
 // Encoder/Decoder for Url and Property encodings for maps of name/value pairs.
 //
