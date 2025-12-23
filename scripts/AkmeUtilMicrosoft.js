@@ -3,11 +3,19 @@
  * e.g. for Scripting.FileSystemObject, Scripting.Dictionary, WScript.Shell, WMI
  * cscript.exe and wscript.exe do NOT support even some older JS such as:
  *   JSON, Object.defineProperty(), Object.getOwnPropertyDescriptor(), Promise
+ * https://en.wikipedia.org/wiki/HTML_Application
+ * https://en.wikipedia.org/wiki/Windows_Script_Host
+ * http://msdn.microsoft.com/en-us/library/ms536496%28v=vs.85%29.aspx
+ * https://learn.microsoft.com/en-us/previous-versions/hbxc2t98(v=vs.85)
+ * https://learn.microsoft.com/en-us/previous-versions//x66z77t4(v=vs.85)?redirectedfrom=MSDN
+ * https://learn.microsoft.com/en-us/windows/win32/api/wbemdisp/ne-wbemdisp-wbemimpersonationlevelenum
  * https://stackoverflow.com/questions/5497967/jscript-version-availability-for-wsh-installations
  * https://web.archive.org/web/20110223213002/http://msdn.microsoft.com:80/en-us/library/yek4tbz0(v=vs.85).aspx
- * https://learn.microsoft.com/en-us/windows/win32/api/wbemdisp/ne-wbemdisp-wbemimpersonationlevelenum
  * Modern Windows has both the old JS-3 era C:/Windows/system32/jscript.dll,
  * and the IE11 JS-5 era jscript9.dll (cscript //nologo //e:{16d51579-a30b-4c8b-a276-0ff4dc41e755}).
+ * Also note Win11-24H2 adds jscript9Legacy.dll to replace jscript.dll, yet still with a separate jscript9.dll.
+ * https://techcommunity.microsoft.com/blog/windows-itpro-blog/jscript9legacy-scripting-engine-now-enabled-by-default/4431326
+ * ScriptEngineMajorVersion() // gives 11 with <meta http-equiv="X-UA-Compatible" content="IE=11"/>
  * WScript.StdIn.ReadLine()
  * WScript.StdOut.WriteLine()
  * WScript.Echo("Hello", "world!")

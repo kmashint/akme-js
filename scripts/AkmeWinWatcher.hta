@@ -4,7 +4,8 @@
 <title>Akme Window Watcher</title>
 <meta http-equiv="Content-Type" content="application/hta; charset=windows-1252" />
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
-<script type="text/javascript">window.moveTo((screen.width-976)/2,(screen.height-720)/2); window.resizeTo(976,720);</script>
+<meta http-equiv="Content-Script-Type" content="{16d51579-a30b-4c8b-a276-0ff4dc41e755}" />
+<script type="text/javascript">window.resizeTo(976,720); // window.moveTo((screen.width-976)/2,(screen.height-720)/2);</script>
 <!-- GetObject is not supported in JScript/HTA for IE=9 or higher, use IE=8 or vbs helper before js.
 	http://social.technet.microsoft.com/Forums/en-US/ITCG/thread/37246a26-6401-4d3f-87c7-77046e11b8af/
 	More on HTA and Windows Scripting Host.
@@ -48,7 +49,6 @@ body { }
 </div>
 <script src="AkmeUtilMicrosoft.js"></script>
 <script>
-//
 
 this.onload = function() {
   var elem = document.forms['testForm'].elements['serviceSelect'];
@@ -78,22 +78,22 @@ var Test = (function() {
     clearLog: clearLog
 	};
 
-	function find() {
+  function find() {
     clearLog();
     var logDiv = document.getElementById('log');
     var elem = document.forms['testForm'].elements['serviceSelect'];
     elem.options.length = 0;
     // Win32_Service the typical services, Win32_BaseService includes deeper ones.
-		for (var en = new Enumerator(AkmeMS.wmiInstancesOf('Win32_Service'));
-				!en.atEnd(); en.moveNext()) {
-			var item = en.item();
-			log(item.Name, item.Description); // key=DeviceID
+    for (var en = new Enumerator(AkmeMS.wmiInstancesOf('Win32_Service'));
+        !en.atEnd(); en.moveNext()) {
+      var item = en.item();
+      log(item.Name, item.Description); // key=DeviceID
       var opt = new Option(item.Name, item.Name);
       opt.setAttribute('title', item.Description);
       opt.setAttribute('data-status', (item.Started ? 'Started' : 'Stopped') + ' ' + item.Status);
       elem.appendChild(opt);
-		}
-	}
+    }
+  }
 
   function selectService(evt) {
     var statusElem = document.forms['testForm'].elements['serviceStatus'];
