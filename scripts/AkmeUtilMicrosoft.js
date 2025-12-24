@@ -6,8 +6,8 @@
  * https://en.wikipedia.org/wiki/HTML_Application
  * https://en.wikipedia.org/wiki/Windows_Script_Host
  * http://msdn.microsoft.com/en-us/library/ms536496%28v=vs.85%29.aspx
- * https://learn.microsoft.com/en-us/previous-versions/hbxc2t98(v=vs.85)
- * https://learn.microsoft.com/en-us/previous-versions//x66z77t4(v=vs.85)?redirectedfrom=MSDN
+ * https://learn.microsoft.com/en-us/previous-versions/hbxc2t98(v=vs.85) for JScript
+ * https://learn.microsoft.com/en-us/previous-versions//x66z77t4(v=vs.85) for COM-ActiveX
  * https://learn.microsoft.com/en-us/windows/win32/api/wbemdisp/ne-wbemdisp-wbemimpersonationlevelenum
  * https://stackoverflow.com/questions/5497967/jscript-version-availability-for-wsh-installations
  * https://web.archive.org/web/20110223213002/http://msdn.microsoft.com:80/en-us/library/yek4tbz0(v=vs.85).aspx
@@ -19,6 +19,9 @@
  * WScript.StdIn.ReadLine()
  * WScript.StdOut.WriteLine()
  * WScript.Echo("Hello", "world!")
+ * WScript.Shell .RegDelete(strName)
+ * WScript.Shell .RegRead(strName)
+ * WScript.Shell .RegWrite(strName, anyValue [,strType])
 */
 
 // Polyfill JSON if not available.
