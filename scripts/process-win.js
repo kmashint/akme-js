@@ -30,6 +30,8 @@ var AkmeMS = {
 
 /*
   /Processid:{CB3B0003-8088-4EDE-8769-8B354AB2FF8C} is Microsoft.Copilot_1.25121.60.0_x64__*
+  /Processid:{3EB3C877-1F16-487C-9050-104DBCD66683} is WinInetCacheServer, Wininet Cache task object, wininet.dll
+  HKLM\SOFTWARE\Classes\AppID\
   HKLM\SOFTWARE\Classes\PackagedCom\ClassIndex\
   HKLM\SOFTWARE\Classes\PackagedCom\Package\Microsoft.Copilot_1.25121.60.0_x64__8wekyb3d8bbwe
   {CB3B0003-8088-4EDE-8769-8B354AB2FF8C} is CopilotNative.FileExplorerExtension.dll
@@ -38,7 +40,7 @@ var AkmeMS = {
 var coll = AkmeMS.wmiInstancesOf("Win32_Process");
 for (var en=new Enumerator(coll); !en.atEnd(); en.moveNext()) {
   var item = en.item();
-  if (/^1184|2224|1324$/.test(item.ProcessId)) {
+  if (/svchost.exe -k DcomLaunch -p|[Dd]ll[Hh]ost.exe \/[Pp]rocess[Ii]d:/.test(item.CommandLine)) {
     WScript.Echo(item.ProcessId, item.Name, item.ParentProcessId, item.CommandLine);
   }
 }
