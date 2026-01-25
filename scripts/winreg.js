@@ -152,7 +152,7 @@ function searchRegistry(hive, subKey, searchTerm) {
       if (valuesAry[j].Type === 1) { // 1=String
         var regValue = regGetValue(hive, subKey, valuesAry[j].Name);
         if (regValue && regValue.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1) {
-          results.push({ type: "Value", path: subKey, name: valuesAry[j].Name });
+          results.push({ type: "Value", path: subKey, name: valuesAry[j].Name, value: regValue });
         }
       }
     }
@@ -163,6 +163,9 @@ function searchRegistry(hive, subKey, searchTerm) {
 // Example usage
 var searchResults = searchRegistry("HKEY_CURRENT_USER", "AppEvents\\EventLabels", "Beep");
 for (var i = 0; i < searchResults.length; i++) {
-    WScript.Echo(searchResults[i].type + ": " + searchResults[i].path +
-                 (searchResults[i].name ? (" - " + searchResults[i].name) : ""));
+    WScript.Echo(
+      searchResults[i].type + ": " + searchResults[i].path +
+      (searchResults[i].name != null ? (": " + searchResults[i].name) : "") +
+      (searchResults[i].value != null ? (": " + searchResults[i].value) : "")
+    );
 }

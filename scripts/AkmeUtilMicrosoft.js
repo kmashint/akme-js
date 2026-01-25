@@ -119,6 +119,20 @@ var AkmeMS = {
   wmiInstancesOf: function(path) { return this.wmi.InstancesOf(path, this.wmiFast); },
   wmiExecQuery: function(qry) { return this.wmi.ExecQuery(qry, this.wmiFast); },
 
+  reg: new ActiveXObject("WbemScripting.SWbemLocator").ConnectServer(".", "root\\default").Get("StdRegProv"),
+  regHives: {
+    HKEY_CLASSES_ROOT: 0x80000000,
+    HKEY_CURRENT_USER: 0x80000001,
+    HKEY_LOCAL_MACHINE: 0x80000002,
+    HKEY_USERS: 0x80000003,
+    HKEY_CURRENT_CONFIG: 0x80000005
+  },
+
+  // https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-
+  winErrorCodes: {
+    161: "ERROR_BAD_PATHNAME"
+  },
+
   VB2JSArray: function (vbAry) {
     return new VBArray(vbAry).toArray();
   },
