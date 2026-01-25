@@ -9,45 +9,71 @@
 // https://github.com/MicrosoftDocs/win32/blob/8627cd1fd2c0534b4ac7ab0c99a3c6c2c29c3a85/desktop-src/WmiSdk/obtaining-registry-data.md?plain=1#L2
 // https://github.com/MicrosoftDocs/win32/blob/8627cd1fd2c0534b4ac7ab0c99a3c6c2c29c3a85/desktop-src/WmiSdk/modifying-the-system-registry.md?plain=1#L12
 
-if (!this.console) this.console = {
-  log: function (a,b,c,d,e,f,g,h,i,j) { WScript.Echo(a,b,c,d,e,f,g,h,i,j); },
-  debug: this.log,
-  info: this.log,
-  warn: this.log,
-  error: this.log
-};
+if (!this.console)
+  this.console = {
+    log: function (a, b, c, d, e, f, g, h, i, j) {
+      WScript.Echo(a, b, c, d, e, f, g, h, i, j);
+    },
+    debug: this.log,
+    info: this.log,
+    warn: this.log,
+    error: this.log
+  };
 
-if (!this.AkmeMS) this.AkmeMS = {
- 	wbemFast : 16 | 32,
+if (!this.AkmeMS)
+  this.AkmeMS = {
+    wbemFast: 16 | 32,
 
-	fso : new ActiveXObject("Scripting.FileSystemObject"),  // https://ss64.com/vb/filesystemobject.html
-	net : new ActiveXObject("WScript.Network"),  // https://ss64.com/vb/network.html
-  sha : new ActiveXObject("Shell.Application"),  // https://ss64.com/vb/shell.html
-	wsh : new ActiveXObject("WScript.Shell"),  // https://ss64.com/vb/shell.html
+    fso: new ActiveXObject("Scripting.FileSystemObject"), // https://ss64.com/vb/filesystemobject.html
+    net: new ActiveXObject("WScript.Network"), // https://ss64.com/vb/network.html
+    sha: new ActiveXObject("Shell.Application"), // https://ss64.com/vb/shell.html
+    wsh: new ActiveXObject("WScript.Shell"), // https://ss64.com/vb/shell.html
 
-  // https://learn.microsoft.com/en-us/windows/win32/wmisdk/wmi-reference
-  // https://learn.microsoft.com/en-us/windows/win32/wmisdk/creating-a-wmi-script
-  wmi: new ActiveXObject("WbemScripting.SWbemLocator").ConnectServer(".", "root\\cimv2"),
-	wmiInstancesOf : function(path) { return this.wmi.InstancesOf(path, this.wbemFast); },
-	wmiExecQuery : function(qry) { return this.wmi.ExecQuery(qry, this.wbemFast); },
+    // https://learn.microsoft.com/en-us/windows/win32/wmisdk/wmi-reference
+    // https://learn.microsoft.com/en-us/windows/win32/wmisdk/creating-a-wmi-script
+    wmi: new ActiveXObject("WbemScripting.SWbemLocator").ConnectServer(".", "root\\cimv2"),
+    wmiInstancesOf: function (path) {
+      return this.wmi.InstancesOf(path, this.wbemFast);
+    },
+    wmiExecQuery: function (qry) {
+      return this.wmi.ExecQuery(qry, this.wbemFast);
+    },
 
-  reg: new ActiveXObject("WbemScripting.SWbemLocator").ConnectServer(".", "root\\default").Get("StdRegProv"),
-  regHives: {
-    HKEY_CLASSES_ROOT: 0x80000000,
-    HKEY_CURRENT_USER: 0x80000001,
-    HKEY_LOCAL_MACHINE: 0x80000002,
-    HKEY_USERS: 0x80000003,
-    HKEY_CURRENT_CONFIG: 0x80000005
-  },
+    reg: new ActiveXObject("WbemScripting.SWbemLocator").ConnectServer(".", "root\\default").Get("StdRegProv"),
+    regHives: {
+      HKEY_CLASSES_ROOT: 0x80000000,
+      HKEY_CURRENT_USER: 0x80000001,
+      HKEY_LOCAL_MACHINE: 0x80000002,
+      HKEY_USERS: 0x80000003,
+      HKEY_CURRENT_CONFIG: 0x80000005
+    },
 
-  // https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-
-  winErrorCodes: {
-    161: "ERROR_BAD_PATHNAME"
-  }
-};
+    // https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-
+    winErrorCodes: {
+      2: "ERROR_FILE_NOT_FOUND",
+      3: "ERROR_PATH_NOT_FOUND",
+      4: "ERROR_TOO_MANY_OPEN_FILES",
+      5: "ERROR_ACCESS_DENIED",
+      8: "ERROR_NOT_ENOUGH_MEMORY",
+      14: "ERROR_OUTOFMEMORY",
+      15: "ERROR_INVALID_DRIVE",
+      16: "ERROR_CURRENT_DIRECTORY",
+      112: "ERROR_DISK_FULL",
+      161: "ERROR_BAD_PATHNAME",
+      183: "ERROR_ALREADY_EXISTS",
+      223: "ERROR_FILE_TOO_LARGE",
+      225: "ERROR_VIRUS_INFECTED",
+      226: "ERROR_VIRUS_DELETED",
+      258: "WAIT_TIMEOUT",
+      267: "ERROR_DIRECTORY",
+      329: "ERROR_OPERATION_IN_PROGRESS",
+      331: "ERROR_TOO_MANY_DESCRIPTORS",
+      336: "ERROR_DIRECTORY_NOT_SUPPORTED"
+    }
+  };
 
 function getWinErrorName(code) {
-  return AkmeMS.winErrorCodes[code] || "-";
+  return AkmeMS.winErrorCodes[code] || "ERROR";
 }
 
 function regEnumKey(hive, subKey) {
@@ -58,12 +84,16 @@ function regEnumKey(hive, subKey) {
   req.sSubKeyName = subKey;
   var res = reg.ExecMethod_("EnumKey", req);
   if (res.ReturnValue !== 0) {
-    throw new Error("StdRegProv::EnumKey: " +
-      res.ReturnValue + ": " +
-      getWinErrorName(res.ReturnValue) + ": " +
-      subKey);
+    throw new Error(
+      "StdRegProv::EnumKey: " +
+        res.ReturnValue +
+        ": " +
+        getWinErrorName(res.ReturnValue) +
+        ": " +
+        subKey
+    );
   }
-  return typeof res.sNames === 'unknown' ? res.sNames.toArray() : [];
+  return typeof res.sNames === "unknown" ? res.sNames.toArray() : [];
 }
 
 function regEnumValues(hive, subKey) {
@@ -75,21 +105,25 @@ function regEnumValues(hive, subKey) {
   var res;
   res = reg.ExecMethod_("EnumValues", req);
   if (res.ReturnValue !== 0) {
-    throw new Error("StdRegProv::EnumValues: " +
-      res.ReturnValue + ": " +
-      getWinErrorName(res.ReturnValue) + ": " +
-      subKey);
+    throw new Error(
+      "StdRegProv::EnumValues: " +
+        res.ReturnValue +
+        ": " +
+        getWinErrorName(res.ReturnValue) +
+        ": " +
+        subKey
+    );
   }
   var result = [];
-  if (typeof res.sNames === 'unknown') {
+  if (typeof res.sNames === "unknown") {
     var ary = res.sNames.toArray();
-    for (var i=0; i<ary.length; i++) {
+    for (var i = 0; i < ary.length; i++) {
       result.push({ Name: ary[i] });
     }
   }
-  if (typeof res.Types === 'unknown') {
+  if (typeof res.Types === "unknown") {
     var ary = res.Types.toArray();
-    for (var i=0; i<ary.length; i++) {
+    for (var i = 0; i < ary.length; i++) {
       result[i].Type = ary[i];
     }
   }
@@ -105,67 +139,87 @@ function regGetValue(hive, subKey, name) {
   req.sValueName = name;
   var res = reg.ExecMethod_("GetStringValue", req);
   if (res.ReturnValue !== 0) {
-    throw new Error("StdRegProv::GetStringValue: " +
-      res.ReturnValue + ": " +
-      getWinErrorName(res.ReturnValue) + ": " +
-      subKey +"\\"+ name);
+    throw new Error(
+      "StdRegProv::GetStringValue: " +
+        res.ReturnValue +
+        ": " +
+        getWinErrorName(res.ReturnValue) +
+        ": " +
+        subKey +
+        "\\" +
+        name
+    );
   }
   return res.sValue;
 }
 
-function searchRegistry(hive, subKey, searchTerm) {
-    var results = [];
+function searchRegistry(hive, subKey, searchTerm, foundCallback) {
+  var results = [];
+  var term = searchTerm.toLowerCase();
 
-    // Enumerate keys under the specified subKey
-    var subKeyAry;
-    try {
-      subKeyAry = regEnumKey(hive, subKey);
-    }
-    catch (err) {
-      subKeyAry = [];
-      WScript.Echo(err.message);
-    }
+  // Enumerate keys under the specified subKey
+  var subKeyAry;
+  try {
+    subKeyAry = regEnumKey(hive, subKey);
+  } catch (err) {
+    subKeyAry = [];
+    WScript.Echo(err.message);
+  }
 
-    for (var i = 0; i < subKeyAry.length; i++) {
-        var currentKey = subKey ? subKey + "\\" + subKeyAry[i] : subKeyAry[i];
-        if (currentKey.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1 || results.length === 0) {
-            results.push({ type: "Key", path: currentKey });
-        }
-        // Recursively search in the subkey
-        results = results.concat(searchRegistry(hive, currentKey, searchTerm));
+  for (var i = 0; i < subKeyAry.length; i++) {
+    var currentKey = subKey ? subKey + "\\" + subKeyAry[i] : subKeyAry[i];
+    if (
+      currentKey.toLowerCase().indexOf(term) !== -1
+    ) {
+      foundCallback({ type: "Key", path: currentKey });
     }
+    // Recursively search in the subkey
+    searchRegistry(hive, currentKey, searchTerm, foundCallback);
+  }
 
-    // Enumerate values under the specified subKey
-    var valuesAry;
-    try {
-      valuesAry = regEnumValues(hive, subKey);
+  // Enumerate values under the specified subKey
+  var valuesAry;
+  try {
+    valuesAry = regEnumValues(hive, subKey);
+  } catch (err) {
+    valuesAry = [];
+    WScript.Echo(err.message);
+  }
+  for (var j = 0; j < valuesAry.length; j++) {
+    if (
+      valuesAry[j].Name.toLowerCase().indexOf(term) !== -1
+    ) {
+      foundCallback({ type: "Value", path: subKey, name: valuesAry[j].Name });
     }
-    catch (err) {
-      valuesAry = [];
-      WScript.Echo(err.message);
-    }
-    for (var j = 0; j < valuesAry.length; j++) {
-      if (valuesAry[j].Name.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1) {
-        results.push({ type: "Value", path: subKey, name: valuesAry[j].Name });
+    // StdRegProv::getStringValue() is much faster than wsh.RegRead().
+    if (valuesAry[j].Type === 1) {
+      // 1=String
+      var regValue = regGetValue(hive, subKey, valuesAry[j].Name);
+      if (
+        regValue &&
+        regValue.toLowerCase().indexOf(term) !== -1
+      ) {
+        foundCallback({
+          type: "Value",
+          path: subKey,
+          name: valuesAry[j].Name,
+          value: regValue
+        });
       }
-      // StdRegProv::getStringValue() is much faster than wsh.RegRead().
-      if (valuesAry[j].Type === 1) { // 1=String
-        var regValue = regGetValue(hive, subKey, valuesAry[j].Name);
-        if (regValue && regValue.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1) {
-          results.push({ type: "Value", path: subKey, name: valuesAry[j].Name, value: regValue });
-        }
-      }
     }
+  }
 
-    return results;
+  return results;
 }
 
 // Example usage
-var searchResults = searchRegistry("HKEY_CURRENT_USER", "AppEvents\\EventLabels", "Beep");
-for (var i = 0; i < searchResults.length; i++) {
-    WScript.Echo(
-      searchResults[i].type + ": " + searchResults[i].path +
-      (searchResults[i].name != null ? (": " + searchResults[i].name) : "") +
-      (searchResults[i].value != null ? (": " + searchResults[i].value) : "")
-    );
-}
+// searchRegistry("HKEY_CURRENT_USER", "", "CrossDevice", 
+searchRegistry("HKEY_CURRENT_USER", "AppEvents\\EventLabels", "Beep", function foundCallback(item) {
+  WScript.Echo(
+    item.type +
+      ": " +
+      item.path +
+      (item.name != null ? ": " + item.name : "") +
+      (item.value != null ? ": " + item.value : "")
+  );
+});
