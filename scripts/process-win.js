@@ -2,6 +2,8 @@
   process-win.js
   Find Windows Process.
   cscript //b //nologo process-win.js
+  Note Jsign for Signing jar, dll, exe, msi, jscript and more files.
+    https://github.com/ebourg/jsign
 */
 
 var AkmeMS = {

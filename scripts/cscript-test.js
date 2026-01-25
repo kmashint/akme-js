@@ -1,5 +1,5 @@
 // cscript-test.js for Microsoft JScript
-// Use: cscript cscript-test.js
+// Use: cscript //nologo cscript-test.js
 // See: cscript /?
 
 if (!this.console) this.console = {
@@ -17,7 +17,7 @@ if (!this.AkmeMS) this.AkmeMS = {
 	net : new ActiveXObject("WScript.Network"),  // https://ss64.com/vb/network.html
   sha : new ActiveXObject("Shell.Application"),  // https://ss64.com/vb/shell.html
 	wsh : new ActiveXObject("WScript.Shell"),  // https://ss64.com/vb/shell.html
-  
+
   // https://learn.microsoft.com/en-us/windows/win32/wmisdk/wmi-reference
   // https://learn.microsoft.com/en-us/windows/win32/wmisdk/creating-a-wmi-script
   wmi: new ActiveXObject("WbemScripting.SWbemLocator").ConnectServer(".", "root\\cimv2"),
