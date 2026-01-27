@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  winreg.wsf for Microsoft JScript
+  Use: cscript //nologo winreg.wsf
+  See: cscript /?
+
+  https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/administration/windows-commands/cscript.md
+  https://en.wikipedia.org/wiki/Windows_Script_File
+-->
 <job>
   <script language="jscript" src="AkmeUtilMicrosoft.js"></script>
   <script language="jscript" src="winreg.js"></script>

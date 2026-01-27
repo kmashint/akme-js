@@ -1,6 +1,3 @@
-// winreg.js for Microsoft JScript
-// Use: cscript //nologo winreg.js
-// See: cscript /?
 // https://github.com/MicrosoftDocs/win32/tree/docs/desktop-src/WmiSdk
 // https://learn.microsoft.com/en-us/previous-versions/windows/desktop/regprov/stdregprov
 // https://stackoverflow.com/questions/32295918/iterate-over-registry-keys
