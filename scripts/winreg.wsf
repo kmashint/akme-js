@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<job>
+  <script language="jscript" src="AkmeUtilMicrosoft.js"></script>
+  <script language="jscript" src="winreg.js"></script>
+
+  <script language="jscript">
+    // Example usage
+    // searchRegistry("HKEY_CURRENT_USER", "AppEvents\\EventLabels", "Beep",
+    // searchRegistry("HKEY_CURRENT_USER", "SOFTWARE", "CrossDevice",
+    searchRegistry("HKEY_CURRENT_USER", "AppEvents\\EventLabels", "Beep", regFoundCallback);
+  </script>
+</job>
